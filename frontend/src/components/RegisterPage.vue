@@ -7,7 +7,7 @@
         </div>
         <div class="brand-text">
           <h1>LOL Skin Collector</h1>
-          <p>Sign in to manage your collection.</p>
+          <p>Sign up</p>
         </div>
       </div>
 
@@ -16,8 +16,8 @@
           <span>Username</span>
           <input
             v-model="username"
-            type="username"
-            placeholder="your_username"
+            type="text"
+            placeholder="Your username"
             required
           />
         </label>
@@ -27,33 +27,38 @@
           <input
             v-model="password"
             type="password"
-            placeholder="••••••••"
+            placeholder="Password"
             minlength="6"
             required
           />
         </label>
 
-        <div class="field field-inline">
-          <label class="checkbox">
-            <input v-model="rememberMe" type="checkbox" />
-            <span>Remember me</span>
-          </label>
-          <button type="button" class="link-button">Forgot password?</button>
-        </div>
+        <label class="field">
+          <span>Repeat Password</span>
+          <input
+            v-model="password2"
+            type="password"
+            placeholder="Repeat password"
+            minlength="6"
+            required
+          />
+        </label>
+
+        <p v-if="passwordError" class="error-text">
+          {{ passwordError }}
+        </p>
 
         <button class="primary-btn" type="submit">
-          Log in
+          Sign up
         </button>
-
-        <p v-if="error" class="error-text">{{ error }}</p>
       </form>
 
-        <p class="helper-text">
-          Don’t have an account?
-          <router-link to="/register" class="link-button">
-            Sign up
-          </router-link>
-        </p>
+      <p class="helper-text">
+        Already have an account?
+        <router-link to="/login" class="link-button">
+          Sign in
+        </router-link>
+      </p>
     </div>
   </div>
 </template>
@@ -63,41 +68,42 @@ import { ref } from "vue";
 
 const username = ref("");
 const password = ref("");
-const rememberMe = ref(false);
+const password2 = ref("");
+const passwordError = ref("");
 const error = ref("");
 const loading = ref(false);
 
 const onSubmit = async () => {
+  passwordError.value = "";
   error.value = "";
   loading.value = true;
 
-  if (!username.value || !password.value) {
-    error.value = "Please enter both username and password.";
+  if (password.value !== password2.value) {
+    passwordError.value = "Passwords must match.";
     loading.value = false;
     return;
   }
 
   try {
-    const res = await fetch("http://127.0.0.1:5000/api/login", {
+    const res = await fetch("http://127.0.0.1:5000/api/register", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         username: username.value,
         password: password.value,
-        rememberMe: rememberMe.value,
       }),
     });
 
     if (!res.ok) {
       const msg = await res.text();
-      throw new Error(msg || "Login failed.");
+      throw new Error(msg || "Register failed.");
     }
 
     const data = await res.json();
-    console.log("Login success", data);
-    // TODO: save token / mark user as logged in / navigate
+    console.log("Register success", data);
+    // TODO: navigate to /login or auto‑login, clear form, etc.
   } catch (e) {
-    error.value = e.message || "Unable to login. Please try again.";
+    error.value = e.message || "Unable to register. Please try again.";
   } finally {
     loading.value = false;
   }

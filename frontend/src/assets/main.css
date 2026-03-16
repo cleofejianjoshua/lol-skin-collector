@@ -32,7 +32,21 @@ body {
   color: var(--text-main);
 }
 
-.app-root,
+.app-root {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.page-content {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+
+/* keep login-page if you still use it somewhere else */
 .login-page {
   min-height: 100vh;
   display: flex;
@@ -137,6 +151,7 @@ body {
   justify-content: space-between;
 }
 
+input[type="text"],
 input[type="email"],
 input[type="password"] {
   border-radius: 999px;
@@ -249,4 +264,37 @@ input[type="password"]::placeholder {
   .brand-text h1 {
     font-size: 1.15rem;
   }
+}
+
+.top-bar {
+  width: 100%;
+  padding: 12px 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: rgba(15, 23, 42, 0.96);
+  border-bottom: 1px solid var(--border-subtle);
+  backdrop-filter: blur(12px);
+  position: sticky; /* or fixed if you want it always visible */
+  top: 0;
+  z-index: 10;
+}
+
+.brand {
+  font-weight: 600;
+}
+
+.nav-links {
+  display: flex;
+  gap: 16px;
+}
+
+.nav-links a {
+  color: var(--text-main);
+  text-decoration: none;
+  font-size: 0.9rem;
+}
+
+.nav-links a.router-link-active {
+  color: var(--accent);
 }
