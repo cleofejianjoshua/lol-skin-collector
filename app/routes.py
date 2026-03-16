@@ -57,3 +57,7 @@ def index():
         user = {"username": "Guest"}
 
     return render_template("index.html", title="Home", user=user)
+
+@app.route("/") 
+def home():
+    return redirect(url_for("index"))
