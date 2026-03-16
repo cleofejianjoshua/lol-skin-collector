@@ -1,4 +1,4 @@
-from flask import render_template, flash, redirect, url_for, session
+from flask import render_template, flash, redirect, url_for, session, jsonify
 from app import app, db
 from app.forms import LoginForm, RegistrationForm
 from app.models import User
@@ -61,3 +61,9 @@ def index():
 @app.route("/") 
 def home():
     return redirect(url_for("index"))
+
+@app.route("/api/user")
+def user():
+    if "username" in session:
+        return jsonify({"username": session["username"]})
+    return jsonify({"username": "Guest"})
