@@ -152,7 +152,7 @@ body {
 }
 
 input[type="text"],
-input[type="email"],
+input[type="username"],
 input[type="password"] {
   border-radius: 999px;
   border: 1px solid var(--border-subtle);
@@ -167,14 +167,14 @@ input[type="password"] {
     background var(--transition-fast);
 }
 
-input[type="email"]:focus,
+input[type="username"]:focus,
 input[type="password"]:focus {
   border-color: var(--accent);
   box-shadow: 0 0 0 1px rgba(59, 130, 246, 0.45);
   background: rgba(6, 9, 20, 0.98);
 }
 
-input[type="email"]::placeholder,
+input[type="username"]::placeholder,
 input[type="password"]::placeholder {
   color: rgba(156, 163, 175, 0.9);
 }
