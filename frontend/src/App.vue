@@ -1,11 +1,18 @@
 <script setup>
-import { ref, onMounted } from "vue"
+import { ref, onMounted, computed } from "vue";
+import { useRoute, useRouter } from "vue-router";
 
 const username = ref("Loading...")
 const flashMessages = ref([])
+const route = useRoute();
+const router = useRouter();
+
+const showNavbar = computed(() => route.name !== "LoginSuccess");
+const isDashboard = computed(() => route.name === "Dashboard");
 
 const onLogout = () => {
   username.value = "Guest"
+  router.push({ name: "Home" });
 }
 
 onMounted(async () => {
@@ -17,16 +24,24 @@ onMounted(async () => {
 
 <template>
   <div class="app-root">
-    <header class="top-bar">
+    <header v-if="showNavbar" class="top-bar">
       <span class="brand">LOL Skin Gacha Collector</span>
 
-      <nav class="nav-links">
+      <!-- Dashboard navbar -->
+      <nav v-if="isDashboard" class="nav-links">
+        <router-link to="/index">Home</router-link>
+        <router-link to="/dashboard">Dashboard</router-link>
+        <a href="#" @click.prevent="onLogout">Sign out</a>
+      </nav>
+
+      <!-- Home/Login/Register navbar -->
+      <nav v-else class="nav-links">
         <router-link to="/index">Home</router-link>
         <router-link to="/login">Log In</router-link>
         <router-link to="/register">Register</router-link>
-        <a href="#" @click.prevent="onLogout">Log Out</a>
+        <a href="#" @click.prevent="onLogout">Sign out</a>
       </nav>
-    </header> 
+    </header>
 
     <main class="page-content">
       <router-view />

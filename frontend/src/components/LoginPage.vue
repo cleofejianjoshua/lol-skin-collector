@@ -16,7 +16,7 @@
           <span>Username</span>
           <input
             v-model="username"
-            type="username"
+            type="text"
             placeholder="your_username"
             required
           />
@@ -60,12 +60,15 @@
 
 <script setup>
 import { ref } from "vue";
+import { useRouter } from "vue-router";
+
 
 const username = ref("");
 const password = ref("");
 const rememberMe = ref(false);
 const error = ref("");
 const loading = ref(false);
+const router = useRouter();
 
 const onSubmit = async () => {
   error.value = "";
@@ -95,6 +98,7 @@ const onSubmit = async () => {
 
     const data = await res.json();
     console.log("Login success", data);
+    await router.push({ name: "LoginSuccess" });
     // TODO: save token / mark user as logged in / navigate
   } catch (e) {
     error.value = e.message || "Unable to login. Please try again.";
