@@ -85,25 +85,28 @@ const onSubmit = async () => {
   }
 
   try {
-    const res = await fetch("http://127.0.0.1:5000/api/register", {
+    const formData = new FormData();
+    formData.append("username", username.value);
+    formData.append("password", password.value);
+    formData.append("password2", password2.value);
+
+    const res = await fetch("http://127.0.0.1:5000/register", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        username: username.value,
-        password: password.value,
-      }),
+      body: formData,
+      credentials: "include" // Include cookies for session management
     });
 
-    if (!res.ok) {
-      const msg = await res.text();
-      throw new Error(msg || "Register failed.");
+    if (res.redirected) {
+      // Flask redirects to login after success
+      window.location.href = res.url;
+      return;
     }
 
-    const data = await res.json();
-    console.log("Register success", data);
-    // TODO: navigate to /login or auto‑login, clear form, etc.
+    const text = await res.text();
+    console.log(text);
+
   } catch (e) {
-    error.value = e.message || "Unable to register. Please try again.";
+    error.value = "Registration failed.";
   } finally {
     loading.value = false;
   }
