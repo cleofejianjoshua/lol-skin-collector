@@ -22,26 +22,29 @@ def login():
     return render_template("login.html", title="Sign In", form=form)
 
 
-@app.route("/register", methods=["GET", "POST"])
-def register():
-    form = RegistrationForm()
+@app.route("/api/register", methods=["POST"])
+def api_register():
+    data = request.form  # because you're using FormData
 
-    if form.validate_on_submit():
-        user = User(
-            username=form.username.data,
-            password=form.password.data
-        )
+    username = data.get("username")
+    password = data.get("password")
+    password2 = data.get("password2")
 
-        try:
-            db.session.add(user)
-            db.session.commit()
-            flash("Account created successfully!")
-            return redirect(url_for("login"))
-        except IntegrityError:
-            db.session.rollback()
-            flash("Username already exists. Please choose another.", "error")
+    if not username or not password:
+        return jsonify({"error": "Missing fields"}), 400
 
-    return render_template("register.html", title="Register", form=form)
+    if password != password2:
+        return jsonify({"error": "Passwords do not match"}), 400
+
+    user = User(username=username, password=password)
+
+    try:
+        db.session.add(user)
+        db.session.commit()
+        return jsonify({"message": "Account created successfully"}), 201
+    except IntegrityError:
+        db.session.rollback()
+        return jsonify({"error": "Username already exists"}), 400
 
 @app.route("/logout")
 def logout():

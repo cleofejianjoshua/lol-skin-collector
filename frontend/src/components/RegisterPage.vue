@@ -90,20 +90,20 @@ const onSubmit = async () => {
     formData.append("password", password.value);
     formData.append("password2", password2.value);
 
-    const res = await fetch("http://127.0.0.1:5000/register", {
+    const res = await fetch("http://127.0.0.1:5000/api/register", {
       method: "POST",
       body: formData,
       credentials: "include" // Include cookies for session management
     });
 
-    if (res.redirected) {
-      // Flask redirects to login after success
-      window.location.href = res.url;
-      return;
-    }
+const data = await res.json();
 
-    const text = await res.text();
-    console.log(text);
+if (!res.ok) {
+  error.value = data.error || "Registration failed.";
+} else {
+  alert("Account created!");
+  window.location.href = "/login"; // Vue route
+}
 
   } catch (e) {
     error.value = "Registration failed.";
