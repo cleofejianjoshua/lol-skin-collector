@@ -7,7 +7,7 @@ from flask_cors import CORS
 app=Flask(__name__)
 app.config.from_object(Config)
 
-app.secret_key = "secret"
+app.config["SECRET_KEY"] = "your-secret-key"
 
 db=SQLAlchemy(app)
 migrate=Migrate(app,db)

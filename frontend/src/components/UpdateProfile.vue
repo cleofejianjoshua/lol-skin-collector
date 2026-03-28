@@ -56,10 +56,12 @@ const errorMsg = ref("");
 // Load existing data first
 onMounted(async () => {
   try {
-    const res = await fetch("http://127.0.0.1:5000/api/user", {
+    const res = await fetch("(http://127.0.0.1:5000/api/user", {
       credentials: "include",
     });
-
+    if (!res.ok) {
+      router.push({ name: "Login" });
+    }
     const data = await res.json();
     nickname.value = data.nickname || data.username;
     email.value = data.email || "";

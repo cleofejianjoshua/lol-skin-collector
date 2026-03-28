@@ -10,7 +10,7 @@ auth = Blueprint("auth", __name__, url_prefix="/auth")
 #register api
 @auth.route("/register", methods=["POST"])
 def register():
-    data = request.form
+    data = request.get_json()
 
     username = data.get("username")
     password = data.get("password")
@@ -35,7 +35,7 @@ def register():
 # login api
 @auth.route("/login", methods=["POST"])
 def login():
-    data = request.form
+    data = request.get_json()
 
     username = data.get("username")
     password = data.get("password")

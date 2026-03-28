@@ -11,7 +11,8 @@
         </div>
       </div>
 
-      <form class="login-form" @submit.prevent="onSubmit">
+      <form class="login-form" method="POST" 
+      @submit.prevent="onSubmit">
         <label class="field">
           <span>Username</span>
           <input
@@ -81,7 +82,11 @@ const onSubmit = async () => {
 
     const res = await fetch("http://127.0.0.1:5000/auth/login", {
       method: "POST",
-      body: formData,
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        username: username.value,
+        password: password.value
+      }),
       credentials: "include",
     });
 
