@@ -77,7 +77,6 @@ const onSubmit = async () => {
   try {
     const formData = new FormData();
     formData.append("username", username.value);
-    formData.append("password", password.value);
 
     const res = await fetch("http://127.0.0.1:5000/api/login", {
       method: "POST",
@@ -92,7 +91,6 @@ const onSubmit = async () => {
     } else {
       error.value = data.error || "Invalid username or password.";
     }
->>>>>>> 85e19c94772b953db599aea22319438acdf6a473
 
   } catch (e) {
     error.value = "Login failed.";
