@@ -90,7 +90,7 @@ const onSubmit = async () => {
     formData.append("password", password.value);
     formData.append("password2", password2.value);
 
-    const res = await fetch("http://127.0.0.1:5000/api/register", {
+    const res = await fetch("http://127.0.0.1:5000/auth/register", {
       method: "POST",
       body: formData,
       credentials: "include" // Include cookies for session management

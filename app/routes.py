@@ -1,3 +1,4 @@
+"""
 from flask import render_template, flash, redirect, url_for, session, jsonify
 from app import app, db
 from app.forms import LoginForm, RegistrationForm
@@ -24,6 +25,9 @@ def login():
 
 @app.route("/api/register", methods=["POST"])
 def api_register():
+
+    from flask import request
+
     data = request.form  # because you're using FormData
 
     username = data.get("username")
@@ -70,3 +74,5 @@ def user():
     if "username" in session:
         return jsonify({"username": session["username"]})
     return jsonify({"username": "Guest"})
+
+"""

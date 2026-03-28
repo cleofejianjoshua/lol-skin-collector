@@ -13,5 +13,5 @@ migrate=Migrate(app,db)
 CORS(app, supports_credentials=True)
 
 from app import routes, models
-from app.routes import register_routes
-register_routes(app)
+from app.routes import init_routes
+init_routes(app)
