@@ -1,7 +1,8 @@
-from flask import Blueprint, request, jsonify
+from flask import Blueprint, request, jsonify, session
 from app import db
 from app.models import User
 from sqlalchemy.exc import IntegrityError
+
 
 api = Blueprint("api", __name__, url_prefix="/api")
 
@@ -39,18 +40,24 @@ def user():
     return jsonify({"username": "Guest"})
 
 # login api not yet modified
-@app.route("/login", methods=["GET", "POST"])
+@api.route("/login", methods=["GET", "POST"])
 def login():
-    form = LoginForm()
 
-    if form.validate_on_submit():
-        user = User.query.filter_by(username=form.username.data).first()
+    data = request.form
 
-        if user and user.password == form.password.data:
-            session['username'] = user.username
-            flash("Login successful!")
-            return redirect(url_for("index"))
-        else:
-            flash("Invalid username or password.")
+    username = data.get("username")
+    password = data.get("password")
 
-    return render_template("login.html", title="Sign In", form=form)
+    if not username or not password:
+        return jsonify({"error": "Missing Fields"}), 400
+    
+    user = User.query.filter_by(username=username).first()
+
+    if user and user.passwor == password:
+        session["username"] = user.username
+        return jsonify({
+            "message": "Login Successful",
+            "username": user.username
+        }), 200
+    
+    return jsonify ({"error": "Invalid username or password"}), 400

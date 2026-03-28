@@ -79,19 +79,19 @@ const onSubmit = async () => {
     formData.append("username", username.value);
     formData.append("password", password.value);
 
-    const res = await fetch("http://127.0.0.1:5000/login", {
+    const res = await fetch("http://127.0.0.1:5000/api/login", {
       method: "POST",
       body: formData,
       credentials: "include"
     });
 
-    if (res.redirected) {
-      // Flask redirects to index after login
-      router.push({ name: "LoginSuccess" }); // your Vue success page
-      return;
-    }
+    const data = await res.json();
 
-    error.value = "Invalid username or password.";
+    if(!res.ok) {
+      error.value = "Invalid username or password.";
+    } else {
+      router.push("/dashboard");
+    }    
 
   } catch (e) {
     error.value = "Login failed.";
