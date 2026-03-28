@@ -12,7 +12,7 @@ app.config["SECRET_KEY"] = "your-secret-key"
 db=SQLAlchemy(app)
 migrate=Migrate(app,db)
 
-CORS(app, supports_credentials=True)
+CORS(app, supports_credentials=True, origins=["http://127.0.0.1:5173"])
 
 from app import routes, models
 from app.routes import init_routes

@@ -60,20 +60,15 @@ const loadProfile = async () => {
   errorMsg.value = "";
 
   try {
-    const res = await fetch("/api/user", {
+    const res = await fetch("/api/user)", {
       method: "GET",
       credentials: "include",
     });
 
-    if (res.status === 401) {
-      router.push({ name: "Login" });
-      return;
-    }
-
     const data = await res.json();
 
     if (!res.ok) {
-      throw new Error(data.error || "Failed to load profile.");
+      throw new Error(data.error || "Failed to load profile.");      
     }
 
     username.value = data.username || "Unknown user";
@@ -85,7 +80,6 @@ const loadProfile = async () => {
     loading.value = false;
   }
 };
-
 
 const goUpdateProfile = () => {
   router.push({ name: "UpdateProfile" });
