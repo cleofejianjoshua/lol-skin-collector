@@ -1,6 +1,6 @@
 <template>
   <div class="login-page">
-    <div class="login-card">
+    <div class="cards">
       <div class="brand">
         <div class="logo-circle">
           <span class="logo-text">LC</span>
@@ -79,19 +79,19 @@ const onSubmit = async () => {
     formData.append("username", username.value);
     formData.append("password", password.value);
 
-    const res = await fetch("http://127.0.0.1:5000/login", {
+    const res = await fetch("http://127.0.0.1:5000/api/login", {
       method: "POST",
       body: formData,
-      credentials: "include"
+      credentials: "include",
     });
 
-    if (res.redirected) {
-      // Flask redirects to index after login
-      router.push({ name: "LoginSuccess" }); // your Vue success page
-      return;
-    }
+    const data = await res.json();
 
-    error.value = "Invalid username or password.";
+    if (res.ok) {
+      router.push({ name: "LoginSuccess" });
+    } else {
+      error.value = data.error || "Invalid username or password.";
+    }
 
   } catch (e) {
     error.value = "Login failed.";

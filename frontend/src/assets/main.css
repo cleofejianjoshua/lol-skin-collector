@@ -55,7 +55,7 @@ body {
   padding: 24px;
 }
 
-.login-card {
+.cards {
   position: relative;
   width: 100%;
   max-width: 420px;
@@ -72,7 +72,7 @@ body {
   backdrop-filter: blur(18px);
 }
 
-.login-card::before {
+.cards::before {
   content: "";
   position: absolute;
   inset: -1px;

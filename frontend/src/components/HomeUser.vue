@@ -1,15 +1,15 @@
 <template>
-  <div class="home-page">
-    <h1>Welcome to LOL Skin Gacha Collector</h1>
-    <p class="home-subtitle">
-      Track your skins, remember your favorites, and never forget that one legendary you’ve always wanted.
-    </p>
+    <div class="home-page">
+        <h1>Welcome Back, {{ username }}!</h1>
+        <p class="home-subtitle">
+          Good to see you again, ready to collect some skins?
+        </p>
 
-    <div class="quote-card">
-      <p class="quote-text">“{{ randomQuote.text }}”</p>
-      <p class="quote-author">— {{ randomQuote.author }}</p>
+        <div class="quote-card">
+        <p class="quote-text">“{{ randomQuote.text }}”</p>
+        <p class="quote-author">— {{ randomQuote.author }}</p>
+        </div>
     </div>
-  </div>
 </template>
 
 <script setup>
@@ -82,3 +82,5 @@ const randomQuote = ref(
   color: var(--text-muted);
 }
 </style>
+
+

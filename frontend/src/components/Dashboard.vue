@@ -1,6 +1,6 @@
 <template>
   <div class="login-page">
-    <div class="login-card">
+    <div class="cards">
       <div class="brand">
         <div class="logo-circle">
           <span class="logo-text">LC</span>

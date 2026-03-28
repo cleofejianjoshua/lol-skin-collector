@@ -1,4 +1,4 @@
-from flask import Blueprint, request, jsonify
+from flask import Blueprint, request, jsonify, session
 from app import db
 from app.models import User
 from sqlalchemy.exc import IntegrityError
@@ -29,28 +29,70 @@ def api_register():
         db.session.rollback()
         return jsonify({"error": "Username already exists"}), 400
 
+# login api
+@api.route("/login", methods=["POST"])
+def api_login():
+    data = request.form
 
-@api.route("/user")
-def user():
-    from flask import session
+    username = data.get("username")
+    password = data.get("password")
 
-    if "username" in session:
-        return jsonify({"username": session["username"]})
-    return jsonify({"username": "Guest"})
+    user = User.query.filter_by(username=username).first()
 
-# login api not yet modified
-@app.route("/login", methods=["GET", "POST"])
-def login():
-    form = LoginForm()
+    if user and user.password == password:
+        session["username"] = user.username
+        return jsonify({"message": "Login successful"})
 
-    if form.validate_on_submit():
-        user = User.query.filter_by(username=form.username.data).first()
+    return jsonify({"error": "Invalid username or password"}), 401
 
-        if user and user.password == form.password.data:
-            session['username'] = user.username
-            flash("Login successful!")
-            return redirect(url_for("index"))
-        else:
-            flash("Invalid username or password.")
+# logout api
+@api.route("/logout", methods=["POST"])
+def api_logout():
+    session.pop("username", None)
+    return jsonify({"message": "Logged out"})
 
-    return render_template("login.html", title="Sign In", form=form)
+# Profile page api
+@api.route("/user", methods=["GET"])
+def get_user():
+    if "username" not in session:
+        return jsonify({"error": "Not logged in"}), 401
+
+    user = User.query.filter_by(username=session["username"]).first()
+
+    if not user:
+        return jsonify({"error": "User not found"}), 404
+
+    return jsonify({
+        "username": user.username,
+        "nickname": user.nickname,
+        "email": user.email,
+        "favorite_skin": user.favorite_skin,
+        "skin_image": user.skin_image
+    })
+
+# update profile api
+@api.route("/update-profile", methods=["POST"])
+def update_profile():
+    from flask import session, request
+
+    if "username" not in session:
+        return jsonify({"error": "Not logged in"}), 401
+
+    user = User.query.filter_by(username=session["username"]).first()
+    if not user:
+        return jsonify({"error": "User not found"}), 404
+
+    nickname = request.form.get("nickname")
+    email = request.form.get("email")
+
+    if not nickname or not email:
+        return jsonify({"error": "All fields are required"}), 400
+
+    try:
+        user.nickname = nickname
+        user.email = email
+        db.session.commit()
+        return jsonify({"message": "Profile updated successfully"})
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"error": "Failed to update profile"}), 500
