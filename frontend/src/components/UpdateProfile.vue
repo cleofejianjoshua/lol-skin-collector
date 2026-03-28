@@ -1,8 +1,6 @@
 <template>
   <div class="login-page">
-    <div class="login-card profile-card-large">
-      
-      <!-- HEADER (NO LOGO) -->
+    <div class="cards profile-card-large">
       <div class="brand">
         <div class="brand-text">
           <h1>Update Profile</h1>
@@ -10,13 +8,12 @@
         </div>
       </div>
 
-      <!-- FORM -->
       <form class="profile-form" @submit.prevent="onSubmit">
-        
         <label class="field">
           <span>Nickname</span>
           <input
             v-model="nickname"
+            name="nickname"
             type="text"
             placeholder="Enter your nickname"
             required
@@ -27,147 +24,174 @@
           <span>Email</span>
           <input
             v-model="email"
+            name="email"
             type="email"
             placeholder="Enter your email"
             required
           />
         </label>
 
-        <p v-if="success" class="success-text">
-          Profile updated successfully!
-        </p>
+        <p v-if="successMsg" class="success-text">{{ successMsg }}</p>
+        <p v-if="errorMsg" class="error-text">{{ errorMsg }}</p>
 
-        <button class="primary-btn" type="submit">
-          Save Changes
+        <button class="primary-btn" type="submit" :disabled="loading">
+          {{ loading ? "Saving..." : "Save Changes" }}
         </button>
       </form>
-
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref } from "vue";
+import { ref, onMounted } from "vue";
+import { useRouter } from "vue-router";
 
+const router = useRouter();
 const nickname = ref("");
 const email = ref("");
-const success = ref(false);
+const loading = ref(false);
+const successMsg = ref("");
+const errorMsg = ref("");
 
-const onSubmit = () => {
-  console.log("Saved:", nickname.value, email.value);
+// Load existing data first
+onMounted(async () => {
+  try {
+    const res = await fetch("[127.0.0.1](http://127.0.0.1:5000/api/user", {
+      credentials: "include",
+    });
 
-  success.value = true;
+    const data = await res.json();
+    nickname.value = data.nickname || data.username;
+    email.value = data.email || "";
+  } catch (err) {
+    console.error(err);
+  }
+});
 
-  setTimeout(() => {
-    success.value = false;
-  }, 2000);
+//  Send update request
+const onSubmit = async () => {
+  loading.value = true;
+  successMsg.value = "";
+  errorMsg.value = "";
+
+  try {
+    const formData = new FormData();
+    formData.append("nickname", nickname.value);
+    formData.append("email", email.value);
+
+    const res = await fetch("[127.0.0.1](http://127.0.0.1:5000/api/update-profile", {
+      method: "POST",
+      body: formData,
+      credentials: "include", // send cookies
+    });
+
+    const data = await res.json();
+    if (!res.ok) {
+      throw new Error(data.error || "Failed to update profile");
+    }
+
+    successMsg.value = "Profile updated successfully!";
+    setTimeout(() => router.push({ name: "Profile" }), 1500);
+  } catch (err) {
+    errorMsg.value = err.message;
+  } finally {
+    loading.value = false;
+  }
 };
 </script>
 
 <style scoped>
-/* PAGE LAYOUT */
-.profile-page {
-  display: flex;
-  justify-content: flex-start; 
-  align-items: flex-start;
+.login-page {
   min-height: 100vh;
-  padding-top: 60px;
-  padding-left: 80px;
-
-  /* responsive center on small screens */
-}
-@media (max-width: 768px) {
-  .profile-page {
-    justify-content: center;
-    padding-left: 24px;
-    padding-right: 24px;
-    padding-top: 40px;
-  }
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: linear-gradient(to bottom, rgba(15, 23, 42, 0.9), rgba(15, 23, 42, 0.96)),
+    url("/lolwallpaper.png") center top / cover no-repeat fixed;
 }
 
-/* CARD */
-.profile-card.profile-card-large {
+.cards.profile-card-large {
   width: 100%;
-  max-width: 600px; /* bigger than before */
-  padding: 40px 36px; /* more spacious */
+  max-width: 600px;
+  padding: 40px 36px;
   border-radius: 24px;
-  background: #1e1e2f;
-  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.35);
-}
-
-/* HEADER */
-.brand {
-  margin-bottom: 28px;
+  background: var(--card-bg);
+  box-shadow: var(--shadow-elevated);
+  backdrop-filter: blur(18px);
+  border: 1px solid var(--border-subtle);
 }
 
 .brand-text h1 {
   margin: 0;
-  font-size: 2rem;
+  font-size: 1.8rem;
+  color: var(--text-main);
 }
-
 .brand-text p {
   margin: 0;
-  font-size: 1rem;
-  color: #aaa;
+  color: var(--text-muted);
+  font-size: 0.9rem;
 }
 
-/* FORM */
 .profile-form {
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
+  margin-top: 20px;
 }
 
-/* FIELD */
 .field {
-  width: 100%;
-  margin-bottom: 22px;
+  margin-bottom: 18px;
 }
 
 .field span {
   display: block;
-  margin-bottom: 8px;
-  font-size: 1rem;
+  margin-bottom: 6px;
+  color: var(--text-muted);
 }
 
-/* BIG INPUTS */
 .field input {
   width: 100%;
-  padding: 16px 18px;
-  font-size: 1.1rem;
+  padding: 14px 16px;
+  font-size: 1rem;
   border-radius: 12px;
-  border: none;
-  outline: none;
-  background: #2a2a40;
-  color: white;
+  border: 1px solid var(--border-subtle);
+  background: rgba(6, 9, 20, 0.85);
+  color: var(--text-main);
 }
 
-/* BUTTON */
+.field input:focus {
+  border-color: var(--accent);
+}
+
 .primary-btn {
-  margin-top: 14px;
+  margin-top: 10px;
   width: 100%;
-  padding: 16px;
-  border-radius: 16px;
+  padding: 14px;
+  border-radius: var(--radius-pill);
   border: none;
-  background: #6366f1;
-  color: white;
-  font-size: 1.05rem;
+  font-weight: 600;
+  background: radial-gradient(circle at 20% 0, #dbeafe, #60a5fa 40%, #1d4ed8);
+  color: #0b1120;
   cursor: pointer;
-  transition: background 0.2s;
+  transition: filter var(--transition-med);
 }
 
 .primary-btn:hover {
-  background: #4f46e5;
+  filter: brightness(1.05);
 }
 
-/* SUCCESS MESSAGE */
 .success-text {
-  margin-bottom: 12px;
-  padding: 12px;
-  border-radius: 12px;
   background: rgba(34, 197, 94, 0.15);
   color: #bbf7d0;
-  width: 100%;
-  font-size: 1rem;
+  padding: 10px;
+  border-radius: 12px;
+  font-size: 0.9rem;
+}
+.error-text {
+  background: rgba(239, 68, 68, 0.15);
+  color: var(--danger);
+  padding: 10px;
+  border-radius: 12px;
+  font-size: 0.9rem;
 }
 </style>

@@ -30,34 +30,71 @@ def api_register():
         db.session.rollback()
         return jsonify({"error": "Username already exists"}), 400
 
-
-@api.route("/user")
-def user():
-    from flask import session
-
-    if "username" in session:
-        return jsonify({"username": session["username"]})
-    return jsonify({"username": "Guest"})
-
-# login api not yet modified
-@api.route("/login", methods=["GET", "POST"])
-def login():
-
+# login api
+@api.route("/login", methods=["POST"])
+def api_login():
     data = request.form
 
     username = data.get("username")
     password = data.get("password")
 
-    if not username or not password:
-        return jsonify({"error": "Missing Fields"}), 400
-    
     user = User.query.filter_by(username=username).first()
 
-    if user and user.passwor == password:
+    if user and user.password == password:
         session["username"] = user.username
-        return jsonify({
-            "message": "Login Successful",
-            "username": user.username
-        }), 200
-    
-    return jsonify ({"error": "Invalid username or password"}), 400
+        return jsonify({"message": "Login successful"})
+
+    return jsonify({"error": "Invalid username or password"}), 401
+
+# logout api
+@api.route("/logout", methods=["POST"])
+def api_logout():
+    session.pop("username", None)
+    return jsonify({"message": "Logged out"})
+
+# Profile page api
+@api.route("/user", methods=["GET"])
+def get_user():
+    if "username" not in session:
+        return jsonify({"error": "Not logged in"}), 401
+
+    user = User.query.filter_by(username=session["username"]).first()
+
+    if not user:
+        return jsonify({"error": "User not found"}), 404
+
+    return jsonify({
+        "username": user.username,
+        "nickname": user.nickname,
+        "email": user.email,
+        "favorite_skin": user.favorite_skin,
+        "skin_image": user.skin_image
+    })
+
+# update profile api
+@api.route("/update-profile", methods=["POST"])
+def update_profile():
+    from flask import session, request
+
+    if "username" not in session:
+        return jsonify({"error": "Not logged in"}), 401
+
+    user = User.query.filter_by(username=session["username"]).first()
+    if not user:
+        return jsonify({"error": "User not found"}), 404
+
+    nickname = request.form.get("nickname")
+    email = request.form.get("email")
+
+    if not nickname or not email:
+        return jsonify({"error": "All fields are required"}), 400
+
+    try:
+        user.nickname = nickname
+        user.email = email
+        db.session.commit()
+        return jsonify({"message": "Profile updated successfully"})
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"error": "Failed to update profile"}), 500
+

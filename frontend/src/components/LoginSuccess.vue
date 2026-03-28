@@ -1,6 +1,6 @@
 <template>
   <div class="login-page">
-    <div class="login-card login-success-card">
+    <div class="cards login-success-card">
       <div class="brand">
         <div class="brand-text">
           <h1>Success</h1>
@@ -43,15 +43,14 @@ const goDashboard = () => {
 <!-->
 
 <style scoped>
-/* Bigger login-success card */
+
 .login-success-card {
-  width: 500px !important;          /* wider than default */
-  max-width: none !important;       /* override global max-width */
-  padding: 40px 36px !important;    /* more padding */
-  border-radius: 24px !important;   /* bigger rounding */
+  width: 500px !important;          
+  max-width: none !important;       
+  padding: 40px 36px !important;    
+  border-radius: 24px !important;   
 }
 
-/* Make the success text a bit bigger */
 .success-text {
   margin: 16px 0 20px;
   padding: 14px 16px;
@@ -63,7 +62,6 @@ const goDashboard = () => {
   text-align: center;
 }
 
-/* Optional: bigger button */
 .primary-btn {
   padding: 16px 20px;
   font-size: 1rem;

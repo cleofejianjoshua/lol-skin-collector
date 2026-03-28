@@ -1,6 +1,6 @@
 <template>
   <div class="login-page">
-    <div class="login-card">
+    <div class="cards">
       <div class="brand">
         <div class="logo-circle">
           <span class="logo-text">LC</span>
@@ -82,16 +82,17 @@ const onSubmit = async () => {
     const res = await fetch("http://127.0.0.1:5000/api/login", {
       method: "POST",
       body: formData,
-      credentials: "include"
+      credentials: "include",
     });
 
     const data = await res.json();
 
-    if(!res.ok) {
-      error.value = "Invalid username or password.";
+    if (res.ok) {
+      router.push({ name: "LoginSuccess" });
     } else {
-      router.push("/dashboard");
-    }    
+      error.value = data.error || "Invalid username or password.";
+    }
+>>>>>>> 85e19c94772b953db599aea22319438acdf6a473
 
   } catch (e) {
     error.value = "Login failed.";

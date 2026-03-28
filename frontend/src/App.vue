@@ -11,6 +11,7 @@ const showNavbar = computed(() => route.name !== "LoginSuccess");
 const isDashboard = computed(() => route.name === "Dashboard");
 const isProfile = computed(() => route.name === "Profile");
 const isUpdateProfile = computed(() => route.name === "UpdateProfile");
+const isHomeUser = computed(() => route.name === "HomeUser");
 
 const isLoggedIn = computed(() => {
   return username.value && username.value !== "Guest";
@@ -19,12 +20,20 @@ const isLoggedIn = computed(() => {
 const loadingUser = ref(true); // loading state for user info
 
 const onLogout = async () => {
-  await fetch("http://127.0.0.1:5000/logout", {
-    credentials: "include"
-  });
+  try {
+    const res = await fetch("http://127.0.0.1:5000/api/logout", {
+      method: "POST",
+      credentials: "include"
+    });
 
-  username.value = "Guest";
-  router.push({ name: "Home" });
+    const data = await res.json(); 
+    console.log(data.message);
+
+    username.value = "Guest";       
+    router.push({ name: "Login" });
+  } catch (err) {
+    console.error("Logout failed:", err);
+  }
 };
 
 onMounted(async () => {
@@ -50,8 +59,8 @@ onMounted(async () => {
       <span class="brand">LOL Skin Gacha Collector</span>
 
       <!-- NAVBAR CHAIN -->
-      <nav v-if="isDashboard || isProfile || isUpdateProfile" class="nav-links">
-        <router-link to="/index">Home</router-link>
+      <nav v-if="isDashboard || isProfile || isUpdateProfile || isHomeUser" class="nav-links">
+        <router-link to="/home">Home</router-link>
         <router-link to="/dashboard">Dashboard</router-link>
         <router-link to="/profile">Profile</router-link>
         <a href="#" @click.prevent="onLogout">Sign out</a>
@@ -70,6 +79,7 @@ onMounted(async () => {
         <!-- LOGGED IN -->
         <template v-else>
           <span class="welcome-text">Welcome, {{ username }}! | </span>
+          <router-link to="/home">Home</router-link>
           <router-link to="/dashboard">Dashboard</router-link>
           <router-link to="/profile">Profile</router-link>
           <a href="#" @click.prevent="onLogout">Sign out</a>

@@ -6,6 +6,7 @@ import LoginSuccess from "../components/LoginSuccess.vue";
 import Dashboard from "../components/Dashboard.vue";
 import ProfilePage from "../components/ProfilePage.vue";
 import UpdateProfile from "../components/UpdateProfile.vue";
+import HomeUser from "../components/HomeUser.vue";
   
 const routes = [
   { path: "/", name: "Home", component: HomePage },
@@ -15,7 +16,8 @@ const routes = [
   { path: "/dashboard", name: "Dashboard", component: Dashboard },
   { path: "/login/success", name: "LoginSuccess", component: LoginSuccess },
   { path: "/profile", name: "Profile", component: ProfilePage },
-  { path: "/profile/update", name: "UpdateProfile", component: UpdateProfile }
+  { path: "/profile/update", name: "UpdateProfile", component: UpdateProfile },
+  { path: "/home", name: "HomeUser", component: HomeUser }
 
 ];
 
