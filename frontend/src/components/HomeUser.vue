@@ -13,7 +13,21 @@
 </template>
 
 <script setup>
-import { ref } from "vue";
+import { ref, onMounted } from "vue";
+
+const username = ref("");
+
+onMounted(async () => {
+  try {
+    const res = await fetch("http://127.0.0.1:5000/api/user", {
+      credentials: "include",
+    });
+    const data = await res.json();
+    username.value = data.username || "Summoner";
+  } catch (err) {
+    username.value = "Summoner";
+  }
+});
 
 const quotes = [
   {

@@ -18,7 +18,23 @@
   </div>
 </template>
 
-<script setup></script>
+<script setup>
+import { onMounted } from "vue";
+import { useRouter } from "vue-router";
+
+const router = useRouter();
+
+onMounted(async () => {
+  try {
+    const res = await fetch("http://127.0.0.1:5000/api/dashboard", { credentials: "include" });
+    if (!res.ok) {
+      router.push({ name: "Login" });
+    }
+  } catch {
+    router.push({ name: "Login" });
+  }
+});
+</script>
 
 <style scoped>
 .home-subtitle {

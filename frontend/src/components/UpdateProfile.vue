@@ -56,7 +56,7 @@ const errorMsg = ref("");
 // Load existing data first
 onMounted(async () => {
   try {
-    const res = await fetch("[127.0.0.1](http://127.0.0.1:5000/api/user", {
+    const res = await fetch("http://127.0.0.1:5000/api/user", {
       credentials: "include",
     });
 
@@ -79,7 +79,7 @@ const onSubmit = async () => {
     formData.append("nickname", nickname.value);
     formData.append("email", email.value);
 
-    const res = await fetch("[127.0.0.1](http://127.0.0.1:5000/api/update-profile", {
+    const res = await fetch("http://127.0.0.1:5000/api/update-profile", {
       method: "POST",
       body: formData,
       credentials: "include", // send cookies

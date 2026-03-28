@@ -6,9 +6,10 @@ from sqlalchemy.exc import IntegrityError
 
 auth = Blueprint("auth", __name__, url_prefix="/auth")
 
+
 #register api
 @auth.route("/register", methods=["POST"])
-def api_register():
+def register():
     data = request.form
 
     username = data.get("username")
@@ -33,7 +34,7 @@ def api_register():
 
 # login api
 @auth.route("/login", methods=["POST"])
-def api_login():
+def login():
     data = request.form
 
     username = data.get("username")
@@ -49,6 +50,6 @@ def api_login():
 
 # logout api
 @auth.route("/logout", methods=["POST"])
-def api_logout():
+def logout():
     session.pop("username", None)
     return jsonify({"message": "Logged out"})

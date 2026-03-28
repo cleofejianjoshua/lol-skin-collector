@@ -21,8 +21,7 @@ def get_user():
         "username": user.username,
         "nickname": user.nickname,
         "email": user.email,
-        "favorite_skin": user.favorite_skin,
-        "skin_image": user.skin_image
+
     })
 
 # update profile api
@@ -51,3 +50,9 @@ def update_profile():
     except Exception as e:
         db.session.rollback()
         return jsonify({"error": "Failed to update profile"}), 500
+    
+#dashboard api
+@api.route("/dashboard", methods=["POST"])
+def dashboard():
+    if "username" not in session:
+        return jsonify({"error": "Not logged in"}), 401

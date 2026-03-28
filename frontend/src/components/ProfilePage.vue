@@ -60,7 +60,7 @@ const loadProfile = async () => {
   errorMsg.value = "";
 
   try {
-    const res = await fetch("[127.0.0.1](http://127.0.0.1:5000/api/user)", {
+    const res = await fetch("http://127.0.0.1:5000/api/user)", {
       method: "GET",
       credentials: "include",
     });
@@ -74,8 +74,6 @@ const loadProfile = async () => {
     username.value = data.username || "Unknown user";
     nickname.value = data.nickname || data.username || "No nickname set";
     email.value = data.email || "No email set";
-    favoriteSkin.value = data.favorite_skin || "No favorite skin yet";
-    skinImage.value = data.skin_image || "/default-skin.png";
   } catch (err) {
     errorMsg.value = err.message;
   } finally {
