@@ -298,3 +298,10 @@ input[type="password"]::placeholder {
 .nav-links a.router-link-active {
   color: var(--accent);
 }
+
+.welcome-text {
+  font-weight: 500;
+  margin-right: 12px;
+  color: var(--accent);
+  font-size: 0.9rem;
+}

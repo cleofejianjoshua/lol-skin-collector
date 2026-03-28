@@ -4,6 +4,8 @@ import LoginPage from "../components/LoginPage.vue";
 import RegisterPage from "../components/RegisterPage.vue";
 import LoginSuccess from "../components/LoginSuccess.vue";
 import Dashboard from "../components/Dashboard.vue";
+import ProfilePage from "../components/ProfilePage.vue";
+import UpdateProfile from "../components/UpdateProfile.vue";
   
 const routes = [
   { path: "/", name: "Home", component: HomePage },
@@ -11,7 +13,9 @@ const routes = [
   { path: "/login", name: "Login", component: LoginPage },
   { path: "/register", name: "Register", component: RegisterPage },
   { path: "/dashboard", name: "Dashboard", component: Dashboard },
-  { path: "/login-success", name: "LoginSuccess", component: LoginSuccess },
+  { path: "/login/success", name: "LoginSuccess", component: LoginSuccess },
+  { path: "/profile", name: "Profile", component: ProfilePage },
+  { path: "/profile/update", name: "UpdateProfile", component: UpdateProfile }
 
 ];
 

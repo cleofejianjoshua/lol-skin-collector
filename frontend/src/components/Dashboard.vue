@@ -6,13 +6,13 @@
           <span class="logo-text">LC</span>
         </div>
         <div class="brand-text">
-          <h1>Dashboard</h1>
-          <p>Your collection hub</p>
+          <h1>Dashboard Placeholder</h1>
+          <p>Placeholder text for the dashboard</p>
         </div>
       </div>
-
+      
       <p class="home-subtitle">
-        Welcome to your dashboard. (You can add skins/champions here later.)
+        Welcome to your dashboard. (You can view skins here later.)
       </p>
     </div>
   </div>
