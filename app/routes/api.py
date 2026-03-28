@@ -52,7 +52,8 @@ def update_profile():
         return jsonify({"error": "Failed to update profile"}), 500
     
 #dashboard api
-@api.route("/dashboard", methods=["POST"])
+@api.route("/dashboard", methods=["GET"])
 def dashboard():
     if "username" not in session:
         return jsonify({"error": "Not logged in"}), 401
+    return jsonify({"message": "Welcome to your dashboard"})
