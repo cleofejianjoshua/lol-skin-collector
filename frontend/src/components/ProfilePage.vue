@@ -60,10 +60,15 @@ const loadProfile = async () => {
   errorMsg.value = "";
 
   try {
-    const res = await fetch("http://127.0.0.1:5000/api/user)", {
+    const res = await fetch("/api/user", {
       method: "GET",
       credentials: "include",
     });
+
+    if (res.status === 401) {
+      router.push({ name: "Login" });
+      return;
+    }
 
     const data = await res.json();
 
@@ -80,6 +85,7 @@ const loadProfile = async () => {
     loading.value = false;
   }
 };
+
 
 const goUpdateProfile = () => {
   router.push({ name: "UpdateProfile" });

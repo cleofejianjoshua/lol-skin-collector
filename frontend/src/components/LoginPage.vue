@@ -79,7 +79,7 @@ const onSubmit = async () => {
     formData.append("username", username.value);
     formData.append("password", password.value);
 
-    const res = await fetch("http://127.0.0.1:5000/auth/login", {
+    const res = await fetch("/auth/login", {
       method: "POST",
       body: formData,
       credentials: "include",

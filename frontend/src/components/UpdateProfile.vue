@@ -56,9 +56,14 @@ const errorMsg = ref("");
 // Load existing data first
 onMounted(async () => {
   try {
-    const res = await fetch("http://127.0.0.1:5000/api/user", {
+    const res = await fetch("/api/user", {
       credentials: "include",
     });
+
+    if (res.status === 401) {
+      router.push({ name: "Login" });
+      return;
+    }
 
     const data = await res.json();
     nickname.value = data.nickname || data.username;
@@ -68,7 +73,7 @@ onMounted(async () => {
   }
 });
 
-//  Send update request
+// Send update request
 const onSubmit = async () => {
   loading.value = true;
   successMsg.value = "";
@@ -79,11 +84,16 @@ const onSubmit = async () => {
     formData.append("nickname", nickname.value);
     formData.append("email", email.value);
 
-    const res = await fetch("http://127.0.0.1:5000/api/update-profile", {
+    const res = await fetch("/api/update-profile", {
       method: "POST",
       body: formData,
-      credentials: "include", // send cookies
+      credentials: "include",
     });
+
+    if (res.status === 401) {
+      router.push({ name: "Login" });
+      return;
+    }
 
     const data = await res.json();
     if (!res.ok) {
@@ -99,6 +109,7 @@ const onSubmit = async () => {
   }
 };
 </script>
+
 
 <style scoped>
 .login-page {
