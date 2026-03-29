@@ -145,3 +145,9 @@ dist
 __pycache__
 __pycache__/
 *.py[cod]
+
+# Flask instance folder (important)
+instance/
+
+# SQLite database
+*.db
