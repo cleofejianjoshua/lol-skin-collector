@@ -92,7 +92,12 @@ const onSubmit = async () => {
 
     const res = await fetch("/auth/register", {
       method: "POST",
-      body: formData,
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        username: username.value,
+        password: password.value,
+        password2: password2.value
+      }),
       credentials: "include" // Include cookies for session management
     });
 
