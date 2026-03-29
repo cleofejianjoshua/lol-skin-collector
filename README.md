@@ -4,7 +4,7 @@ Setup Instructions (Using SQLite)
 1. Clone the repository
 
 git clone https://github.com/cleofejianjoshua/lol-skin-collector.git
-cd yourrepo
+cd lol-skin-collector
 
 2. Setup Python backend
 
