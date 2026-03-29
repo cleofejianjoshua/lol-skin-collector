@@ -21,7 +21,7 @@ const loadingUser = ref(true); // loading state for user info
 
 const onLogout = async () => {
   try {
-    const res = await fetch("/api/logout", {
+    const res = await fetch("/auth/logout", {
       method: "POST",
       credentials: "include"
     });

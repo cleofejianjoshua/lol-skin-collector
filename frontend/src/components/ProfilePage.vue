@@ -60,11 +60,10 @@ const loadProfile = async () => {
   errorMsg.value = "";
 
   try {
-    const res = await fetch("/api/user)", {
+    const res = await fetch("/api/user", {
       method: "GET",
       credentials: "include",
     });
-
     const data = await res.json();
 
     if (!res.ok) {
