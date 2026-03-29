@@ -2,7 +2,7 @@ LOL Skin Gacha Collector
 Setup Instructions
 1. Clone the repository
 
-git clone https://github.com/yourusername/yourrepo.git
+git clone https://github.com/cleofejianjoshua/lol-skin-collector.git
 cd yourrepo
 
 2. Setup Python backend
