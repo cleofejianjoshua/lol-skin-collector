@@ -1,5 +1,6 @@
 LOL Skin Gacha Collector
-Setup Instructions
+Setup Instructions (Using SQLite)
+
 1. Clone the repository
 
 git clone https://github.com/cleofejianjoshua/lol-skin-collector.git
@@ -19,20 +20,6 @@ source venv/bin/activate
 
 Install dependencies:
 pip install -r requirements.txt
-
-3. Setup PostgreSQL
-
-Make sure PostgreSQL is installed.
-
-Create database:
-createdb lscDB
-
-4. Configure environment variables
-
-Copy the example file:
-cp .env.example .env
-
-Edit .env and set your PostgreSQL username/password.
 
 5. Run migrations
 
