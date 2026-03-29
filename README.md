@@ -25,7 +25,7 @@ pip install -r requirements.txt
 Make sure PostgreSQL is installed.
 
 Create database:
-createdb microblog
+createdb lscDB
 
 4. Configure environment variables
 
