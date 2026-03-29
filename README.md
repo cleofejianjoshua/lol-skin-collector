@@ -1,48 +1,78 @@
-LOL Skin Gacha Collector
-Setup Instructions (Using SQLite)
+# LOL Skin Gacha Collector
 
-1. Clone the repository
+## Setup Instructions (Using SQLite)
 
+### 1. Clone the repository
+
+```
 git clone https://github.com/cleofejianjoshua/lol-skin-collector.git
 cd lol-skin-collector
+```
 
-2. Setup Python backend
+---
 
+### 2. Setup Python backend
+
+```
 python -m venv venv
+```
 
-Activate virtual environment:
+#### Activate virtual environment
 
-Windows:
+**Windows:**
+
+```
 venv\Scripts\activate
+```
 
-Mac/Linux:
+**Mac/Linux:**
+
+```
 source venv/bin/activate
+```
 
-Install dependencies:
+#### Install dependencies
+
+```
 pip install -r requirements.txt
+```
 
-5. Run migrations
+---
 
-flask db upgrade
+### 3. Run migrations
 
-6. Start Flask backend
+```
+python -m flask db upgrade
+```
 
+---
+
+### 4. Start Flask backend
+
+```
 python microblog.py
+```
 
 Backend runs at:
 http://127.0.0.1:5000
 
-7. Setup Vue frontend
+---
+
+### 5. Setup Vue frontend
 
 Open a new terminal:
 
+```
 cd frontend
 npm install
 npm run dev
+```
 
 Frontend runs at:
 http://localhost:5173
 
-8. Use the app
+---
+
+### 6. Use the app
 
 Open the Vue URL in your browser.
