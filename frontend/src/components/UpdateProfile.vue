@@ -56,7 +56,7 @@ const errorMsg = ref("");
 // Load existing data first
 onMounted(async () => {
   try {
-    const res = await fetch("(api/user", {
+    const res = await fetch("/api/user", {
       credentials: "include",
     });
 
