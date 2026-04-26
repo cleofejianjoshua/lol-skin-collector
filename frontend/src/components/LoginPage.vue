@@ -93,7 +93,7 @@ const onSubmit = async () => {
     const data = await res.json();
 
     if (res.ok) {
-      router.push({ name: "LoginSuccess" });
+      router.push({ path: "/" });
     } else {
       error.value = data.error || "Invalid username or password.";
     }
@@ -105,3 +105,22 @@ const onSubmit = async () => {
   }
 };
 </script>
+
+<style scoped>
+.primary-btn {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.primary-btn:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 6px 20px rgba(96, 165, 250, 0.4);
+}
+
+.link-button {
+  transition: transform 0.2s ease;
+}
+
+.link-button:hover {
+  transform: translateY(-1px);
+}
+</style>

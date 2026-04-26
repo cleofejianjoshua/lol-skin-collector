@@ -178,6 +178,8 @@ const onSubmit = async () => {
 
 .primary-btn:hover {
   filter: brightness(1.05);
+  transform: translateY(-3px);
+  transition: ease 0.7s;
 }
 
 .success-text {

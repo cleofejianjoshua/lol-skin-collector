@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted, computed } from "vue";
+import { ref, onMounted, computed, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 
 const username = ref("Guest");
@@ -7,17 +7,29 @@ const flashMessages = ref([]);
 const route = useRoute();
 const router = useRouter();
 
-const showNavbar = computed(() => route.name !== "LoginSuccess");
-const isDashboard = computed(() => route.name === "Dashboard");
-const isProfile = computed(() => route.name === "Profile");
-const isUpdateProfile = computed(() => route.name === "UpdateProfile");
-const isHomeUser = computed(() => route.name === "HomeUser");
-
 const isLoggedIn = computed(() => {
   return username.value && username.value !== "Guest";
 });
 
-const loadingUser = ref(true); // loading state for user info
+const loadingUser = ref(true);
+
+const fetchUser = async () => {
+  try {
+    const res = await fetch("/api/user", {
+      credentials: "include"
+    });
+    const data = await res.json();
+    if (data.username) {
+      username.value = data.username;
+    } else {
+      username.value = "Guest";
+    }
+  } catch (e) {
+    username.value = "Guest";
+  } finally {
+    loadingUser.value = false;
+  }
+};
 
 const onLogout = async () => {
   try {
@@ -26,28 +38,23 @@ const onLogout = async () => {
       credentials: "include"
     });
 
-    const data = await res.json(); 
+    const data = await res.json();
     console.log(data.message);
 
-    username.value = "Guest";       
+    username.value = "Guest";
     router.push({ name: "Login" });
   } catch (err) {
     console.error("Logout failed:", err);
   }
 };
 
-onMounted(async () => {
-  try {
-    const res = await fetch("/api/user", {
-      credentials: "include"
-    });
-    const data = await res.json();
-    username.value = data.username;
-  } catch (e) {
-    username.value = "Guest";
-  } finally {
-    loadingUser.value = false;
-  }
+onMounted(() => {
+  fetchUser();
+});
+
+// Refetch user when route changes (after login)
+watch(() => route.fullPath, () => {
+  fetchUser();
 });
 </script>
 
@@ -55,35 +62,22 @@ onMounted(async () => {
   <div class="app-root">
     
     <!-- NAVBAR -->
-    <header v-if="showNavbar" class="top-bar">
+    <header v-if="!loadingUser" class="top-bar">
       <span class="brand">LOL Skin Gacha Collector</span>
 
-      <!-- NAVBAR CHAIN -->
-      <nav v-if="isDashboard || isProfile || isUpdateProfile || isHomeUser" class="nav-links">
-        <router-link to="/home">Home</router-link>
+      <!-- LOGGED IN NAVBAR -->
+      <nav v-if="isLoggedIn" class="nav-links">
+        <span class="welcome-text">Welcome, {{ username }}! | </span>
+        <router-link to="/">Home</router-link>
         <router-link to="/dashboard">Dashboard</router-link>
         <router-link to="/profile">Profile</router-link>
         <a href="#" @click.prevent="onLogout">Sign out</a>
       </nav>
 
-      <!-- NORMAL NAVBAR -->
+      <!-- NOT LOGGED IN NAVBAR -->
       <nav v-else class="nav-links">
-        <router-link to="/index">Home</router-link>
-
-        <!-- NOT LOGGED IN -->
-        <template v-if="!isLoggedIn">
-          <router-link to="/login">Log In</router-link>
-          <router-link to="/register">Register</router-link>
-        </template>
-
-        <!-- LOGGED IN -->
-        <template v-else>
-          <span class="welcome-text">Welcome, {{ username }}! | </span>
-          <router-link to="/home">Home</router-link>
-          <router-link to="/dashboard">Dashboard</router-link>
-          <router-link to="/profile">Profile</router-link>
-          <a href="#" @click.prevent="onLogout">Sign out</a>
-        </template>
+        <router-link to="/login">Log In</router-link>
+        <router-link to="/register">Register</router-link>
       </nav>
     </header>
 
@@ -100,4 +94,27 @@ onMounted(async () => {
     </ul>
 
   </div>
-</template> 
+</template>
+
+<style>
+/* Global button hover effects */
+.primary-btn,
+button.primary-btn,
+.nav-links a,
+.nav-links .link-button,
+.link-button {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.primary-btn:hover,
+button.primary-btn:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 6px 20px rgba(96, 165, 250, 0.4);
+}
+
+.nav-links a:hover,
+.nav-links .link-button:hover,
+.link-button:hover {
+  transform: translateY(-1px);
+}
+</style>
