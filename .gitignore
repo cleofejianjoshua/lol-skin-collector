@@ -145,9 +145,14 @@ dist
 __pycache__
 __pycache__/
 *.py[cod]
+backend/__pycache__/
+backend/**/__pycache__/
+
+# Virtual environment
+backend/venv/
 
 # Flask instance folder (important)
-instance/
+backend/instance/
 
 # SQLite database
 *.db

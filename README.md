@@ -14,6 +14,7 @@ cd lol-skin-collector
 ### 2. Setup Python backend
 
 ```
+cd backend
 python -m venv venv
 ```
 
@@ -42,6 +43,7 @@ pip install -r requirements.txt
 ### 3. Run migrations
 
 ```
+cd backend
 python -m flask db upgrade
 ```
 
@@ -50,7 +52,8 @@ python -m flask db upgrade
 ### 4. Start Flask backend
 
 ```
-python microblog.py
+cd backend
+python run.py
 ```
 
 Backend runs at:
