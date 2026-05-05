@@ -92,7 +92,6 @@ body {
   display: flex;
   align-items: center;
   gap: 14px;
-  margin-bottom: 22px;
 }
 
 .logo-circle {
@@ -282,6 +281,8 @@ input[type="password"]::placeholder {
 
 .brand {
   font-weight: 600;
+  display: flex;
+  align-items: center;
 }
 
 .nav-links {
@@ -293,6 +294,23 @@ input[type="password"]::placeholder {
   color: var(--text-main);
   text-decoration: none;
   font-size: 0.9rem;
+  position: relative;
+  padding-bottom: 2px;
+}
+
+.nav-links a::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: 0;
+  height: 2px;
+  background-color: var(--accent);
+  transition: width var(--transition-fast);
+}
+
+.nav-links a:hover::after {
+  width: 100%;
 }
 
 .nav-links a.router-link-active {
