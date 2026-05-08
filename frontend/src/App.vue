@@ -1,80 +1,71 @@
 <script setup>
 import { ref, onMounted, computed, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
+import { fetchUser, logoutUser } from "@/services/api.js";
+import ConfirmModal from "@/components/shared/ConfirmModal.vue";
 
 const username = ref("Guest");
-const flashMessages = ref([]);
 const route = useRoute();
 const router = useRouter();
-
-const isLoggedIn = computed(() => {
-  return username.value && username.value !== "Guest";
-});
-
 const loadingUser = ref(true);
+const showLogoutModal = ref(false);
 
-const fetchUser = async () => {
-  try {
-    const res = await fetch("/api/user", {
-      credentials: "include"
-    });
-    const data = await res.json();
-    if (data.username) {
-      username.value = data.username;
-    } else {
-      username.value = "Guest";
-    }
-  } catch (e) {
-    username.value = "Guest";
-  } finally {
-    loadingUser.value = false;
-  }
+const isLoggedIn = computed(() => username.value && username.value !== "Guest");
+
+const loadUser = async () => {
+  const data = await fetchUser();
+  username.value = data.username || "Guest";
+  loadingUser.value = false;
 };
 
-const onLogout = async () => {
+// Opens the confirmation modal instead of logging out immediately
+const promptLogout = () => {
+  showLogoutModal.value = true;
+};
+
+// Called when user clicks "Yes, sign out"
+const confirmLogout = async () => {
+  showLogoutModal.value = false;
   try {
-    const res = await fetch("/auth/logout", {
-      method: "POST",
-      credentials: "include"
-    });
-
-    const data = await res.json();
-    console.log(data.message);
-
-    username.value = "Guest";
-    router.push({ name: "Login" });
+    await logoutUser();
   } catch (err) {
     console.error("Logout failed:", err);
+  } finally {
+    username.value = "Guest";
+    router.push({ name: "Login" });
   }
 };
 
-onMounted(() => {
-  fetchUser();
-});
+// Called when user clicks "No, stay" or the backdrop
+const cancelLogout = () => {
+  showLogoutModal.value = false;
+};
 
-// Refetch user when route changes (after login)
-watch(() => route.fullPath, () => {
-  fetchUser();
-});
+onMounted(loadUser);
+
+// Re-check user on every route change (e.g. after login/logout)
+watch(() => route.fullPath, loadUser);
 </script>
 
 <template>
   <div class="app-root">
-    
+
     <!-- NAVBAR -->
     <header v-if="!loadingUser" class="top-bar">
       <span class="brand">LOL Skin Gacha Collector</span>
 
-      <!-- LOGGED IN NAVBAR -->
+      <!-- Logged-in nav -->
       <nav v-if="isLoggedIn" class="nav-links">
-        <span class="welcome-text">Welcome, {{ username }}! | </span>
+        <span class="welcome-text">Welcome, {{ username }}! |</span>
         <router-link to="/">Home</router-link>
         <router-link to="/dashboard">Dashboard</router-link>
+        <router-link to="/gacha">Gacha</router-link>
+        <router-link to="/shards">💎 Shards</router-link>
         <router-link to="/profile">Profile</router-link>
-        <a href="#" @click.prevent="onLogout">Sign out</a>
+        <a href="#" @click.prevent="promptLogout">Sign out</a>
       </nav>
 
-      <!-- NOT LOGGED IN NAVBAR -->
+      <!-- Guest nav -->
       <nav v-else class="nav-links">
         <router-link to="/login">Log In</router-link>
         <router-link to="/register">Register</router-link>
@@ -86,35 +77,14 @@ watch(() => route.fullPath, () => {
       <router-view />
     </main>
 
-    <!-- FLASH MESSAGES (optional) -->
-    <ul v-if="flashMessages.length" class="flash-list">
-      <li v-for="(msg, i) in flashMessages" :key="i">
-        {{ msg }}
-      </li>
-    </ul>
+    <!-- SIGN OUT CONFIRMATION MODAL -->
+    <ConfirmModal
+      :show="showLogoutModal"
+      title="Sign out?"
+      message="Are you sure you want to sign out of your account?"
+      @confirm="confirmLogout"
+      @cancel="cancelLogout"
+    />
 
   </div>
 </template>
-
-<style>
-/* Global button hover effects */
-.primary-btn,
-button.primary-btn,
-.nav-links a,
-.nav-links .link-button,
-.link-button {
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
-}
-
-.primary-btn:hover,
-button.primary-btn:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 6px 20px rgba(96, 165, 250, 0.4);
-}
-
-.nav-links a:hover,
-.nav-links .link-button:hover,
-.link-button:hover {
-  transform: translateY(-1px);
-}
-</style>
