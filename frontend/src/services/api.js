@@ -1,0 +1,119 @@
+/**
+ * api.js — Central API service layer.
+ *
+ * All backend calls go through here. Use relative paths so the
+ * Vite proxy handles routing to Flask correctly.
+ */
+
+// Auth
+
+export async function loginUser({ username, password }) {
+  const res = await fetch("/auth/login", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ username, password }),
+    credentials: "include",
+  });
+
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || "Login failed");
+  return data;
+}
+
+export async function registerUser({ username, password, password2 }) {
+  const res = await fetch("/auth/register", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ username, password, password2 }),
+    credentials: "include",
+  });
+
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || "Registration failed");
+  return data;
+}
+
+export async function logoutUser() {
+  const res = await fetch("/auth/logout", {
+    method: "POST",
+    credentials: "include",
+  });
+
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || "Logout failed");
+  return data;
+}
+
+// User / Profile
+
+/**
+ * Fetch the currently logged-in user.
+ * Returns { username, nickname, email, ... } or { username: null } if not logged in.
+ */
+export async function fetchUser() {
+  try {
+    const res = await fetch("/api/user", {
+      method: "GET",
+      credentials: "include",
+    });
+    return await res.json();
+  } catch {
+    return { username: null };
+  }
+}
+
+export async function updateProfile({ nickname, email }) {
+  const formData = new FormData();
+  formData.append("nickname", nickname);
+  formData.append("email", email);
+
+  const res = await fetch("/api/update-profile", {
+    method: "POST",
+    body: formData,
+    credentials: "include",
+  });
+
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || "Failed to update profile");
+  return data;
+}
+
+// Gacha
+
+/**
+ * Perform a single gacha pull.
+ * Returns { skin: { id, name, champion, rarity, image_path }, is_duplicate }
+ */
+export async function gachaPull() {
+  const res = await fetch("/api/gacha/pull", {
+    method: "POST",
+    credentials: "include",
+  });
+
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || "Pull failed");
+  return data;
+}
+
+// Skins
+
+/**
+ * Fetch all available skins from the backend.
+ * Expected response: [{ id, name, champion, image_path, rarity }, ...]
+ */
+export async function fetchSkins() {
+  const res = await fetch("/api/skins", { credentials: "include" });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || "Failed to fetch skins");
+  return data;
+}
+
+/**
+ * Fetch the skins owned by the current user.
+ */
+export async function fetchUserCollection() {
+  const res = await fetch("/api/collection", { credentials: "include" });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || "Failed to fetch collection");
+  return data;
+}

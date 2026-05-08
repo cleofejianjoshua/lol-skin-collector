@@ -1,0 +1,12 @@
+/* ================================================
+   CSS BARREL FILE
+   Imports all component-level stylesheets.
+   Import this once in main.js — no need to import
+   individual files anywhere else.
+================================================ */
+
+@import "./components/navbar.css";
+@import "./components/cards.css";
+@import "./components/forms.css";
+@import "./components/buttons.css";
+@import "./components/feedback.css";

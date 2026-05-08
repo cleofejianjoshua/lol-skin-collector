@@ -1,15 +1,10 @@
 <template>
-  <div class="login-page">
+  <div class="auth-page">
     <div class="cards">
-      <div class="brand">
-        <div class="logo-circle">
-          <span class="logo-text">LC</span>
-        </div>
-        <div class="brand-text">
-          <h1>LOL Skin Collector</h1>
-          <p>Sign up</p>
-        </div>
-      </div>
+      <BrandHeader
+        title="LOL Skin Collector"
+        subtitle="Create your account."
+      />
 
       <form class="login-form" @submit.prevent="onSubmit">
         <label class="field">
@@ -44,20 +39,17 @@
           />
         </label>
 
-        <p v-if="passwordError" class="error-text">
-          {{ passwordError }}
-        </p>
+        <p v-if="passwordError" class="error-text">{{ passwordError }}</p>
+        <p v-if="error" class="error-text">{{ error }}</p>
 
-        <button class="primary-btn" type="submit">
-          Sign up
+        <button class="primary-btn" type="submit" :disabled="loading">
+          {{ loading ? "Creating account..." : "Sign up" }}
         </button>
       </form>
 
       <p class="helper-text">
         Already have an account?
-        <router-link to="/login" class="link-button">
-          Sign in
-        </router-link>
+        <router-link to="/login" class="link-button">Sign in</router-link>
       </p>
     </div>
   </div>
@@ -65,7 +57,10 @@
 
 <script setup>
 import { ref } from "vue";
+import { useRouter } from "vue-router";
+import BrandHeader from "@/components/shared/BrandHeader.vue";
 
+const router = useRouter();
 const username = ref("");
 const password = ref("");
 const password2 = ref("");
@@ -85,33 +80,26 @@ const onSubmit = async () => {
   }
 
   try {
-    const formData = new FormData();
-    formData.append("username", username.value);
-    formData.append("password", password.value);
-    formData.append("password2", password2.value);
-
     const res = await fetch("/auth/register", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         username: username.value,
         password: password.value,
-        password2: password2.value
+        password2: password2.value,
       }),
-      credentials: "include" // Include cookies for session management
+      credentials: "include",
     });
 
-const data = await res.json();
+    const data = await res.json();
 
-if (!res.ok) {
-  error.value = data.error || "Registration failed.";
-} else {
-  alert("Account created!");
-  window.location.href = "/login"; // Vue route
-}
-
+    if (!res.ok) {
+      error.value = data.error || "Registration failed.";
+    } else {
+      router.push({ name: "Login" });
+    }
   } catch (e) {
-    error.value = "Registration failed.";
+    error.value = "Registration failed. Please try again.";
   } finally {
     loading.value = false;
   }
@@ -119,20 +107,11 @@ if (!res.ok) {
 </script>
 
 <style scoped>
-.primary-btn {
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
-}
-
-.primary-btn:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 6px 20px rgba(96, 165, 250, 0.4);
-}
-
-.link-button {
-  transition: transform 0.2s ease;
-}
-
-.link-button:hover {
-  transform: translateY(-1px);
+.auth-page {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
 }
 </style>

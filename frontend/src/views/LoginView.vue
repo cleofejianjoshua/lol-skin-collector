@@ -1,18 +1,12 @@
 <template>
-  <div class="login-page">
+  <div class="auth-page">
     <div class="cards">
-      <div class="brand">
-        <div class="logo-circle">
-          <span class="logo-text">LC</span>
-        </div>
-        <div class="brand-text">
-          <h1>LOL Skin Collector</h1>
-          <p>Sign in to manage your collection.</p>
-        </div>
-      </div>
+      <BrandHeader
+        title="LOL Skin Collector"
+        subtitle="Sign in to manage your collection."
+      />
 
-      <form class="login-form" method="POST" 
-      @submit.prevent="onSubmit">
+      <form class="login-form" @submit.prevent="onSubmit">
         <label class="field">
           <span>Username</span>
           <input
@@ -42,19 +36,17 @@
           <button type="button" class="link-button">Forgot password?</button>
         </div>
 
-        <button class="primary-btn" type="submit">
-          Log in
+        <button class="primary-btn" type="submit" :disabled="loading">
+          {{ loading ? "Signing in..." : "Log in" }}
         </button>
 
         <p v-if="error" class="error-text">{{ error }}</p>
       </form>
 
-        <p class="helper-text">
-          Don’t have an account?
-          <router-link to="/register" class="link-button">
-            Sign up
-          </router-link>
-        </p>
+      <p class="helper-text">
+        Don't have an account?
+        <router-link to="/register" class="link-button">Sign up</router-link>
+      </p>
     </div>
   </div>
 </template>
@@ -62,7 +54,7 @@
 <script setup>
 import { ref } from "vue";
 import { useRouter } from "vue-router";
-
+import BrandHeader from "@/components/shared/BrandHeader.vue";
 
 const username = ref("");
 const password = ref("");
@@ -76,16 +68,12 @@ const onSubmit = async () => {
   loading.value = true;
 
   try {
-    const formData = new FormData();
-    formData.append("username", username.value);
-    formData.append("password", password.value);
-
     const res = await fetch("/auth/login", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         username: username.value,
-        password: password.value
+        password: password.value,
       }),
       credentials: "include",
     });
@@ -97,9 +85,8 @@ const onSubmit = async () => {
     } else {
       error.value = data.error || "Invalid username or password.";
     }
-
   } catch (e) {
-    error.value = "Login failed.";
+    error.value = "Login failed. Please try again.";
   } finally {
     loading.value = false;
   }
@@ -107,20 +94,11 @@ const onSubmit = async () => {
 </script>
 
 <style scoped>
-.primary-btn {
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
-}
-
-.primary-btn:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 6px 20px rgba(96, 165, 250, 0.4);
-}
-
-.link-button {
-  transition: transform 0.2s ease;
-}
-
-.link-button:hover {
-  transform: translateY(-1px);
+.auth-page {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
 }
 </style>

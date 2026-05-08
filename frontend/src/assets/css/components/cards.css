@@ -1,0 +1,70 @@
+/* ================================================
+   CARDS
+   Glassmorphism card container used across pages.
+================================================ */
+
+.cards {
+  position: relative;
+  width: 100%;
+  max-width: 420px;
+  padding: 28px 26px 24px;
+  border-radius: var(--radius-lg);
+  background: linear-gradient(
+      145deg,
+      rgba(255, 255, 255, 0.03),
+      rgba(6, 9, 20, 0.9)
+    ),
+    var(--card-bg);
+  border: 1px solid var(--border-subtle);
+  box-shadow: var(--shadow-elevated);
+  backdrop-filter: blur(18px);
+}
+
+/* Glowing accent border overlay */
+.cards::before {
+  content: "";
+  position: absolute;
+  inset: -1px;
+  border-radius: inherit;
+  border: 1px solid transparent;
+  background:
+    linear-gradient(135deg, rgba(59, 130, 246, 0.8), transparent 55%) border-box;
+  mask:
+    linear-gradient(#000 0 0) padding-box,
+    linear-gradient(#000 0 0);
+  mask-composite: exclude;
+  opacity: 0.7;
+  pointer-events: none;
+}
+
+/* Wide variant for update profile */
+.cards.cards--wide {
+  max-width: 600px;
+  padding: 40px 36px;
+  border-radius: 24px;
+}
+
+/* Standard profile / skin cards (used on profile page) */
+.profile-card,
+.skin-card {
+  width: 400px;
+  padding: 30px;
+  border-radius: 20px;
+  background: var(--card-bg);
+  box-shadow: var(--shadow-elevated);
+  border: 1px solid var(--border-subtle);
+}
+
+.profile-card h2,
+.skin-card h2 {
+  margin: 0 0 8px;
+  color: var(--text-main);
+}
+
+@media (max-width: 768px) {
+  .profile-card,
+  .skin-card {
+    width: 100%;
+    max-width: 460px;
+  }
+}

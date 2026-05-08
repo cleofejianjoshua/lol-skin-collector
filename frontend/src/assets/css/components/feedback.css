@@ -1,0 +1,31 @@
+/* ================================================
+   FEEDBACK
+   Error, success, and helper text messages.
+================================================ */
+
+.helper-text {
+  margin: 4px 0 0;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  display: flex;
+  justify-content: center;
+  gap: 6px;
+}
+
+.error-text {
+  margin: 4px 0 0;
+  font-size: 0.85rem;
+  color: var(--danger);
+  background: rgba(239, 68, 68, 0.1);
+  padding: 8px 12px;
+  border-radius: 10px;
+}
+
+.success-text {
+  margin: 4px 0 0;
+  font-size: 0.85rem;
+  color: #bbf7d0;
+  background: rgba(34, 197, 94, 0.15);
+  padding: 8px 12px;
+  border-radius: 10px;
+}

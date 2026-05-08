@@ -1,59 +1,173 @@
 from flask import Blueprint, request, jsonify, session
 from app import db
-from app.models import User
-from sqlalchemy.exc import IntegrityError
-
+from app.models import User, Skin, UserCollection
+import random
 
 api = Blueprint("api", __name__, url_prefix="/api")
 
-# Profile page api
+
+# Auth helpers
+
+def get_current_user():
+    """Return the logged-in User object or None."""
+    if "username" not in session:
+        return None
+    return User.query.filter_by(username=session["username"]).first()
+
+
+# User / Profile
+
 @api.route("/user", methods=["GET"])
 def get_user():
-    if "username" not in session:
-        return jsonify({"error": "Not logged in"}), 401
-
-    user = User.query.filter_by(username=session["username"]).first()
-
+    user = get_current_user()
     if not user:
-        return jsonify({"error": "User not found"}), 404
+        return jsonify({"error": "Not logged in"}), 401
 
     return jsonify({
         "username": user.username,
         "nickname": user.nickname,
-        "email": user.email,
-
+        "email":    user.email,
     })
 
-# update profile api
+
 @api.route("/update-profile", methods=["POST"])
 def update_profile():
-    from flask import session, request
-
-    if "username" not in session:
+    user = get_current_user()
+    if not user:
         return jsonify({"error": "Not logged in"}), 401
 
-    user = User.query.filter_by(username=session["username"]).first()
-    if not user:
-        return jsonify({"error": "User not found"}), 404
-
     nickname = request.form.get("nickname")
-    email = request.form.get("email")
+    email    = request.form.get("email")
 
     if not nickname or not email:
         return jsonify({"error": "All fields are required"}), 400
 
     try:
         user.nickname = nickname
-        user.email = email
+        user.email    = email
         db.session.commit()
         return jsonify({"message": "Profile updated successfully"})
-    except Exception as e:
+    except Exception:
         db.session.rollback()
         return jsonify({"error": "Failed to update profile"}), 500
-    
-#dashboard api
+
+
 @api.route("/dashboard", methods=["GET"])
 def dashboard():
     if "username" not in session:
         return jsonify({"error": "Not logged in"}), 401
     return jsonify({"message": "Welcome to your dashboard"})
+
+
+# Skins
+
+@api.route("/skins", methods=["GET"])
+def get_skins():
+    """Return all skins in the pool."""
+    skins = Skin.query.all()
+    return jsonify([s.to_dict() for s in skins])
+
+
+# Collection
+
+@api.route("/collection", methods=["GET"])
+def get_collection():
+    """Return the current user's collected skins."""
+    user = get_current_user()
+    if not user:
+        return jsonify({"error": "Not logged in"}), 401
+
+    entries = UserCollection.query.filter_by(user_id=user.id)\
+                .order_by(UserCollection.obtained_at.desc()).all()
+    return jsonify([e.to_dict() for e in entries])
+
+
+# Gacha Pull
+
+# Rarity weights: common 60%, rare 25%, epic 10%, legendary 5%
+RARITY_WEIGHTS = {
+    "common":    60,
+    "rare":      25,
+    "epic":      10,
+    "legendary": 5,
+}
+
+
+def pick_rarity():
+    rarities = list(RARITY_WEIGHTS.keys())
+    weights  = list(RARITY_WEIGHTS.values())
+    return random.choices(rarities, weights=weights, k=1)[0]
+
+
+@api.route("/gacha/pull", methods=["POST"])
+def gacha_pull():
+    """
+    Perform a single gacha pull.
+    Randomly picks a rarity, then picks a random skin of that rarity.
+    If no skins exist for that rarity, falls back to any skin.
+    Returns the skin and whether it was a duplicate.
+    """
+    user = get_current_user()
+    if not user:
+        return jsonify({"error": "Not logged in"}), 401
+
+    all_skins = Skin.query.all()
+    if not all_skins:
+        return jsonify({"error": "No skins available in the pool yet."}), 404
+
+    # Pick a rarity, then filter skins
+    rarity     = pick_rarity()
+    pool       = [s for s in all_skins if s.rarity == rarity]
+    if not pool:
+        pool = all_skins  # fallback
+
+    skin = random.choice(pool)
+
+    # Check if user already owns it
+    existing = UserCollection.query.filter_by(
+        user_id=user.id, skin_id=skin.id
+    ).first()
+
+    is_duplicate = existing is not None
+
+    # Add to collection regardless (duplicates allowed — part of gacha)
+    entry = UserCollection(user_id=user.id, skin_id=skin.id)
+    db.session.add(entry)
+    db.session.commit()
+
+    return jsonify({
+        "skin":         skin.to_dict(),
+        "is_duplicate": is_duplicate,
+    })
+
+
+# Seed skins (dev helper)
+
+@api.route("/skins/seed", methods=["POST"])
+def seed_skins():
+    """
+    Dev-only endpoint to seed the skins table with sample data.
+    POST /api/skins/seed
+    """
+    sample_skins = [
+        {"name": "Base Ahri",            "champion": "Ahri",    "rarity": "common",    "image_path": "/images/skins/champions/ahri/default.jpg"},
+        {"name": "Spirit Blossom Ahri",  "champion": "Ahri",    "rarity": "legendary", "image_path": "/images/skins/champions/ahri/spirit_blossom.jpg"},
+        {"name": "Base Jinx",            "champion": "Jinx",    "rarity": "common",    "image_path": "/images/skins/champions/jinx/default.jpg"},
+        {"name": "Arcane Jinx",          "champion": "Jinx",    "rarity": "epic",      "image_path": "/images/skins/champions/jinx/arcane.jpg"},
+        {"name": "Base Lux",             "champion": "Lux",     "rarity": "common",    "image_path": "/images/skins/champions/lux/default.jpg"},
+        {"name": "Elementalist Lux",     "champion": "Lux",     "rarity": "legendary", "image_path": "/images/skins/champions/lux/elementalist.jpg"},
+        {"name": "Base Ezreal",          "champion": "Ezreal",  "rarity": "common",    "image_path": "/images/skins/champions/ezreal/default.jpg"},
+        {"name": "Pulsefire Ezreal",     "champion": "Ezreal",  "rarity": "epic",      "image_path": "/images/skins/champions/ezreal/pulsefire.jpg"},
+        {"name": "Star Guardian Lux",    "champion": "Lux",     "rarity": "rare",      "image_path": "/images/skins/champions/lux/star_guardian.jpg"},
+        {"name": "Bewitching Jinx",      "champion": "Jinx",    "rarity": "rare",      "image_path": "/images/skins/champions/jinx/bewitching.jpg"},
+    ]
+
+    added = 0
+    for s in sample_skins:
+        exists = Skin.query.filter_by(name=s["name"]).first()
+        if not exists:
+            db.session.add(Skin(**s))
+            added += 1
+
+    db.session.commit()
+    return jsonify({"message": f"Seeded {added} skins."})
