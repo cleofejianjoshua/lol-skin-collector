@@ -9,9 +9,15 @@ class User(db.Model):
     password = db.Column(db.String(255), nullable=False)
     nickname = db.Column(db.String(20))
     email    = db.Column(db.String(255))
+    currency = db.Column(db.Integer,default=0)
 
     # Relationship to skin collection
-    collection = db.relationship("UserCollection", back_populates="user", lazy=True)
+    collection = db.relationship(
+        "UserCollection",
+        back_populates="user",
+        lazy=True,
+        cascade="all, delete-orphan"
+    )
 
     def __repr__(self):
         return f"<User {self.username}>"
@@ -23,23 +29,43 @@ class Skin(db.Model):
     name       = db.Column(db.String(120), nullable=False)
     champion   = db.Column(db.String(80), nullable=False)
     # Rarity: common | rare | epic | legendary
-    rarity     = db.Column(db.String(20), nullable=False, default="common")
+    rarity_id  = db.Column(db.Integer, db.ForeignKey("rarities.id"),nullable=False)
     # Path relative to /public, e.g. /images/skins/champions/ahri/spirit_blossom.jpg
     image_path = db.Column(db.String(255), nullable=False, default="")
 
-    collection = db.relationship("UserCollection", back_populates="skin", lazy=True)
+    rarity = db.relationship("Rarity", lazy="joined")
+
+    collection = db.relationship(
+        "UserCollection",
+        back_populates="skin",
+        lazy=True,
+        cascade="all, delete-orphan"
+    )
 
     def to_dict(self):
         return {
             "id":         self.id,
             "name":       self.name,
             "champion":   self.champion,
-            "rarity":     self.rarity,
+            "rarity":     self.rarity.rarity_name,
             "image_path": self.image_path,
         }
 
     def __repr__(self):
         return f"<Skin {self.name} ({self.champion})>"
+    
+
+class Rarity(db.Model):
+    __tablename__ = "rarities"
+    id = db.Column(db.Integer, primary_key=True)
+    rarity_name = db.Column(db.String(50), unique=True, nullable=False)
+    item_cost = db.Column(db.Integer, nullable=False)
+    disenchant_value = db.Column(db.Integer, nullable=False)
+
+    skins = db.relationship("Skin", back_populates="rarity", lazy=True)
+
+    def __repr__(self):
+        return f"<Rarity {self.rarity_name}>"
 
 
 class UserCollection(db.Model):
