@@ -25,13 +25,14 @@ class User(db.Model):
 
 class Skin(db.Model):
     __tablename__ = "skins"
-    id         = db.Column(db.Integer, primary_key=True)
-    name       = db.Column(db.String(120), nullable=False)
+    skin_id    = db.Column(db.Integer, primary_key=True)
+    skin_name  = db.Column(db.String(120), nullable=False)
     champion   = db.Column(db.String(80), nullable=False)
     # Rarity: common | rare | epic | legendary
     rarity_id  = db.Column(db.Integer, db.ForeignKey("rarities.id"),nullable=False)
     # Path relative to /public, e.g. /images/skins/champions/ahri/spirit_blossom.jpg
     image_path = db.Column(db.String(255), nullable=False, default="")
+    release_date = db.Column(db.DateTime, nullable=False)
 
     rarity = db.relationship("Rarity", lazy="joined")
 
