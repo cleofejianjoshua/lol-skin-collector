@@ -25,7 +25,7 @@ class User(db.Model):
 
 class Skin(db.Model):
     __tablename__ = "skins"
-    skin_id    = db.Column(db.Integer, primary_key=True)
+    id    = db.Column(db.Integer, primary_key=True)
     skin_name  = db.Column(db.String(120), nullable=False)
     champion   = db.Column(db.String(80), nullable=False)
     # Rarity: common | rare | epic | legendary
@@ -46,7 +46,7 @@ class Skin(db.Model):
     def to_dict(self):
         return {
             "id":         self.id,
-            "name":       self.name,
+            "name":       self.skin_name,
             "champion":   self.champion,
             "rarity":     self.rarity.rarity_name,
             "image_path": self.image_path,
