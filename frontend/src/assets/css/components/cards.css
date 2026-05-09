@@ -50,8 +50,7 @@
 }
 
 /* Standard profile / skin cards (used on profile page) */
-.profile-card,
-.skin-card {
+.profile-card {
   width: 400px;
   padding: 30px;
   border-radius: 20px;
@@ -60,8 +59,7 @@
   border: 1px solid var(--border-subtle);
 }
 
-.profile-card h2,
-.skin-card h2 {
+.profile-card h2 {
   margin: 0 0 8px;
   color: var(--text-main);
 }
