@@ -1,7 +1,6 @@
 import requests
 from app import db, app
 from app.models import Skin, Rarity
-from datetime import datetime, timezone
 
 app.app_context().push()
 
@@ -15,34 +14,49 @@ def get_latest_version():
     return requests.get(url).json()[0]
 
 
-def get_champions(version):
+def get_champion_list(version):
+    """Summary list — used only to get champion keys."""
     url = f"https://ddragon.leagueoflegends.com/cdn/{version}/data/en_US/champion.json"
     return requests.get(url).json()["data"]
 
 
-def get_champion_data(version, champ_key):
+def get_champion_detail(session, version, champ_key):
+    """Full champion data including skins list."""
     url = f"https://ddragon.leagueoflegends.com/cdn/{version}/data/en_US/champion/{champ_key}.json"
-    return requests.get(url).json()["data"][champ_key]
+    data = session.get(url).json()["data"]
+    return data[list(data.keys())[0]]  # key name isn't always champ_key (e.g. Wukong = MonkeyKing)
 
 
-def build_image_url(champion, skin_name):
+def get_community_dragon_skins(session):
+    url = "https://raw.communitydragon.org/latest/plugins/rcp-be-lol-game-data/global/default/v1/skins.json"
+    print("Fetching Community Dragon skin data...")
+    raw = {int(k): v for k, v in session.get(url).json().items()}
+
+    # Build a set of all chroma IDs from the chromas arrays
+    chroma_ids = set()
+    for skin_data in raw.values():
+        for chroma in skin_data.get("chromas", []):
+            chroma_ids.add(chroma["id"])
+
+    return raw, chroma_ids
+
+def build_image_url(champion, skin_num):
     clean_champ = champion.replace(" ", "")
-    clean_skin = skin_name.replace(" ", "_").replace("'", "").replace(":", "")
-
-    return f"https://ddragon.leagueoflegends.com/cdn/img/champion/loading/{clean_champ}_{clean_skin}.jpg"
+    return f"https://ddragon.leagueoflegends.com/cdn/img/champion/loading/{clean_champ}_{skin_num}.jpg"
 
 
-def assign_rarity(skin_name):
-    name = skin_name.lower()
-
-    if "prestige" in name or "ultimate" in name:
-        return "legendary"
-    elif "project" in name or "k/da" in name:
-        return "epic"
-    elif name == "classic":
+def map_rarity(community_rarity: str, is_base: bool) -> str:
+    if is_base:
         return "common"
-    else:
-        return "rare"
+
+    mapping = {
+        "kNoRarity":  "rare",
+        "kEpic":      "epic",
+        "kLegendary": "legendary",
+        "kMythic":    "legendary",
+        "kUltimate":  "ultimate",
+    }
+    return mapping.get(community_rarity, "rare")
 
 
 # ----------------------------
@@ -51,47 +65,66 @@ def assign_rarity(skin_name):
 
 def seed_skins():
     version = get_latest_version()
-    champions = get_champions(version)
-
     print(f"Using version: {version}")
 
-    for champ_key, champ_data in champions.items():
+    session = requests.Session()
 
-        full_data = get_champion_data(version, champ_key)
-        skins = full_data["skins"]
+    print("Fetching champion list...")
+    champions = get_champion_list(version)
+    total_champs = len(champions)
 
-        for skin in skins:
-            name = skin["name"]
+    print("Fetching skin rarities...")
+    cd_skins, chroma_ids = get_community_dragon_skins(session)
 
-            image_url = build_image_url(full_data["name"], name)
-            rarity_name = assign_rarity(name)
+    rarity_cache = {r.rarity_name: r for r in Rarity.query.all()}
 
-            rarity = Rarity.query.filter_by(rarity_name=rarity_name).first()
+    total_added = 0
 
+    for idx, champ_key in enumerate(champions, start=1):
+        print(f"[{idx}/{total_champs}] Processing {champ_key}...")
+
+        full_data = get_champion_detail(session, version, champ_key)
+        champ_name = full_data["name"]
+        champ_id = int(full_data["key"])
+
+        for skin in full_data["skins"]:
+            skin_num = skin["num"]
+            skin_id = champ_id * 1000 + skin_num
+
+            # Skip chromas using the definitive chroma ID set from Community Dragon
+            if skin_id in chroma_ids:
+                continue
+
+            is_base = skin_num == 0
+            name = f"Original {champ_name}" if is_base else skin["name"]
+
+            cd_rarity = cd_skins.get(skin_id, {}).get("rarity", "kNoRarity")
+            rarity_name = map_rarity(cd_rarity, is_base)
+
+            rarity = rarity_cache.get(rarity_name)
             if not rarity:
-                print(f"Skipping missing rarity: {rarity_name}")
+                print(f"  Skipping '{name}' — missing rarity in DB: {rarity_name}")
                 continue
 
             exists = Skin.query.filter_by(
                 skin_name=name,
-                champion=full_data["name"]
+                champion=champ_name
             ).first()
 
             if exists:
                 continue
 
-            new_skin = Skin(
+            db.session.add(Skin(
                 skin_name=name,
-                champion=full_data["name"],
+                champion=champ_name,
                 rarity_id=rarity.id,
-                image_path=image_url,
-                release_date=datetime.now(timezone.utc)
-            )
-
-            db.session.add(new_skin)
+                image_path=build_image_url(champ_name, skin_num),
+            ))
+            total_added += 1
 
         db.session.commit()
-        print(f"Seeded {champ_key}")
+
+    print(f"Seeding complete. {total_added} skins added.")
 
 
 if __name__ == "__main__":
