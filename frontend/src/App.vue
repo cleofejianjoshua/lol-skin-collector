@@ -5,6 +5,7 @@ import { fetchUser, logoutUser } from "@/services/api.js";
 import ConfirmModal from "@/components/shared/ConfirmModal.vue";
 
 const username = ref("Guest");
+const nickname = ref("");
 const route = useRoute();
 const router = useRouter();
 const loadingUser = ref(true);
@@ -15,8 +16,11 @@ const isLoggedIn = computed(() => username.value && username.value !== "Guest");
 const loadUser = async () => {
   const data = await fetchUser();
   username.value = data.username || "Guest";
+  nickname.value = data.nickname || "";
   loadingUser.value = false;
 };
+
+const displayName = computed(() => nickname.value || username.value);
 
 // Opens the confirmation modal instead of logging out immediately
 const promptLogout = () => {
@@ -56,7 +60,7 @@ watch(() => route.fullPath, loadUser);
 
       <!-- Logged-in nav -->
       <nav v-if="isLoggedIn" class="nav-links">
-        <span class="welcome-text">Welcome, {{ username }}! |</span>
+        <span class="welcome-text">Welcome, {{ displayName }}! |</span>
         <router-link to="/">Home</router-link>
         <router-link to="/collection">Collection</router-link>
         <router-link to="/gacha">Gacha</router-link>

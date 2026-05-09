@@ -22,9 +22,9 @@
               <p>{{ username }}</p>
             </div>
 
-            <div v-if="nickname" class="info-field">
+            <div class="info-field">
               <span>Nickname</span>
-              <p>{{ nickname }}</p>
+              <p>{{ nickname || 'No nickname set' }}</p>
             </div>
 
             <div class="info-field">

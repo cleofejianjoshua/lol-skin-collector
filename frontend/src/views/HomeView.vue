@@ -2,7 +2,7 @@
   <div v-if="!isLoading" class="home-page" :class="{ 'logged-in': isLoggedIn }">
     <!-- Header Section -->
     <header class="home-header">
-      <h1 v-if="isLoggedIn">Welcome Back, {{ username }}!</h1>
+      <h1 v-if="isLoggedIn">Welcome Back, {{ displayName }}!</h1>
       <h1 v-else>Welcome to LOL Skin Gacha Collector</h1>
 
       <p class="home-subtitle">
@@ -21,11 +21,27 @@
     <!-- Showcase Section (Only when logged in) -->
     <div v-if="isLoggedIn" class="showcase-container">
       <div class="showcase-grid">
-        <div v-for="i in 4" :key="i" class="showcase-card">
+        <div
+          v-for="(slot, idx) in displaySlots"
+          :key="idx"
+          class="showcase-card"
+          :class="slot ? slot.rarity : ''"
+        >
           <div class="card-inner">
-            <div class="empty-state">
+            <!-- Filled slot -->
+            <template v-if="slot">
+              <div class="slot-art-bg" :class="slot.rarity"></div>
+              <div class="slot-skin-info">
+                <p class="slot-champ">{{ slot.champion }}</p>
+                <p class="slot-name">{{ slot.name }}</p>
+                <span class="slot-rarity-pill" :class="slot.rarity">{{ slot.rarity.toUpperCase() }}</span>
+              </div>
+              <p class="slot-num-label">Slot {{ idx + 1 }}</p>
+            </template>
+            <!-- Empty slot -->
+            <div v-else class="empty-state">
               <div class="plus-circle">+</div>
-              <p>No skin displayed</p>
+              <p>Slot {{ idx + 1 }}</p>
             </div>
           </div>
         </div>
@@ -39,15 +55,27 @@ import { ref, computed, onMounted } from "vue";
 import QuoteCard from "@/components/shared/QuoteCard.vue";
 import { fetchUser } from "@/services/api.js";
 
-const username = ref("");
-const isLoading = ref(true);
+const SLOTS_KEY = "lol_display_slots";
 
-const isLoggedIn = computed(() => username.value && username.value !== "Guest");
+const username     = ref("");
+const nickname     = ref("");
+const isLoading    = ref(true);
+const displaySlots = ref([null, null, null, null]);
+
+const displayName = computed(() => nickname.value || username.value);
+const isLoggedIn  = computed(() => username.value && username.value !== "Guest");
+
+function loadSlots() {
+  const saved = localStorage.getItem(SLOTS_KEY);
+  if (saved) displaySlots.value = JSON.parse(saved);
+}
 
 onMounted(async () => {
+  loadSlots();
   try {
     const data = await fetchUser();
     username.value = data.username || "Guest";
+    nickname.value = data.nickname || "";
   } finally {
     isLoading.value = false;
   }
@@ -77,6 +105,7 @@ onMounted(async () => {
   font-size: 1.4rem;
   font-weight: 800;
   background: linear-gradient(135deg, #f9fafb, #93c5fd);
+  background-clip: text;
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
 }
@@ -117,6 +146,10 @@ onMounted(async () => {
   backdrop-filter: blur(16px);
 }
 
+.showcase-card.rare      { border-color: rgba(59,130,246,0.4); }
+.showcase-card.epic      { border-color: rgba(168,85,247,0.45); }
+.showcase-card.legendary { border-color: rgba(234,179,8,0.5); box-shadow: 0 0 30px rgba(234,179,8,0.15); }
+
 .showcase-card:hover {
   transform: translateY(-8px);
   border-color: var(--accent);
@@ -124,11 +157,13 @@ onMounted(async () => {
 }
 
 .card-inner {
-  height: 100%;
+  position: absolute;
+  inset: 0;
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 20px;
+  overflow: hidden;
 }
 
 .empty-state {
@@ -162,6 +197,67 @@ onMounted(async () => {
   font-weight: 600;
   letter-spacing: 0.05em;
   text-transform: uppercase;
+}
+
+/* Filled slot styles */
+.slot-art-bg {
+  position: absolute;
+  inset: 0;
+  border-radius: 38px;
+}
+.slot-art-bg.common    { background: linear-gradient(160deg, #1e293b 0%, #0f172a 100%); }
+.slot-art-bg.rare      { background: linear-gradient(160deg, #1e3a8a 0%, #0f172a 100%); }
+.slot-art-bg.epic      { background: linear-gradient(160deg, #581c87 0%, #1e293b 100%); }
+.slot-art-bg.legendary { background: linear-gradient(160deg, #92400e 0%, #1e293b 100%); }
+
+.slot-skin-info {
+  position: relative;
+  z-index: 2;
+  text-align: center;
+  margin-top: auto;
+  padding: 20px 16px 8px;
+  background: linear-gradient(to top, rgba(5,10,25,0.95) 0%, transparent 100%);
+  width: 100%;
+}
+
+.slot-champ {
+  margin: 0 0 2px;
+  font-size: 0.65rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.slot-name {
+  margin: 0 0 8px;
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: var(--text-main);
+  line-height: 1.2;
+}
+
+.slot-rarity-pill {
+  font-size: 0.6rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  padding: 3px 9px;
+  border-radius: 999px;
+}
+.slot-rarity-pill.common    { background: rgba(156,163,175,0.15); color: #d1d5db; border: 1px solid rgba(156,163,175,0.3); }
+.slot-rarity-pill.rare      { background: rgba(59,130,246,0.15);  color: #93c5fd; border: 1px solid rgba(59,130,246,0.4); }
+.slot-rarity-pill.epic      { background: rgba(168,85,247,0.15);  color: #d8b4fe; border: 1px solid rgba(168,85,247,0.4); }
+.slot-rarity-pill.legendary { background: rgba(234,179,8,0.15);   color: #fde68a; border: 1px solid rgba(234,179,8,0.5); }
+
+.slot-num-label {
+  position: absolute;
+  top: 14px; left: 14px;
+  z-index: 3;
+  margin: 0;
+  font-size: 0.65rem;
+  font-weight: 700;
+  color: rgba(148,163,184,0.5);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
 }
 
 @media (max-width: 1024px) {
