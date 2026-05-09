@@ -32,7 +32,7 @@ class Skin(db.Model):
     rarity_id  = db.Column(db.Integer, db.ForeignKey("rarities.id"),nullable=False)
     # Path relative to /public, e.g. /images/skins/champions/ahri/spirit_blossom.jpg
     image_path = db.Column(db.String(255), nullable=False, default="")
-    release_date = db.Column(db.DateTime, nullable=False)
+    
 
     rarity = db.relationship("Rarity", lazy="joined", back_populates="skins")
 
