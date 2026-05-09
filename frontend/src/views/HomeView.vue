@@ -34,7 +34,10 @@
               <div class="slot-skin-info">
                 <p class="slot-champ">{{ slot.champion }}</p>
                 <p class="slot-name">{{ slot.name }}</p>
-                <span class="slot-rarity-pill" :class="slot.rarity">{{ slot.rarity.toUpperCase() }}</span>
+                <span class="slot-rarity-pill" :class="slot.rarity">
+                  <span v-if="slot.rarity === 'ultimate'" class="ultimate-dot"></span>
+                  {{ slot.rarity.toUpperCase() }}
+                </span>
               </div>
               <p class="slot-num-label">Slot {{ idx + 1 }}</p>
             </template>
@@ -129,14 +132,16 @@ onMounted(async () => {
 }
 
 .showcase-grid {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  display: flex;
+  justify-content: center;
   gap: 60px;
   padding: 20px;
+  flex-wrap: wrap;
 }
 
 .showcase-card {
-  min-height: 58vh;
+  width: 308px;
+  height: 560px;
   background: rgba(15, 23, 42, 0.6);
   border: 2px solid rgba(148, 163, 184, 0.2);
   border-radius: 40px;
@@ -149,6 +154,7 @@ onMounted(async () => {
 .showcase-card.rare      { border-color: rgba(59,130,246,0.4); }
 .showcase-card.epic      { border-color: rgba(168,85,247,0.45); }
 .showcase-card.legendary { border-color: rgba(234,179,8,0.5); box-shadow: 0 0 30px rgba(234,179,8,0.15); }
+.showcase-card.ultimate  { border-color: rgba(239, 68, 68, 0.7); box-shadow: 0 0 40px rgba(239, 68, 68, 0.3); }
 
 .showcase-card:hover {
   transform: translateY(-8px);
@@ -209,6 +215,7 @@ onMounted(async () => {
 .slot-art-bg.rare      { background: linear-gradient(160deg, #1e3a8a 0%, #0f172a 100%); }
 .slot-art-bg.epic      { background: linear-gradient(160deg, #581c87 0%, #1e293b 100%); }
 .slot-art-bg.legendary { background: linear-gradient(160deg, #92400e 0%, #1e293b 100%); }
+.slot-art-bg.ultimate  { background: linear-gradient(160deg, #450a0a 0%, #1e293b 100%); }
 
 .slot-skin-info {
   position: relative;
@@ -247,6 +254,15 @@ onMounted(async () => {
 .slot-rarity-pill.rare      { background: rgba(59,130,246,0.15);  color: #93c5fd; border: 1px solid rgba(59,130,246,0.4); }
 .slot-rarity-pill.epic      { background: rgba(168,85,247,0.15);  color: #d8b4fe; border: 1px solid rgba(168,85,247,0.4); }
 .slot-rarity-pill.legendary { background: rgba(234,179,8,0.15);   color: #fde68a; border: 1px solid rgba(234,179,8,0.5); }
+.slot-rarity-pill.ultimate  { background: rgba(239, 68, 68, 0.15); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.6); display: flex; align-items: center; gap: 6px; }
+
+.ultimate-dot {
+  width: 5px;
+  height: 5px;
+  background: #ef4444;
+  border-radius: 50%;
+  box-shadow: 0 0 6px #ef4444;
+}
 
 .slot-num-label {
   position: absolute;

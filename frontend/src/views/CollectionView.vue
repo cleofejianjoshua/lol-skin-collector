@@ -48,7 +48,10 @@
         <div class="card-info">
           <p class="card-champ">{{ entry.skin.champion }}</p>
           <p class="card-name">{{ entry.skin.name }}</p>
-          <span class="rarity-pill" :class="entry.skin.rarity">{{ entry.skin.rarity.toUpperCase() }}</span>
+          <span class="rarity-pill" :class="entry.skin.rarity">
+            <span v-if="entry.skin.rarity === 'ultimate'" class="ultimate-dot"></span>
+            {{ entry.skin.rarity.toUpperCase() }}
+          </span>
         </div>
       </div>
     </div>
@@ -63,7 +66,10 @@
             <div class="modal-art-wrap">
               <img v-if="selected.skin.image_path" :src="selected.skin.image_path" :alt="selected.skin.name" class="modal-img" />
               <div v-else class="modal-art-bg" :class="selected.skin.rarity"></div>
-              <span class="modal-rarity-badge" :class="selected.skin.rarity">{{ selected.skin.rarity.toUpperCase() }}</span>
+              <span class="modal-rarity-badge" :class="selected.skin.rarity">
+                <span v-if="selected.skin.rarity === 'ultimate'" class="ultimate-dot"></span>
+                {{ selected.skin.rarity.toUpperCase() }}
+              </span>
               <span v-if="selected.count > 1" class="modal-dupe">×{{ selected.count }}</span>
             </div>
 
@@ -79,7 +85,7 @@
 
               <div class="modal-actions">
                 <button class="disenchant-btn" @click="disenchant">
-                  Disenchant — +{{ TOKEN_VALUES[selected.skin.rarity] }} Tokens
+                  Disenchant:  +{{ TOKEN_VALUES[selected.skin.rarity] }} Tokens
                 </button>
 
                 <div class="display-slot-section">
@@ -113,7 +119,7 @@ import { fetchUserCollection } from "@/services/api.js";
 
 const router = useRouter();
 
-const TOKEN_VALUES = { common: 15, rare: 40, epic: 100, legendary: 250 };
+const TOKEN_VALUES = { common: 15, rare: 40, epic: 100, legendary: 250, ultimate: 600 };
 const SLOTS_KEY    = "lol_display_slots";
 const SHARDS_KEY   = "lol_shards";
 
@@ -134,8 +140,13 @@ const MOCK_COLLECTION = [
 ];
 
 function normalizeSkins(data) {
+  if (!Array.isArray(data)) {
+    console.warn("normalizeSkins: Expected array, got:", data);
+    return [];
+  }
   const map = new Map();
   for (const skin of data) {
+    if (!skin) continue;
     const key = skin.id ?? skin.name;
     if (map.has(key)) {
       map.get(key).count += 1;
@@ -152,17 +163,31 @@ onMounted(async () => {
   if (savedSlots)  displaySlots.value = JSON.parse(savedSlots);
   if (savedShards) tokenBalance.value = parseInt(savedShards, 10);
 
+  // Auth check
   try {
-    const res = await fetch("/api/dashboard", { credentials: "include" });
-    if (!res.ok) { router.push({ name: "Login" }); return; }
-  } catch {
-    router.push({ name: "Login" }); return;
+    const userRes = await fetch("/api/user", { credentials: "include" });
+    const userData = await userRes.json();
+    if (!userRes.ok || !userData.username) {
+      router.push({ name: "Login" });
+      return;
+    }
+  } catch (err) {
+    console.error("Auth check failed:", err);
+    router.push({ name: "Login" });
+    return;
   }
 
   // Always seed with mock cards; merge real backend data on top
-  let merged = [...MOCK_COLLECTION];
+  // Create a deep copy of mock to avoid mutating the original reference
+  let merged = MOCK_COLLECTION.map(item => ({ 
+    skin: { ...item.skin }, 
+    count: item.count 
+  }));
+
   try {
     const data = await fetchUserCollection();
+    console.log("Fetched collection data:", data);
+    
     if (data && data.length > 0) {
       const backendEntries = normalizeSkins(data);
       // Add backend skins that aren't already in mock
@@ -175,7 +200,10 @@ onMounted(async () => {
         }
       }
     }
-  } catch { /* use mock only */ }
+  } catch (err) {
+    console.error("Failed to fetch user collection from database:", err);
+    // Fall back to mock only
+  }
 
   collection.value = merged;
   loading.value = false;
@@ -301,18 +329,18 @@ function saveSlots() {
 /* ── Gallery Grid ── */
 .skin-gallery {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(308px, 1fr));
   gap: 32px;
 }
 
 /* ── Skin Card ── */
 .skin-card {
   position: relative;
-  width: 100%;
+  width: 308px;
+  height: 560px;
   border-radius: 18px;
   overflow: hidden;
   cursor: pointer;
-  aspect-ratio: 3/4;
   border: 1px solid rgba(148,163,184,0.15);
   background: rgba(15, 23, 42, 0.6);
   transition: transform 0.25s ease, box-shadow 0.25s ease;
@@ -332,6 +360,8 @@ function saveSlots() {
 .skin-card.epic:hover    { box-shadow: 0 12px 40px rgba(168,85,247,0.3); }
 .skin-card.legendary { border-color: rgba(234,179,8,0.5); }
 .skin-card.legendary:hover { box-shadow: 0 12px 50px rgba(234,179,8,0.35); }
+.skin-card.ultimate  { border-color: rgba(239, 68, 68, 0.7); }
+.skin-card.ultimate:hover  { box-shadow: 0 12px 60px rgba(239, 68, 68, 0.45); }
 
 /* Dupe badge */
 .dupe-badge {
@@ -432,6 +462,15 @@ function saveSlots() {
 .rarity-pill.rare      { background: rgba(59,130,246,0.15);  color: #93c5fd; border: 1px solid rgba(59,130,246,0.4); }
 .rarity-pill.epic      { background: rgba(168,85,247,0.15);  color: #d8b4fe; border: 1px solid rgba(168,85,247,0.4); }
 .rarity-pill.legendary { background: rgba(234,179,8,0.15);   color: #fde68a; border: 1px solid rgba(234,179,8,0.5); }
+.rarity-pill.ultimate  { background: rgba(239, 68, 68, 0.15); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.5); box-shadow: 0 0 10px rgba(239, 68, 68, 0.3); display: flex; align-items: center; gap: 6px; }
+
+.ultimate-dot {
+  width: 5px;
+  height: 5px;
+  background: #ef4444;
+  border-radius: 50%;
+  box-shadow: 0 0 6px #ef4444;
+}
 
 /* ── Modal ── */
 .modal-backdrop {
@@ -462,6 +501,7 @@ function saveSlots() {
 .modal-panel.rare      { border-color: rgba(59,130,246,0.4);  box-shadow: 0 0 60px rgba(59,130,246,0.15), 0 40px 80px rgba(0,0,0,0.6); }
 .modal-panel.epic      { border-color: rgba(168,85,247,0.45); box-shadow: 0 0 60px rgba(168,85,247,0.2),  0 40px 80px rgba(0,0,0,0.6); }
 .modal-panel.legendary { border-color: rgba(234,179,8,0.5);   box-shadow: 0 0 80px rgba(234,179,8,0.25),  0 40px 80px rgba(0,0,0,0.6); }
+.modal-panel.ultimate  { border-color: rgba(239, 68, 68, 0.8); box-shadow: 0 0 100px rgba(239, 68, 68, 0.4), 0 40px 80px rgba(0,0,0,0.6); }
 
 .modal-close {
   position: absolute;
@@ -481,9 +521,9 @@ function saveSlots() {
 
 .modal-art-wrap {
   position: relative;
-  width: 280px;
+  width: 308px;
   flex-shrink: 0;
-  min-height: 380px;
+  min-height: 560px;
 }
 
 .modal-img {
@@ -498,6 +538,7 @@ function saveSlots() {
 .modal-art-bg.rare      { background: linear-gradient(160deg, #1e3a8a 0%, #0f172a 100%); }
 .modal-art-bg.epic      { background: linear-gradient(160deg, #581c87 0%, #1e293b 100%); }
 .modal-art-bg.legendary { background: linear-gradient(160deg, #92400e 0%, #1e293b 100%); }
+.modal-art-bg.ultimate  { background: linear-gradient(160deg, #450a0a 0%, #1e293b 100%); }
 
 .modal-rarity-badge {
   position: absolute;
@@ -511,6 +552,7 @@ function saveSlots() {
 .modal-rarity-badge.rare      { background: rgba(59,130,246,0.2);  color: #93c5fd; border: 1px solid rgba(59,130,246,0.5); }
 .modal-rarity-badge.epic      { background: rgba(168,85,247,0.2);  color: #d8b4fe; border: 1px solid rgba(168,85,247,0.5); }
 .modal-rarity-badge.legendary { background: rgba(234,179,8,0.2);   color: #fde68a; border: 1px solid rgba(234,179,8,0.6); }
+.modal-rarity-badge.ultimate  { background: rgba(239, 68, 68, 0.2); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.7); display: flex; align-items: center; gap: 6px; }
 
 .modal-dupe {
   position: absolute;

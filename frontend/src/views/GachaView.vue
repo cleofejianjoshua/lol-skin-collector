@@ -3,7 +3,7 @@
     <div class="gacha-layout-wrapper">
       <!-- Left Slideshow -->
       <aside class="gacha-side-panel left">
-        <SkinSlideshow :skins="MOCK_POOL" :interval="5000" />
+        <SkinSlideshow :skins="skins" :interval="5000" />
       </aside>
 
       <!-- Center Content -->
@@ -20,7 +20,6 @@
     <!-- Header -->
     <div class="gacha-header">
       <h1 class="gacha-title">Skin Gacha</h1>
-      <p class="gacha-subtitle">Summon your destiny.</p>
     </div>
 
     <!-- Shard balance + cost -->
@@ -31,6 +30,17 @@
       </div>
       <span class="shard-divider">·</span>
       <span class="shard-cost">Cost: <strong>{{ PULL_COST }} Shards</strong> per pull</span>
+    </div>
+
+    <!-- Rarity odds -->
+    <div class="odds-card">
+      <div class="odds-list-horizontal">
+        <div class="odds-item" v-for="r in rarities" :key="r.name">
+          <span class="odds-dot" :class="r.name"></span>
+          <span class="odds-label-compact">{{ r.label }}:</span>
+          <span class="odds-pct-compact">{{ r.pct }}</span>
+        </div>
+      </div>
     </div>
 
     <!-- Pull area -->
@@ -65,6 +75,7 @@
             <div class="rarity-shimmer"></div>
 
             <span class="rarity-badge" :class="result.skin.rarity">
+              <span v-if="result.skin.rarity === 'ultimate'" class="ultimate-dot"></span>
               {{ result.skin.rarity.toUpperCase() }}
             </span>
 
@@ -97,23 +108,13 @@
 
     </div>
 
-    <!-- Rarity odds -->
-    <div class="odds-card">
-      <h3 class="odds-title">Drop Rates</h3>
-      <div class="odds-list">
-        <div class="odds-row" v-for="r in rarities" :key="r.name">
-          <span class="odds-dot" :class="r.name"></span>
-          <span class="odds-label">{{ r.label }}</span>
-          <span class="odds-pct">{{ r.pct }}</span>
-        </div>
-      </div>
-    </div>
+
 
       </div>
 
       <!-- Right Slideshow -->
       <aside class="gacha-side-panel right">
-        <SkinSlideshow :skins="MOCK_POOL" :interval="7000" />
+        <SkinSlideshow :skins="skins" :interval="5000" />
       </aside>
     </div>
   </div>
@@ -121,13 +122,14 @@
 
 <script setup>
 import { ref, computed, onMounted } from "vue";
-import { gachaPull } from "@/services/api.js";
+import { gachaPull, fetchSkins } from "@/services/api.js";
 import SkinSlideshow from "@/components/shared/SkinSlideshow.vue";
 
 const PULL_COST   = 10;
 const STORAGE_KEY = "lol_shards";
 
 const shards    = ref(0);
+const skins     = ref([]);
 const isPulling = ref(false);
 const revealed  = ref(false);
 const result    = ref(null);
@@ -136,19 +138,35 @@ const demoMode  = ref(false);
 const notEnoughShards = computed(() => shards.value < PULL_COST);
 
 const rarities = [
+  { name: "ultimate",  label: "Ultimate",  pct: "1%"  },
   { name: "legendary", label: "Legendary", pct: "5%"  },
   { name: "epic",      label: "Epic",      pct: "10%" },
   { name: "rare",      label: "Rare",      pct: "25%" },
-  { name: "common",    label: "Common",    pct: "60%" },
+  { name: "common",    label: "Common",    pct: "59%" },
 ];
 
-onMounted(() => {
+onMounted(async () => {
   const saved = localStorage.getItem(STORAGE_KEY);
   if (saved !== null) shards.value = parseInt(saved, 10);
+
+  // Load skins for side panels
+  try {
+    const data = await fetchSkins();
+    // Map backend keys (skin_name -> name) if necessary
+    skins.value = data.map(s => ({
+      ...s,
+      name: s.skin_name || s.name,
+      rarity: s.rarity_name || s.rarity
+    }));
+  } catch (err) {
+    console.error("Failed to load skins for side panels:", err);
+    skins.value = MOCK_POOL;
+  }
 });
 
 // Mock pool for demo (no backend skins yet)
 const MOCK_POOL = [
+  { name: "Elementalist Lux",     champion: "Lux",    rarity: "ultimate",  image_path: "" },
   { name: "Spirit Blossom Ahri",  champion: "Ahri",   rarity: "legendary", image_path: "" },
   { name: "Arcane Jinx",          champion: "Jinx",   rarity: "epic",      image_path: "" },
   { name: "Pulsefire Ezreal",     champion: "Ezreal", rarity: "epic",      image_path: "" },
@@ -159,7 +177,7 @@ const MOCK_POOL = [
   { name: "Base Lux",             champion: "Lux",    rarity: "common",    image_path: "" },
 ];
 
-const WEIGHTS = { common: 60, rare: 25, epic: 10, legendary: 5 };
+const WEIGHTS = { common: 59, rare: 25, epic: 10, legendary: 5, ultimate: 1 };
 
 function mockPull() {
   const total = Object.values(WEIGHTS).reduce((a, b) => a + b, 0);
@@ -199,8 +217,11 @@ const triggerPull = async () => {
 
 const resetPull = () => {
   revealed.value  = false;
-  result.value    = null;
   isPulling.value = false;
+  // Clear result after flip-back animation finishes (1.2s)
+  setTimeout(() => {
+    if (!revealed.value) result.value = null;
+  }, 1200);
 };
 </script>
 
@@ -210,7 +231,7 @@ const resetPull = () => {
   min-height: 80vh;
   position: relative;
   overflow-x: hidden;
-  padding: 48px 0;
+  padding: 20px 0;
 }
 
 .gacha-layout-wrapper {
@@ -245,7 +266,7 @@ const resetPull = () => {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 28px;
+  gap: 10px;
 }
 
 @media (max-width: 1200px) {
@@ -276,6 +297,7 @@ const resetPull = () => {
 .page-glow.reveal-rare      { animation: flashRare 2s ease-out forwards; opacity: 1; }
 .page-glow.reveal-epic      { animation: flashEpic 2s ease-out forwards; opacity: 1; }
 .page-glow.reveal-legendary { animation: flashLegendary 2s ease-out forwards; opacity: 1; }
+.page-glow.reveal-ultimate  { animation: flashUltimate 2s ease-out forwards; opacity: 1; }
 
 @keyframes flashCommon {
   0% { background: rgba(255, 255, 255, 0.4); }
@@ -297,12 +319,17 @@ const resetPull = () => {
   15% { background: rgba(234, 179, 8, 0.5); }
   100% { background: transparent; }
 }
+@keyframes flashUltimate {
+  0% { background: rgba(255, 255, 255, 0.9); }
+  15% { background: rgba(239, 68, 68, 0.6); }
+  100% { background: transparent; }
+}
 
 .gacha-header { text-align: center; }
 
 .gacha-title {
-  margin: 0 0 6px;
-  font-size: 2.2rem;
+  margin: 0 0 4px;
+  font-size: 1.6rem;
   font-weight: 800;
   background: linear-gradient(135deg, #dbeafe, #60a5fa, #a78bfa);
   -webkit-background-clip: text;
@@ -310,22 +337,16 @@ const resetPull = () => {
   background-clip: text;
 }
 
-.gacha-subtitle {
-  margin: 0;
-  color: var(--text-muted);
-  font-size: 0.9rem;
-}
-
 /* Shard info bar */
 .shard-info {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
   background: rgba(15, 23, 42, 0.6);
   border: 1px solid var(--border-subtle);
   border-radius: 999px;
-  padding: 10px 22px;
-  font-size: 0.88rem;
+  padding: 6px 16px;
+  font-size: 0.8rem;
   color: var(--text-muted);
 }
 
@@ -337,7 +358,7 @@ const resetPull = () => {
   font-weight: 600;
 }
 
-.shard-icon { font-size: 1rem; }
+.shard-icon { font-size: 0.85rem; }
 .shard-divider { color: var(--border-subtle); }
 .shard-cost strong { color: var(--text-main); }
 
@@ -351,9 +372,10 @@ const resetPull = () => {
 
 /* 3D card flip */
 .card-container {
-  width: 280px;
-  height: 380px;
-  perspective: 1000px;
+  width: 308px;
+  height: 560px;
+  perspective: 1200px;
+  transform-style: preserve-3d;
 }
 
 .card-face {
@@ -364,6 +386,8 @@ const resetPull = () => {
   -webkit-backface-visibility: hidden;
   transition: transform 1.2s cubic-bezier(0.4, 0, 0.2, 1);
   overflow: hidden;
+  will-change: transform;
+  box-sizing: border-box;
 }
 
 .card-back {
@@ -379,7 +403,7 @@ const resetPull = () => {
 }
 
 .card-front {
-  transform: rotateY(180deg);
+  transform: rotateY(180deg) translateZ(1px);
   background: rgba(13, 18, 33, 0.9);
   border: 1px solid var(--border-subtle);
 }
@@ -392,6 +416,7 @@ const resetPull = () => {
 .card-front.rare      { border-color: rgba(59,130,246,0.5);  box-shadow: 0 0 30px rgba(59,130,246,0.2); }
 .card-front.epic      { border-color: rgba(168,85,247,0.5);  box-shadow: 0 0 40px rgba(168,85,247,0.25); }
 .card-front.legendary { border-color: rgba(234,179,8,0.6);   box-shadow: 0 0 60px rgba(234,179,8,0.35); }
+.card-front.ultimate  { border-color: rgba(239,68,68,0.8);  box-shadow: 0 0 80px rgba(239,68,68,0.5); }
 
 /* Pull button / orb */
 .pull-btn {
@@ -453,7 +478,7 @@ const resetPull = () => {
   height: 100%;
   display: flex;
   flex-direction: column;
-  align-items: center;
+  align-items: flex-start;
   justify-content: flex-end;
   padding: 20px;
   position: relative;
@@ -486,7 +511,7 @@ const resetPull = () => {
 
 .rarity-badge {
   position: absolute;
-  top: 14px; right: 14px;
+  top: 20px; left: 20px;
   font-size: 0.62rem;
   font-weight: 700;
   letter-spacing: 0.1em;
@@ -498,6 +523,15 @@ const resetPull = () => {
 .rarity-badge.rare      { background: rgba(59,130,246,0.15);  color: #93c5fd; border: 1px solid rgba(59,130,246,0.4); }
 .rarity-badge.epic      { background: rgba(168,85,247,0.15);  color: #d8b4fe; border: 1px solid rgba(168,85,247,0.4); }
 .rarity-badge.legendary { background: rgba(234,179,8,0.15);   color: #fde68a; border: 1px solid rgba(234,179,8,0.5); }
+.rarity-badge.ultimate  { background: rgba(239,68,68,0.15);  color: #ef4444; border: 1px solid rgba(239,68,68,0.6); box-shadow: 0 0 15px rgba(239,68,68,0.4); display: flex; align-items: center; gap: 6px; }
+
+.ultimate-dot {
+  width: 6px;
+  height: 6px;
+  background: #ef4444;
+  border-radius: 50%;
+  box-shadow: 0 0 8px #ef4444;
+}
 
 /* Skin art */
 .skin-art-container {
@@ -516,9 +550,6 @@ const resetPull = () => {
   transition: transform 0.5s ease;
 }
 
-.card-container.flipped:hover .skin-img {
-  transform: scale(1.05);
-}
 
 .skin-img-placeholder {
   width: 100%;
@@ -529,33 +560,38 @@ const resetPull = () => {
 .skin-img-placeholder.rare      { background: linear-gradient(to bottom, #1e293b, #1e3a8a); }
 .skin-img-placeholder.epic      { background: linear-gradient(to bottom, #1e293b, #581c87); }
 .skin-img-placeholder.legendary { background: linear-gradient(to bottom, #1e293b, #713f12); }
+.skin-img-placeholder.ultimate  { background: linear-gradient(to bottom, #1e293b, #450a0a); }
 
 .skin-info {
   width: 100%;
-  text-align: center;
-  background: linear-gradient(to top, rgba(5,10,25,0.95) 0%, transparent 100%);
-  padding: 28px 16px 12px;
+  text-align: left;
+  margin-top: auto;
+  z-index: 2;
 }
 
 .skin-champion {
-  margin: 0 0 2px;
-  font-size: 0.72rem;
+  margin: 0;
+  font-size: 0.75rem;
   color: var(--text-muted);
   text-transform: uppercase;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.1em;
 }
 
 .skin-name {
-  margin: 0;
-  font-size: 1.05rem;
-  font-weight: 700;
+  margin: 4px 0 0;
+  font-size: 1.1rem;
+  font-weight: 800;
   color: var(--text-main);
+  line-height: 1.2;
 }
 
 .duplicate-tag {
-  margin: 4px 0 0;
-  font-size: 0.72rem;
-  color: var(--text-muted);
+  margin: 6px 0 0;
+  font-size: 0.7rem;
+  color: #94a3b8;
+  text-transform: uppercase;
+  font-weight: 700;
+  letter-spacing: 0.05em;
 }
 
 /* Post-reveal */
@@ -563,35 +599,33 @@ const resetPull = () => {
 
 .primary-btn { width: 180px; padding: 11px; }
 
-/* Odds card */
+/* Odds Card */
 .odds-card {
-  background: rgba(15, 23, 42, 0.6);
+  margin-bottom: 4px;
+  background: rgba(15, 23, 42, 0.4);
   border: 1px solid var(--border-subtle);
-  border-radius: 14px;
-  padding: 18px 24px;
-  min-width: 200px;
+  border-radius: 999px;
+  padding: 4px 18px;
   backdrop-filter: blur(8px);
 }
 
-.odds-title {
-  margin: 0 0 12px;
-  font-size: 0.72rem;
-  text-transform: uppercase;
-  letter-spacing: 0.1em;
-  color: var(--text-muted);
+.odds-list-horizontal {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 20px;
+  flex-wrap: wrap;
 }
 
-.odds-list { display: flex; flex-direction: column; gap: 8px; }
-
-.odds-row {
+.odds-item {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 6px;
 }
 
 .odds-dot {
-  width: 8px;
-  height: 8px;
+  width: 6px;
+  height: 6px;
   border-radius: 50%;
   flex-shrink: 0;
 }
@@ -599,8 +633,19 @@ const resetPull = () => {
 .odds-dot.common    { background: #9ca3af; }
 .odds-dot.rare      { background: #3b82f6; }
 .odds-dot.epic      { background: #a855f7; }
-.odds-dot.legendary { background: #eab308; box-shadow: 0 0 6px rgba(234,179,8,0.6); }
+.odds-dot.legendary { background: #eab308; }
+.odds-dot.ultimate  { background: #ef4444; }
 
-.odds-label { flex: 1; font-size: 0.83rem; color: var(--text-main); }
-.odds-pct   { font-size: 0.83rem; font-weight: 600; color: var(--text-muted); }
+.odds-label-compact {
+  font-size: 0.64rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.odds-pct-compact {
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: var(--text-main);
+}
 </style>

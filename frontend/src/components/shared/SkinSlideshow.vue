@@ -32,7 +32,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, onUnmounted } from 'vue';
+import { ref, onMounted, onUnmounted, watch } from 'vue';
 
 const props = defineProps({
   skins: {
@@ -49,17 +49,30 @@ const currentIndex = ref(0);
 const currentSkin = ref(null);
 let timer = null;
 
+const startSlideshow = () => {
+  if (timer) clearInterval(timer);
+  if (props.skins.length > 0) {
+    // Start at a random index so multiple slideshows don't show the same card
+    currentIndex.value = Math.floor(Math.random() * props.skins.length);
+    currentSkin.value = props.skins[currentIndex.value];
+    timer = setInterval(nextSkin, props.interval);
+  }
+};
+
 const nextSkin = () => {
   if (props.skins.length === 0) return;
   currentIndex.value = (currentIndex.value + 1) % props.skins.length;
   currentSkin.value = props.skins[currentIndex.value];
 };
 
-onMounted(() => {
-  if (props.skins.length > 0) {
-    currentSkin.value = props.skins[0];
-    timer = setInterval(nextSkin, props.interval);
+watch(() => props.skins, (newSkins) => {
+  if (newSkins && newSkins.length > 0 && !currentSkin.value) {
+    startSlideshow();
   }
+}, { deep: true });
+
+onMounted(() => {
+  startSlideshow();
 });
 
 onUnmounted(() => {
@@ -69,8 +82,8 @@ onUnmounted(() => {
 
 <style scoped>
 .skin-slideshow-card {
-  width: 320px;
-  height: 520px;
+  width: 308px;
+  height: 560px;
   border-radius: 32px;
   background: rgba(15, 23, 42, 0.6);
   border: 1px solid rgba(255, 255, 255, 0.08);

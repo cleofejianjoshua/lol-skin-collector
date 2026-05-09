@@ -3,7 +3,7 @@
     <div class="profile-layout-wrapper">
       <!-- Left Slideshow -->
       <aside class="profile-side-panel left">
-        <SkinSlideshow :skins="MOCK_POOL" :interval="4500" />
+        <SkinSlideshow :skins="skins" :interval="5000" />
       </aside>
 
       <!-- Center Content -->
@@ -43,7 +43,7 @@
 
       <!-- Right Slideshow -->
       <aside class="profile-side-panel right">
-        <SkinSlideshow :skins="MOCK_POOL" :interval="6500" />
+        <SkinSlideshow :skins="skins" :interval="5000" />
       </aside>
     </div>
   </div>
@@ -52,7 +52,7 @@
 <script setup>
 import { ref, onMounted } from "vue";
 import { useRouter, onBeforeRouteUpdate } from "vue-router";
-import { fetchUser } from "@/services/api.js";
+import { fetchUser, fetchSkins } from "@/services/api.js";
 import SkinSlideshow from "@/components/shared/SkinSlideshow.vue";
 
 const router = useRouter();
@@ -63,6 +63,7 @@ const errorMsg = ref("");
 const username = ref("");
 const nickname = ref("");
 const email = ref("");
+const skins = ref([]);
 
 const MOCK_POOL = [
   { name: "Spirit Blossom Ahri",  champion: "Ahri",   rarity: "legendary", image_path: "" },
@@ -88,6 +89,19 @@ const loadProfile = async () => {
     email.value = data.email || "No email set";
   } catch (err) {
     errorMsg.value = err.message;
+  }
+
+  // Load skins for side panels
+  try {
+    const data = await fetchSkins();
+    skins.value = data.map(s => ({
+      ...s,
+      name: s.skin_name || s.name,
+      rarity: s.rarity_name || s.rarity
+    }));
+  } catch (err) {
+    console.error("Failed to load skins for profile side panels:", err);
+    skins.value = MOCK_POOL;
   } finally {
     loading.value = false;
   }
@@ -141,7 +155,7 @@ onBeforeRouteUpdate(loadProfile);
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding-top: 40px;
+  padding-top: 110px;
 }
 
 .subtitle {

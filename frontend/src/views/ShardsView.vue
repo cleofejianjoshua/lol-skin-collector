@@ -3,7 +3,7 @@
     <div class="shards-layout-wrapper">
       <!-- Left Slideshow -->
       <aside class="shards-side-panel left">
-        <SkinSlideshow :skins="MOCK_POOL" :interval="4000" />
+        <SkinSlideshow :skins="skins" :interval="5000" />
       </aside>
 
       <!-- Center Content -->
@@ -43,7 +43,7 @@
 
       <!-- Right Slideshow -->
       <aside class="shards-side-panel right">
-        <SkinSlideshow :skins="MOCK_POOL" :interval="6000" />
+        <SkinSlideshow :skins="skins" :interval="5000" />
       </aside>
     </div>
   </div>
@@ -51,6 +51,7 @@
 
 <script setup>
 import { ref, onMounted } from "vue";
+import { fetchSkins } from "@/services/api.js";
 import SkinSlideshow from "@/components/shared/SkinSlideshow.vue";
 
 const MOCK_POOL = [
@@ -64,11 +65,25 @@ const MOCK_POOL = [
 
 const STORAGE_KEY = "lol_shards";
 const shards    = ref(0);
+const skins     = ref([]);
 const isClicked = ref(false);
 
-onMounted(() => {
+onMounted(async () => {
   const saved = localStorage.getItem(STORAGE_KEY); // gets shard value from local storage, just a mini database
   if (saved !== null) shards.value = parseInt(saved, 10);
+
+  // Load skins for side panels
+  try {
+    const data = await fetchSkins();
+    skins.value = data.map(s => ({
+      ...s,
+      name: s.skin_name || s.name,
+      rarity: s.rarity_name || s.rarity
+    }));
+  } catch (err) {
+    console.error("Failed to load skins for shard side panels:", err);
+    skins.value = MOCK_POOL;
+  }
 });
 
 const clickShard = () => {
