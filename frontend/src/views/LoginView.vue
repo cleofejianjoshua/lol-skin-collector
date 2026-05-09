@@ -28,14 +28,6 @@
           />
         </label>
 
-        <div class="field field-inline">
-          <label class="checkbox">
-            <input v-model="rememberMe" type="checkbox" />
-            <span>Remember me</span>
-          </label>
-          <button type="button" class="link-button">Forgot password?</button>
-        </div>
-
         <button class="primary-btn" type="submit" :disabled="loading">
           {{ loading ? "Signing in..." : "Log in" }}
         </button>
@@ -58,7 +50,7 @@ import BrandHeader from "@/components/shared/BrandHeader.vue";
 
 const username = ref("");
 const password = ref("");
-const rememberMe = ref(false);
+
 const error = ref("");
 const loading = ref(false);
 const router = useRouter();

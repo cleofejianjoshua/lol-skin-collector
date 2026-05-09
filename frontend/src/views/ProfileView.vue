@@ -1,54 +1,51 @@
 <template>
-  <div class="profile-page-main">
+  <div class="profile-page">
+    <div class="profile-layout-wrapper">
+      <!-- Left Slideshow -->
+      <aside class="profile-side-panel left">
+        <SkinSlideshow :skins="MOCK_POOL" :interval="4500" />
+      </aside>
 
-    <!-- Profile Info Card -->
-    <div class="profile-card">
-      <h2>Profile</h2>
-      <p class="subtitle">Your account information</p>
+      <!-- Center Content -->
+      <div class="profile-main-container">
+        <div class="profile-card">
+          <h2>Profile</h2>
+          <p class="subtitle">Your account information</p>
 
-      <div v-if="loading" class="info-field">
-        <p>Loading profile...</p>
+          <div v-if="loading" class="info-field">
+            <p>Loading profile...</p>
+          </div>
+
+          <template v-else>
+            <div class="info-field">
+              <span>Username</span>
+              <p>{{ username }}</p>
+            </div>
+
+            <div v-if="nickname" class="info-field">
+              <span>Nickname</span>
+              <p>{{ nickname }}</p>
+            </div>
+
+            <div class="info-field">
+              <span>Email</span>
+              <p>{{ email }}</p>
+            </div>
+
+            <button class="primary-btn" @click="goUpdateProfile">
+              Update Profile
+            </button>
+
+            <p v-if="errorMsg" class="error-text">{{ errorMsg }}</p>
+          </template>
+        </div>
       </div>
 
-      <template v-else>
-        <div class="info-field">
-          <span>Username</span>
-          <p>{{ username }}</p>
-        </div>
-
-        <div class="info-field">
-          <span>Nickname</span>
-          <p>{{ nickname }}</p>
-        </div>
-
-        <div class="info-field">
-          <span>Email</span>
-          <p>{{ email }}</p>
-        </div>
-
-        <button class="primary-btn" @click="goUpdateProfile">
-          Update Profile
-        </button>
-
-        <p v-if="errorMsg" class="error-text">{{ errorMsg }}</p>
-      </template>
+      <!-- Right Slideshow -->
+      <aside class="profile-side-panel right">
+        <SkinSlideshow :skins="MOCK_POOL" :interval="6500" />
+      </aside>
     </div>
-
-    <!-- Favorite Skin Card -->
-    <div class="skin-card">
-      <h2>Favorite Skin</h2>
-      <img
-        v-if="skinImage"
-        :src="skinImage"
-        :alt="favoriteSkin"
-        class="skin-image"
-      />
-      <div v-else class="skin-placeholder">
-        <span>No skin selected yet</span>
-      </div>
-      <p class="skin-name">{{ favoriteSkin }}</p>
-    </div>
-
   </div>
 </template>
 
@@ -56,6 +53,7 @@
 import { ref, onMounted } from "vue";
 import { useRouter, onBeforeRouteUpdate } from "vue-router";
 import { fetchUser } from "@/services/api.js";
+import SkinSlideshow from "@/components/shared/SkinSlideshow.vue";
 
 const router = useRouter();
 
@@ -65,8 +63,14 @@ const errorMsg = ref("");
 const username = ref("");
 const nickname = ref("");
 const email = ref("");
-const favoriteSkin = ref("No favorite skin yet");
-const skinImage = ref("");
+
+const MOCK_POOL = [
+  { name: "Spirit Blossom Ahri",  champion: "Ahri",   rarity: "legendary", image_path: "" },
+  { name: "Arcane Jinx",          champion: "Jinx",   rarity: "epic",      image_path: "" },
+  { name: "Pulsefire Ezreal",     champion: "Ezreal", rarity: "epic",      image_path: "" },
+  { name: "Star Guardian Lux",    champion: "Lux",    rarity: "rare",      image_path: "" },
+  { name: "Bewitching Jinx",      champion: "Jinx",   rarity: "rare",      image_path: "" },
+];
 
 const loadProfile = async () => {
   loading.value = true;
@@ -80,12 +84,8 @@ const loadProfile = async () => {
     }
 
     username.value = data.username || "Unknown user";
-    nickname.value = data.nickname || data.username || "No nickname set";
+    nickname.value = data.nickname || "";
     email.value = data.email || "No email set";
-
-    // Skin image from backend — path like /images/skins/champions/ahri/default.jpg
-    skinImage.value = data.favorite_skin_image || "";
-    favoriteSkin.value = data.favorite_skin || "No favorite skin yet";
   } catch (err) {
     errorMsg.value = err.message;
   } finally {
@@ -102,76 +102,83 @@ onBeforeRouteUpdate(loadProfile);
 </script>
 
 <style scoped>
-.profile-page-main {
-  display: flex;
-  justify-content: center;
-  align-items: flex-start;
-  flex-wrap: wrap;
-  gap: 40px;
-  padding: 60px 40px;
+.profile-page {
   min-height: 80vh;
+  position: relative;
+  overflow-x: hidden;
+  padding: 60px 0;
+}
+
+.profile-layout-wrapper {
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  width: 100%;
+  max-width: 100vw;
+  margin: 0;
+  padding: 0;
+}
+
+.profile-side-panel {
+  position: fixed;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 5;
+  display: block;
+  width: 320px;
+}
+
+.profile-side-panel.left {
+  left: 180px;
+}
+
+.profile-side-panel.right {
+  right: 180px;
+}
+
+.profile-main-container {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding-top: 40px;
 }
 
 .subtitle {
   font-size: 0.9rem;
   color: var(--text-muted);
-  margin-bottom: 18px;
+  margin-bottom: 24px;
+}
+
+.profile-card {
+  text-align: left;
 }
 
 .info-field {
-  margin-bottom: 18px;
+  margin-bottom: 22px;
 }
 
 .info-field span {
-  font-size: 0.9rem;
+  font-size: 0.85rem;
   color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
   display: block;
 }
 
 .info-field p {
-  font-size: 1rem;
+  font-size: 1.1rem;
   color: var(--text-main);
-  margin: 4px 0 0;
+  margin: 6px 0 0;
+  font-weight: 500;
 }
 
-.skin-card {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
+.primary-btn {
+  margin-top: 10px;
+  min-width: 200px;
 }
 
-.skin-image {
-  width: 100%;
-  border-radius: 12px;
-  margin-top: 20px;
-  object-fit: cover;
-}
-
-.skin-placeholder {
-  width: 100%;
-  height: 200px;
-  margin-top: 20px;
-  border-radius: 12px;
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px dashed var(--border-subtle);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: var(--text-muted);
-  font-size: 0.9rem;
-}
-
-.skin-name {
-  margin-top: 12px;
-  font-size: 0.9rem;
-  color: var(--text-muted);
-}
-
-@media (max-width: 768px) {
-  .profile-page-main {
-    flex-direction: column;
-    align-items: center;
-    padding: 32px 20px;
-  }
+@media (max-width: 1280px) {
+  .profile-side-panel { display: none; }
 }
 </style>

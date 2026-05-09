@@ -104,23 +104,28 @@ const onSubmit = async () => {
   padding: 24px;
 }
 
+.cards--wide {
+  text-align: left;
+}
+
 .brand-text {
-  margin-bottom: 20px;
+  margin-bottom: 32px;
 }
 
 .brand-text h1 {
-  margin: 0 0 4px;
-  font-size: 1.8rem;
+  margin: 0 0 6px;
+  font-size: 2rem;
+  font-weight: 800;
   color: var(--text-main);
 }
 
 .brand-text p {
   margin: 0;
   color: var(--text-muted);
-  font-size: 0.9rem;
+  font-size: 0.95rem;
 }
 
 .profile-form {
-  gap: 18px;
+  gap: 24px;
 }
 </style>

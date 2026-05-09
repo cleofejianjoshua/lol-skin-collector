@@ -2,12 +2,12 @@
   <div class="auth-page">
     <div class="cards">
       <BrandHeader
-        title="Dashboard"
-        subtitle="Your skin collection hub."
+        title="Collection"
+        subtitle="Manage your skins."
       />
 
       <p class="home-subtitle">
-        Welcome to your dashboard. Your collected skins will appear here.
+        Welcome to your collection. All your summoned skins are tracked here.
       </p>
     </div>
   </div>
