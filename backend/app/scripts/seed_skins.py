@@ -1,6 +1,7 @@
 import requests
 from app import db, app
 from app.models import Skin, Rarity
+from datetime import datetime, timezone
 
 app.app_context().push()
 
@@ -72,7 +73,7 @@ def seed_skins():
                 continue
 
             exists = Skin.query.filter_by(
-                name=name,
+                skin_name=name,
                 champion=full_data["name"]
             ).first()
 
@@ -80,10 +81,11 @@ def seed_skins():
                 continue
 
             new_skin = Skin(
-                name=name,
+                skin_name=name,
                 champion=full_data["name"],
                 rarity_id=rarity.id,
-                image_path=image_url
+                image_path=image_url,
+                release_date=datetime.now(timezone.utc)
             )
 
             db.session.add(new_skin)
