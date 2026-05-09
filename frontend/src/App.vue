@@ -58,7 +58,7 @@ watch(() => route.fullPath, loadUser);
       <nav v-if="isLoggedIn" class="nav-links">
         <span class="welcome-text">Welcome, {{ username }}! |</span>
         <router-link to="/">Home</router-link>
-        <router-link to="/dashboard">Dashboard</router-link>
+        <router-link to="/collection">Collection</router-link>
         <router-link to="/gacha">Gacha</router-link>
         <router-link to="/shards">💎 Shards</router-link>
         <router-link to="/profile">Profile</router-link>
@@ -74,7 +74,7 @@ watch(() => route.fullPath, loadUser);
 
     <!-- PAGE CONTENT -->
     <main class="page-content">
-      <router-view />
+      <router-view v-if="!loadingUser" />
     </main>
 
     <!-- SIGN OUT CONFIRMATION MODAL -->

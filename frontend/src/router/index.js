@@ -2,7 +2,7 @@ import { createRouter, createWebHistory } from "vue-router";
 import HomeView from "@/views/HomeView.vue";
 import LoginView from "@/views/LoginView.vue";
 import RegisterView from "@/views/RegisterView.vue";
-import DashboardView from "@/views/DashboardView.vue";
+import CollectionView from "@/views/CollectionView.vue";
 import ProfileView from "@/views/ProfileView.vue";
 import UpdateProfileView from "@/views/UpdateProfileView.vue";
 import GachaView from "@/views/GachaView.vue";
@@ -12,7 +12,7 @@ const routes = [
   { path: "/",               name: "Home",          component: HomeView },
   { path: "/login",          name: "Login",         component: LoginView },
   { path: "/register",       name: "Register",      component: RegisterView },
-  { path: "/dashboard",      name: "Dashboard",     component: DashboardView },
+  { path: "/collection",     name: "Collection",    component: CollectionView },
   { path: "/profile",        name: "Profile",       component: ProfileView },
   { path: "/profile/update", name: "UpdateProfile", component: UpdateProfileView },
   { path: "/gacha",          name: "Gacha",         component: GachaView },

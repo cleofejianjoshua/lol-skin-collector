@@ -7,7 +7,7 @@
   position: relative;
   width: 100%;
   max-width: 420px;
-  padding: 28px 26px 24px;
+  padding: 34px 32px 30px;
   border-radius: var(--radius-lg);
   background: linear-gradient(
       145deg,
@@ -35,6 +35,11 @@
   mask-composite: exclude;
   opacity: 0.7;
   pointer-events: none;
+}
+
+/* Space out the header from the form */
+.cards .brand {
+  margin-bottom: 28px;
 }
 
 /* Wide variant for update profile */

@@ -1,5 +1,21 @@
 <template>
   <div class="gacha-page">
+    <div class="gacha-layout-wrapper">
+      <!-- Left Slideshow -->
+      <aside class="gacha-side-panel left">
+        <SkinSlideshow :skins="MOCK_POOL" :interval="5000" />
+      </aside>
+
+      <!-- Center Content -->
+      <div class="gacha-main-container">
+    <!-- Page Glow Overlay -->
+    <div
+      class="page-glow"
+      :class="{
+        'pulsing': isPulling,
+        ['reveal-' + result?.skin?.rarity]: revealed
+      }"
+    ></div>
 
     <!-- Header -->
     <div class="gacha-header">
@@ -93,12 +109,20 @@
       </div>
     </div>
 
+      </div>
+
+      <!-- Right Slideshow -->
+      <aside class="gacha-side-panel right">
+        <SkinSlideshow :skins="MOCK_POOL" :interval="7000" />
+      </aside>
+    </div>
   </div>
 </template>
 
 <script setup>
 import { ref, computed, onMounted } from "vue";
 import { gachaPull } from "@/services/api.js";
+import SkinSlideshow from "@/components/shared/SkinSlideshow.vue";
 
 const PULL_COST   = 10;
 const STORAGE_KEY = "lol_shards";
@@ -153,7 +177,7 @@ const triggerPull = async () => {
   if (isPulling.value || revealed.value || notEnoughShards.value) return;
   isPulling.value = true;
 
-  const delay = new Promise(res => setTimeout(res, 900));
+  const delay = new Promise(res => setTimeout(res, 2000));
 
   try {
     const [data] = await Promise.all([gachaPull(), delay]);
@@ -181,14 +205,97 @@ const resetPull = () => {
 </script>
 
 <style scoped>
-/* Page */
+/* Page Layout */
 .gacha-page {
   min-height: 80vh;
+  position: relative;
+  overflow-x: hidden;
+  padding: 48px 0;
+}
+
+.gacha-layout-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  max-width: 100vw;
+  margin: 0;
+  padding: 0;
+}
+
+.gacha-side-panel {
+  position: fixed;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 5;
+  display: block;
+  width: 320px;
+}
+
+.gacha-side-panel.left {
+  left: 180px;
+}
+
+.gacha-side-panel.right {
+  right: 180px;
+}
+
+.gacha-main-container {
+  flex: 1;
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 28px;
-  padding: 48px 24px;
+}
+
+@media (max-width: 1200px) {
+  .gacha-side-panel { display: none; }
+}
+
+.page-glow {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  opacity: 0;
+  transition: opacity 0.5s ease;
+}
+
+.page-glow.pulsing {
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.45) 0%, transparent 75%);
+  animation: smoothPulse 2.2s ease-in-out infinite;
+}
+
+@keyframes smoothPulse {
+  0%, 100% { opacity: 0.5; }
+  50%       { opacity: 1; }
+}
+
+/* Rarity Reveal Flashes */
+.page-glow.reveal-common    { animation: flashCommon 2s ease-out forwards; opacity: 1; }
+.page-glow.reveal-rare      { animation: flashRare 2s ease-out forwards; opacity: 1; }
+.page-glow.reveal-epic      { animation: flashEpic 2s ease-out forwards; opacity: 1; }
+.page-glow.reveal-legendary { animation: flashLegendary 2s ease-out forwards; opacity: 1; }
+
+@keyframes flashCommon {
+  0% { background: rgba(255, 255, 255, 0.4); }
+  15% { background: rgba(156, 163, 175, 0.3); }
+  100% { background: transparent; }
+}
+@keyframes flashRare {
+  0% { background: rgba(255, 255, 255, 0.5); }
+  15% { background: rgba(59, 130, 246, 0.35); }
+  100% { background: transparent; }
+}
+@keyframes flashEpic {
+  0% { background: rgba(255, 255, 255, 0.6); }
+  15% { background: rgba(168, 85, 247, 0.4); }
+  100% { background: transparent; }
+}
+@keyframes flashLegendary {
+  0% { background: rgba(255, 255, 255, 0.7); }
+  15% { background: rgba(234, 179, 8, 0.5); }
+  100% { background: transparent; }
 }
 
 .gacha-header { text-align: center; }
@@ -255,7 +362,7 @@ const resetPull = () => {
   border-radius: 20px;
   backface-visibility: hidden;
   -webkit-backface-visibility: hidden;
-  transition: transform 0.75s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: transform 1.2s cubic-bezier(0.4, 0, 0.2, 1);
   overflow: hidden;
 }
 
@@ -369,7 +476,7 @@ const resetPull = () => {
 }
 
 .flipped .rarity-shimmer {
-  animation: shimmerSweep 1.5s cubic-bezier(0.4, 0, 0.2, 1) 0.4s forwards;
+  animation: shimmerSweep 2s cubic-bezier(0.4, 0, 0.2, 1) 0.8s forwards;
 }
 
 @keyframes shimmerSweep {
