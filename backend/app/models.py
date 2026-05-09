@@ -1,5 +1,5 @@
 from app import db
-from datetime import datetime
+from datetime import datetime, timezone
 
 
 class User(db.Model):
@@ -34,7 +34,7 @@ class Skin(db.Model):
     image_path = db.Column(db.String(255), nullable=False, default="")
     release_date = db.Column(db.DateTime, nullable=False)
 
-    rarity = db.relationship("Rarity", lazy="joined")
+    rarity = db.relationship("Rarity", lazy="joined", back_populates="skins")
 
     collection = db.relationship(
         "UserCollection",
@@ -53,7 +53,7 @@ class Skin(db.Model):
         }
 
     def __repr__(self):
-        return f"<Skin {self.name} ({self.champion})>"
+        return f"<Skin {self.skin_name} ({self.champion})>"
     
 
 class Rarity(db.Model):
@@ -74,7 +74,11 @@ class UserCollection(db.Model):
     id          = db.Column(db.Integer, primary_key=True)
     user_id     = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
     skin_id     = db.Column(db.Integer, db.ForeignKey("skins.id"), nullable=False)
-    obtained_at = db.Column(db.DateTime, default=datetime.utcnow)
+    obtained_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
+    duplicate_count = db.Column(db.Integer, nullable=False, default=0)
+    __table_args__ = (
+        db.UniqueConstraint ("user_id", "skin_id", name="uq_user_skin"),
+    )
 
     user = db.relationship("User", back_populates="collection")
     skin = db.relationship("Skin", back_populates="collection")
@@ -84,6 +88,7 @@ class UserCollection(db.Model):
             "id":          self.id,
             "skin":        self.skin.to_dict(),
             "obtained_at": self.obtained_at.isoformat(),
+            "duplicate_count": self.duplicate_count,
         }
 
     def __repr__(self):
