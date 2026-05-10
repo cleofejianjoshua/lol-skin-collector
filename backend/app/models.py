@@ -10,6 +10,7 @@ class User(db.Model):
     nickname = db.Column(db.String(20))
     email    = db.Column(db.String(255))
     currency = db.Column(db.Integer,default=0)
+    gold     = db.Column(db.Integer,default=0)
 
     # Relationship to skin collection
     collection = db.relationship(
