@@ -40,9 +40,8 @@ def get_community_dragon_skins(session):
 
     return raw, chroma_ids
 
-def build_image_url(champion, skin_num):
-    clean_champ = champion.replace(" ", "")
-    return f"https://ddragon.leagueoflegends.com/cdn/img/champion/loading/{clean_champ}_{skin_num}.jpg"
+def build_image_url(champ_key, skin_num):
+    return f"https://ddragon.leagueoflegends.com/cdn/img/champion/loading/{champ_key}_{skin_num}.jpg"
 
 
 def map_rarity(community_rarity: str, is_base: bool) -> str:
@@ -68,6 +67,7 @@ def seed_skins():
     print(f"Using version: {version}")
 
     session = requests.Session()
+    session.request = lambda method, url, **kwargs: requests.Session.request(session, method, url, timeout=10, **kwargs)
 
     print("Fetching champion list...")
     champions = get_champion_list(version)
@@ -118,7 +118,7 @@ def seed_skins():
                 skin_name=name,
                 champion=champ_name,
                 rarity_id=rarity.id,
-                image_path=build_image_url(champ_name, skin_num),
+                image_path=build_image_url(champ_key, skin_num),
             ))
             total_added += 1
 
