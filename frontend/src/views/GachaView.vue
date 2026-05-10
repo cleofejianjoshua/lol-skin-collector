@@ -141,6 +141,9 @@ if (pullSound) pullSound.volume = 0.5;
 const revealSound = typeof Audio !== 'undefined' ? new Audio('/sounds/sound_open.mp3') : null;
 if (revealSound) revealSound.volume = 0.5;
 
+const clickSound = typeof Audio !== 'undefined' ? new Audio('/sounds/sound_click.mp3') : null;
+if (clickSound) revealSound.volume = 0.5;
+
 const notEnoughShards = computed(() => shards.value < PULL_COST);
 
 const rarities = [
@@ -246,6 +249,10 @@ const resetPull = () => {
   setTimeout(() => {
     if (!revealed.value) result.value = null;
   }, 1200);
+  if (clickSound) {
+    clickSound.currentTime = 0;
+    clickSound.play().catch(e => console.log("Audio play failed:", e));
+  }
 };
 </script>
 
