@@ -84,12 +84,13 @@ def get_collection():
 
 # Gacha Pull
 
-# Rarity weights: common 60%, rare 25%, epic 10%, legendary 5%
+# Rarity weights: Ultimate 1%, legendary 9%, epic 18%, rare 32%, common 40%
 RARITY_WEIGHTS = {
-    "common":    60,
-    "rare":      25,
-    "epic":      10,
-    "legendary": 5,
+    "ultimate":  1,
+    "legendary": 9,
+    "epic":      18,
+    "rare":      32,
+    "common":    40,
 }
 
 

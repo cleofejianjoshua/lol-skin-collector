@@ -46,11 +46,6 @@
     <!-- Pull area -->
     <div class="pull-area">
 
-      <!-- Not enough shards warning -->
-      <p v-if="notEnoughShards && !revealed" class="error-text">
-        Not enough shards. Go earn more!
-      </p>
-
       <!-- Card -->
       <div class="card-container" :class="{ flipped: revealed }">
 
@@ -100,6 +95,11 @@
         </div>
 
       </div>
+
+      <!-- Not enough shards warning -->
+      <p v-if="notEnoughShards && !revealed" class="error-text">
+        Not enough shards. Go earn more!
+      </p>
 
       <!-- Post-reveal actions -->
       <div v-if="revealed" class="pull-actions">
@@ -527,11 +527,11 @@ const resetPull = () => {
   border-radius: 999px;
 }
 
-.rarity-badge.common    { background: rgba(156,163,175,0.15); color: #d1d5db; border: 1px solid rgba(156,163,175,0.3); }
-.rarity-badge.rare      { background: rgba(59,130,246,0.15);  color: #93c5fd; border: 1px solid rgba(59,130,246,0.4); }
-.rarity-badge.epic      { background: rgba(168,85,247,0.15);  color: #d8b4fe; border: 1px solid rgba(168,85,247,0.4); }
-.rarity-badge.legendary { background: rgba(234,179,8,0.15);   color: #fde68a; border: 1px solid rgba(234,179,8,0.5); }
-.rarity-badge.ultimate  { background: rgba(239,68,68,0.15);  color: #ef4444; border: 1px solid rgba(239,68,68,0.6); box-shadow: 0 0 15px rgba(239,68,68,0.4); display: flex; align-items: center; gap: 6px; }
+.rarity-badge.common    { background: rgba(30,30,35,0.85);   color: #d1d5db; border: 1px solid rgba(156,163,175,0.3); }
+.rarity-badge.rare      { background: rgba(15,30,60,0.85);   color: #93c5fd; border: 1px solid rgba(59,130,246,0.4); }
+.rarity-badge.epic      { background: rgba(40,10,65,0.85);   color: #d8b4fe; border: 1px solid rgba(168,85,247,0.4); }
+.rarity-badge.legendary { background: rgba(55,35,5,0.9);     color: #fde68a; border: 1px solid rgba(234,179,8,0.5); }
+.rarity-badge.ultimate  { background: rgba(60,8,8,0.9);      color: #ef4444; border: 1px solid rgba(239,68,68,0.6); box-shadow: 0 0 15px rgba(239,68,68,0.4); display: flex; align-items: center; gap: 6px; }
 
 .ultimate-dot {
   width: 6px;

@@ -145,9 +145,11 @@ onUnmounted(() => {
   background: rgba(0,0,0,0.4);
 }
 
-.rarity-tag.legendary { color: #fde68a; border-color: rgba(234,179,8,0.4); }
-.rarity-tag.epic      { color: #d8b4fe; border-color: rgba(168,85,247,0.4); }
-.rarity-tag.rare      { color: #93c5fd; border-color: rgba(59,130,246,0.4); }
+.rarity-tag.common    { color: #d1d5db; background: rgba(30,30,35,0.85);  border-color: rgba(156,163,175,0.4); }
+.rarity-tag.rare      { color: #93c5fd; background: rgba(15,30,60,0.85);  border-color: rgba(59,130,246,0.4); }
+.rarity-tag.epic      { color: #d8b4fe; background: rgba(40,10,65,0.85);  border-color: rgba(168,85,247,0.4); }
+.rarity-tag.legendary { color: #fde68a; background: rgba(55,35,5,0.9);    border-color: rgba(234,179,8,0.4); }
+.rarity-tag.ultimate  { color: #ef4444; background: rgba(60,8,8,0.9);     border-color: rgba(239,68,68,0.5); box-shadow: 0 0 8px rgba(239,68,68,0.3); }
 
 .text-info {
   text-align: left;

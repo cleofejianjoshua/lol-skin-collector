@@ -29,30 +29,17 @@
       <div
         v-for="entry in collection"
         :key="entry.skin.name"
-        class="skin-card"
-        :class="entry.skin.rarity"
+        class="card-wrapper"
         @click="openModal(entry)"
         tabindex="0"
         role="button"
         @keydown.enter="openModal(entry)"
       >
+        <SkinCard :skin="entry.skin" />
         <span v-if="entry.count > 1" class="dupe-badge">×{{ entry.count }}</span>
         <span v-if="getSlotForSkin(entry.skin) !== null" class="slot-pip">
           Slot {{ getSlotForSkin(entry.skin) + 1 }}
         </span>
-        <div class="card-art">
-          <img v-if="entry.skin.image_path" :src="entry.skin.image_path" :alt="entry.skin.name" class="card-img" />
-          <div v-else class="art-bg" :class="entry.skin.rarity"></div>
-        </div>
-        <div class="card-shimmer"></div>
-        <div class="card-info">
-          <p class="card-champ">{{ entry.skin.champion }}</p>
-          <p class="card-name">{{ entry.skin.name }}</p>
-          <span class="rarity-pill" :class="entry.skin.rarity">
-            <span v-if="entry.skin.rarity === 'ultimate'" class="ultimate-dot"></span>
-            {{ entry.skin.rarity.toUpperCase() }}
-          </span>
-        </div>
       </div>
     </div>
 
@@ -116,6 +103,7 @@
 import { ref, onMounted } from "vue";
 import { useRouter } from "vue-router";
 import { fetchUserCollection } from "@/services/api.js";
+import SkinCard from "@/components/shared/SkinCard.vue";
 
 const router = useRouter();
 
@@ -145,13 +133,17 @@ function normalizeSkins(data) {
     return [];
   }
   const map = new Map();
-  for (const skin of data) {
-    if (!skin) continue;
-    const key = skin.id ?? skin.name;
+  for (const entry of data) {
+    if (!entry) continue;
+    // Backend returns UserCollection entries: { id, skin: {...}, duplicate_count }
+    // The nested 'skin' is the actual skin data
+    const skin = entry.skin ?? entry;
+    const key  = skin.id ?? skin.name;
     if (map.has(key)) {
       map.get(key).count += 1;
     } else {
-      map.set(key, { skin, count: skin.count ?? 1 });
+      const count = (entry.duplicate_count ?? 0) + 1;
+      map.set(key, { skin, count });
     }
   }
   return Array.from(map.values());
@@ -163,50 +155,25 @@ onMounted(async () => {
   if (savedSlots)  displaySlots.value = JSON.parse(savedSlots);
   if (savedShards) tokenBalance.value = parseInt(savedShards, 10);
 
-  // Auth check
+  // Run auth check and collection fetch in parallel
   try {
-    const userRes = await fetch("/api/user", { credentials: "include" });
-    const userData = await userRes.json();
-    if (!userRes.ok || !userData.username) {
+    const [userRes, data] = await Promise.all([
+      fetch("/api/user", { credentials: "include" }).then(r => r.json()),
+      fetchUserCollection().catch(() => [])
+    ]);
+
+    if (!userRes.username) {
       router.push({ name: "Login" });
       return;
     }
+
+    collection.value = normalizeSkins(data ?? []);
   } catch (err) {
-    console.error("Auth check failed:", err);
+    console.error("Collection load failed:", err);
     router.push({ name: "Login" });
-    return;
+  } finally {
+    loading.value = false;
   }
-
-  // Always seed with mock cards; merge real backend data on top
-  // Create a deep copy of mock to avoid mutating the original reference
-  let merged = MOCK_COLLECTION.map(item => ({ 
-    skin: { ...item.skin }, 
-    count: item.count 
-  }));
-
-  try {
-    const data = await fetchUserCollection();
-    console.log("Fetched collection data:", data);
-    
-    if (data && data.length > 0) {
-      const backendEntries = normalizeSkins(data);
-      // Add backend skins that aren't already in mock
-      for (const entry of backendEntries) {
-        const exists = merged.find(m => m.skin.name === entry.skin.name);
-        if (exists) {
-          exists.count += entry.count;
-        } else {
-          merged.push(entry);
-        }
-      }
-    }
-  } catch (err) {
-    console.error("Failed to fetch user collection from database:", err);
-    // Fall back to mock only
-  }
-
-  collection.value = merged;
-  loading.value = false;
 });
 
 function getSlotForSkin(skin) {
@@ -333,40 +300,26 @@ function saveSlots() {
   gap: 32px;
 }
 
-/* ── Skin Card ── */
-.skin-card {
+/* ── Card Wrapper (overlays for collection-specific badges) ── */
+.card-wrapper {
   position: relative;
   width: 308px;
   height: 560px;
-  border-radius: 18px;
-  overflow: hidden;
   cursor: pointer;
-  border: 1px solid rgba(148,163,184,0.15);
-  background: rgba(15, 23, 42, 0.6);
-  transition: transform 0.25s ease, box-shadow 0.25s ease;
+  border-radius: 32px;
+  transition: transform 0.25s ease;
   outline: none;
 }
 
-.skin-card:hover,
-.skin-card:focus {
-  transform: translateY(-6px) scale(1.02);
+.card-wrapper:hover,
+.card-wrapper:focus {
+  transform: translateY(-6px);
 }
-
-.skin-card.common    { border-color: rgba(156,163,175,0.3); }
-.skin-card.common:hover  { box-shadow: 0 12px 32px rgba(0,0,0,0.4); }
-.skin-card.rare      { border-color: rgba(59,130,246,0.4); }
-.skin-card.rare:hover    { box-shadow: 0 12px 40px rgba(59,130,246,0.25); }
-.skin-card.epic      { border-color: rgba(168,85,247,0.45); }
-.skin-card.epic:hover    { box-shadow: 0 12px 40px rgba(168,85,247,0.3); }
-.skin-card.legendary { border-color: rgba(234,179,8,0.5); }
-.skin-card.legendary:hover { box-shadow: 0 12px 50px rgba(234,179,8,0.35); }
-.skin-card.ultimate  { border-color: rgba(239, 68, 68, 0.7); }
-.skin-card.ultimate:hover  { box-shadow: 0 12px 60px rgba(239, 68, 68, 0.45); }
 
 /* Dupe badge */
 .dupe-badge {
   position: absolute;
-  top: 10px; right: 10px;
+  top: 12px; right: 12px;
   z-index: 10;
   background: rgba(0,0,0,0.75);
   backdrop-filter: blur(6px);
@@ -381,95 +334,21 @@ function saveSlots() {
 /* Slot pip */
 .slot-pip {
   position: absolute;
-  top: 10px; left: 10px;
+  top: 12px;
+  left: 50%;
+  transform: translateX(-50%);
   z-index: 10;
   background: rgba(59,130,246,0.85);
   color: #dbeafe;
   font-size: 0.65rem;
   font-weight: 700;
-  padding: 3px 8px;
+  padding: 4px 12px;
   border-radius: 999px;
-  letter-spacing: 0.04em;
-}
-
-/* Art */
-.card-art {
-  position: absolute;
-  inset: 0;
-}
-
-.card-img {
-  width: 100%; height: 100%;
-  object-fit: cover;
-  transition: transform 0.4s ease;
-}
-
-.skin-card:hover .card-img { transform: scale(1.06); }
-
-.art-bg {
-  width: 100%; height: 100%;
-}
-.art-bg.common    { background: linear-gradient(160deg, #1e293b 0%, #0f172a 100%); }
-.art-bg.rare      { background: linear-gradient(160deg, #1e3a8a 0%, #0f172a 100%); }
-.art-bg.epic      { background: linear-gradient(160deg, #581c87 0%, #1e293b 100%); }
-.art-bg.legendary { background: linear-gradient(160deg, #713f12 0%, #1e293b 100%); }
-
-/* Shimmer on hover */
-.card-shimmer {
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(135deg, transparent 40%, rgba(255,255,255,0.07) 50%, transparent 60%);
-  background-size: 200% 200%;
-  opacity: 0;
-  transition: opacity 0.3s ease;
-  pointer-events: none;
-}
-.skin-card:hover .card-shimmer { opacity: 1; }
-
-/* Info overlay */
-.card-info {
-  position: absolute;
-  bottom: 0; left: 0; right: 0;
-  background: linear-gradient(to top, rgba(5,10,25,0.95) 0%, transparent 100%);
-  padding: 32px 14px 14px;
-  text-align: center;
-}
-
-.card-champ {
-  margin: 0 0 2px;
-  font-size: 0.65rem;
-  color: var(--text-muted);
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-}
-
-.card-name {
-  margin: 0 0 8px;
-  font-size: 0.85rem;
-  font-weight: 700;
-  color: var(--text-main);
-  line-height: 1.2;
-}
-
-.rarity-pill {
-  font-size: 0.6rem;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  padding: 3px 9px;
-  border-radius: 999px;
-}
-.rarity-pill.common    { background: rgba(156,163,175,0.15); color: #d1d5db; border: 1px solid rgba(156,163,175,0.3); }
-.rarity-pill.rare      { background: rgba(59,130,246,0.15);  color: #93c5fd; border: 1px solid rgba(59,130,246,0.4); }
-.rarity-pill.epic      { background: rgba(168,85,247,0.15);  color: #d8b4fe; border: 1px solid rgba(168,85,247,0.4); }
-.rarity-pill.legendary { background: rgba(234,179,8,0.15);   color: #fde68a; border: 1px solid rgba(234,179,8,0.5); }
-.rarity-pill.ultimate  { background: rgba(239, 68, 68, 0.15); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.5); box-shadow: 0 0 10px rgba(239, 68, 68, 0.3); display: flex; align-items: center; gap: 6px; }
-
-.ultimate-dot {
-  width: 5px;
-  height: 5px;
-  background: #ef4444;
-  border-radius: 50%;
-  box-shadow: 0 0 6px #ef4444;
+  letter-spacing: 0.06em;
+  backdrop-filter: blur(4px);
+  border: 1px solid rgba(96,165,250,0.5);
+  box-shadow: 0 0 12px rgba(59,130,246,0.35);
+  white-space: nowrap;
 }
 
 /* ── Modal ── */
