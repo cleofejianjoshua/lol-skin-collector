@@ -138,11 +138,11 @@ const demoMode  = ref(false);
 const notEnoughShards = computed(() => shards.value < PULL_COST);
 
 const rarities = [
-  { name: "ultimate",  label: "Ultimate",  pct: "1%"  },
-  { name: "legendary", label: "Legendary", pct: "5%"  },
-  { name: "epic",      label: "Epic",      pct: "10%" },
-  { name: "rare",      label: "Rare",      pct: "25%" },
-  { name: "common",    label: "Common",    pct: "59%" },
+  { name: "common",    label: "Common",    pct: "40%" },
+  { name: "rare",      label: "Rare",      pct: "32%" },
+  { name: "epic",      label: "Epic",      pct: "18%" },
+  { name: "legendary", label: "Legendary", pct: "9%"  },
+  { name: "ultimate",  label: "Ultimate",  pct: "1%"  }
 ];
 
 onMounted(async () => {
@@ -177,7 +177,7 @@ const MOCK_POOL = [
   { name: "Base Lux",             champion: "Lux",    rarity: "common",    image_path: "" },
 ];
 
-const WEIGHTS = { common: 59, rare: 25, epic: 10, legendary: 5, ultimate: 1 };
+const WEIGHTS = { common: 0, rare: 0, epic: 0, legendary: 0, ultimate: 100 };
 
 function mockPull() {
   const total = Object.values(WEIGHTS).reduce((a, b) => a + b, 0);
@@ -199,15 +199,23 @@ const triggerPull = async () => {
 
   try {
     const [data] = await Promise.all([gachaPull(), delay]);
-    result.value  = data;
+
+    // Map backend response to match mock shape
+    result.value = {
+      skin: {
+        ...data.skin,
+        name:  data.skin.name  || data.skin.skin_name,
+        rarity: data.skin.rarity || data.skin.rarity_name,
+      },
+      is_duplicate: data.is_duplicate,
+    };
     demoMode.value = false;
   } catch {
     await delay;
-    result.value   = mockPull();
+    result.value   = mockPull();  // fallback to mock on backend failure
     demoMode.value = true;
   }
 
-  // Deduct shards (UI only for now)
   shards.value -= PULL_COST;
   localStorage.setItem(STORAGE_KEY, shards.value);
 
