@@ -109,7 +109,6 @@ const router = useRouter();
 
 const TOKEN_VALUES = { common: 15, rare: 40, epic: 100, legendary: 250, ultimate: 600 };
 const SLOTS_KEY    = "lol_display_slots";
-const SHARDS_KEY   = "lol_shards";
 
 const loading      = ref(true);
 const collection   = ref([]);
@@ -143,7 +142,7 @@ function normalizeSkins(data) {
       map.get(key).count += 1;
     } else {
       const count = (entry.duplicate_count ?? 0) + 1;
-      map.set(key, { skin, count });
+      map.set(key, { id: entry.id, skin, count });
     }
   }
   return Array.from(map.values());
@@ -151,9 +150,7 @@ function normalizeSkins(data) {
 
 onMounted(async () => {
   const savedSlots  = localStorage.getItem(SLOTS_KEY);
-  const savedShards = localStorage.getItem(SHARDS_KEY);
-  if (savedSlots)  displaySlots.value = JSON.parse(savedSlots);
-  if (savedShards) tokenBalance.value = parseInt(savedShards, 10);
+  if (savedSlots) displaySlots.value = JSON.parse(savedSlots);
 
   // Run auth check and collection fetch in parallel
   try {
@@ -166,7 +163,7 @@ onMounted(async () => {
       router.push({ name: "Login" });
       return;
     }
-
+    tokenBalance.value = userRes.currency ?? 0;
     collection.value = normalizeSkins(data ?? []);
   } catch (err) {
     console.error("Collection load failed:", err);
@@ -184,18 +181,37 @@ function getSlotForSkin(skin) {
 function openModal(entry) { selected.value = entry; }
 function closeModal()     { selected.value = null; }
 
-function disenchant() {
+async function disenchant() {
   if (!selected.value) return;
   const entry  = selected.value;
-  tokenBalance.value += TOKEN_VALUES[entry.skin.rarity] ?? 15;
-  localStorage.setItem(SHARDS_KEY, tokenBalance.value);
 
-  entry.count -= 1;
-  if (entry.count <= 0) {
-    collection.value = collection.value.filter(e => e !== entry);
-    displaySlots.value = displaySlots.value.map(s => s && s.name === entry.skin.name ? null : s);
-    saveSlots();
-    closeModal();
+  if (!selected.value) return;
+  console.log("selected entry:", selected.value);
+
+  try{
+    const res = await fetch(`/api/collection/disenchant/${entry.id}`, {
+      method: "DELETE",
+    });
+
+    if (!res.ok) {
+      const err = await res.json();
+      console.error("Disenchant failed:", err.error);
+      return;
+    }
+
+    const data = await res.json();
+
+    tokenBalance.value = data.currency;
+
+    entry.count -= 1;
+    if (entry.count <= 0) {
+      collection.value = collection.value.filter(e => e !== entry);
+      displaySlots.value = displaySlots.value.map(s => s && s.name === entry.skin.name ? null : s);
+      saveSlots();
+      closeModal();
+    }
+  } catch (err) {
+    console.error("Network error during disenchant:", err);
   }
 }
 
@@ -209,10 +225,6 @@ function setDisplaySlot(idx) {
   slots[idx] = { ...skin };
   displaySlots.value = slots;
   saveSlots();
-}
-
-function saveSlots() {
-  localStorage.setItem(SLOTS_KEY, JSON.stringify(displaySlots.value));
 }
 </script>
 
