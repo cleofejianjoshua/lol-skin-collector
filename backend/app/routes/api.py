@@ -27,6 +27,7 @@ def get_user():
         "username": user.username,
         "nickname": user.nickname,
         "email":    user.email,
+        "currency": user.currency,
     })
 
 
@@ -81,6 +82,36 @@ def get_collection():
                 .order_by(UserCollection.obtained_at.desc()).all()
     return jsonify([e.to_dict() for e in entries])
 
+# Collection Disenchant
+
+@api.route("/collection/disenchant/<int:collection_id>", methods=["DELETE"])
+def disenchant_skin(collection_id):
+    user = get_current_user()
+    if not user:
+        return jsonify({"error": "Not logged in"}), 401
+
+    entry = UserCollection.query.filter_by(id=collection_id, user_id=user.id).first()
+    if not entry:
+        return jsonify({"error": "Skin not found in collection"}), 404
+
+    disenchant_value = entry.skin.rarity.disenchant_value
+
+    if entry.duplicate_count > 0:
+        entry.duplicate_count -= 1
+    else:
+        db.session.delete(entry)
+
+    user.currency = (user.currency or 0) + disenchant_value
+
+    try:
+        db.session.commit()
+        return jsonify({
+            "message": "Skin disenchanted",
+            "currency": user.currency
+        })
+    except Exception:
+        db.session.rollback()
+        return jsonify({"error": "Failed to disenchant skin"}), 500
 
 
 # Seed skins (dev helper)
