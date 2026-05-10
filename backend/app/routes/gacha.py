@@ -39,13 +39,29 @@ def gacha_pull():
 
     skin = random.choice(skins)
 
+    # Check if user already owns this skin
+    existing = UserCollection.query.filter_by(user_id=user_id, skin_id=skin.id).first()
+
+    if existing:
+        existing.duplicate_count += 1
+        is_duplicate = True
+    else:
+        db.session.add(UserCollection(
+            user_id=user_id,
+            skin_id=skin.id,
+            duplicate_count=0,
+        ))
+        is_duplicate = False
+
+    db.session.commit()
+
     return jsonify({
         "skin": {
-            "id":         skin.id,
-            "name":       skin.skin_name,
-            "champion":   skin.champion,
-            "rarity":     rarity_name,
-            "image_path": skin.image_path,
+            "id":           skin.id,
+            "name":         skin.skin_name,
+            "champion":     skin.champion,
+            "rarity":       rarity_name,
+            "image_path":   skin.image_path,
         },
-        "is_duplicate": False  # implement dupe logic here if you have a collection table
+        "is_duplicate": is_duplicate,
     })
