@@ -82,57 +82,6 @@ def get_collection():
     return jsonify([e.to_dict() for e in entries])
 
 
-# Gacha Pull
-
-# Rarity weights: Ultimate 1%, legendary 9%, epic 18%, rare 32%, common 40%
-RARITY_WEIGHTS = {
-    "ultimate":  1,
-    "legendary": 9,
-    "epic":      18,
-    "rare":      32,
-    "common":    40,
-}
-
-
-def pick_rarity():
-    rarities = list(RARITY_WEIGHTS.keys())
-    weights  = list(RARITY_WEIGHTS.values())
-    return random.choices(rarities, weights=weights, k=1)[0]
-
-
-@api.route("/gacha/pull", methods=["POST"])
-def gacha_pull():
-    user = get_current_user()
-    if not user:
-        return jsonify({"error": "Not logged in"}), 401
-
-    all_skins = Skin.query.all()
-    if not all_skins:
-        return jsonify({"error": "No skins available in the pool yet."}), 404
-
-    rarity = pick_rarity()
-    pool   = [s for s in all_skins if s.rarity.rarity_name == rarity]
-    if not pool:
-        pool = all_skins  # fallback
-
-    skin = random.choice(pool)
-
-    existing = UserCollection.query.filter_by(user_id=user.id, skin_id=skin.id).first()
-
-    if existing:
-        existing.duplicate_count += 1
-        is_duplicate = True
-    else:
-        db.session.add(UserCollection(user_id=user.id, skin_id=skin.id))
-        is_duplicate = False
-
-    db.session.commit()
-
-    return jsonify({
-        "skin":         skin.to_dict(),
-        "is_duplicate": is_duplicate,
-    })
-
 
 # Seed skins (dev helper)
 

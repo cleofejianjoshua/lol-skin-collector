@@ -135,6 +135,12 @@ const revealed  = ref(false);
 const result    = ref(null);
 const demoMode  = ref(false);
 
+const pullSound = typeof Audio !== 'undefined' ? new Audio('/sounds/sound_select.mp3') : null;
+if (pullSound) pullSound.volume = 0.5;
+
+const revealSound = typeof Audio !== 'undefined' ? new Audio('/sounds/sound_open.mp3') : null;
+if (revealSound) revealSound.volume = 0.5;
+
 const notEnoughShards = computed(() => shards.value < PULL_COST);
 
 const rarities = [
@@ -195,6 +201,11 @@ const triggerPull = async () => {
   if (isPulling.value || revealed.value || notEnoughShards.value) return;
   isPulling.value = true;
 
+  if (pullSound) {
+    pullSound.currentTime = 0;
+    pullSound.play().catch(e => console.log("Audio play failed:", e));
+  }
+
   const delay = new Promise(res => setTimeout(res, 2000));
 
   try {
@@ -221,6 +232,11 @@ const triggerPull = async () => {
 
   isPulling.value = false;
   revealed.value  = true;
+
+  if (revealSound) {
+    revealSound.currentTime = 0;
+    revealSound.play().catch(e => console.log("Audio play failed:", e));
+  }
 };
 
 const resetPull = () => {
