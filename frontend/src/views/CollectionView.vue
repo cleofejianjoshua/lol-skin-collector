@@ -107,7 +107,7 @@ import SkinCard from "@/components/shared/SkinCard.vue";
 
 const router = useRouter();
 
-const TOKEN_VALUES = { common: 15, rare: 40, epic: 100, legendary: 250, ultimate: 600 };
+const TOKEN_VALUES = { common: 90, rare: 150, epic: 350, legendary: 600, ultimate: 1200 };
 const SLOTS_KEY    = "lol_display_slots";
 
 const loading      = ref(true);
@@ -184,9 +184,6 @@ function closeModal()     { selected.value = null; }
 async function disenchant() {
   if (!selected.value) return;
   const entry  = selected.value;
-
-  if (!selected.value) return;
-  console.log("selected entry:", selected.value);
 
   try{
     const res = await fetch(`/api/collection/disenchant/${entry.id}`, {
