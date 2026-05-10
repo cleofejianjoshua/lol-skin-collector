@@ -27,6 +27,19 @@ const promptLogout = () => {
   showLogoutModal.value = true;
 };
 
+// Navigation sound effect
+const navSound = typeof Audio !== 'undefined' ? new Audio('/sounds/sound_click.mp3') : null;
+if (navSound) navSound.volume = 0.5;
+
+const handleNavClick = (e) => {
+  // Only play sound if an anchor tag (or something inside it) was clicked
+  const link = e.target.closest('a');
+  if (link && navSound) {
+    navSound.currentTime = 0;
+    navSound.play().catch(err => console.log("Audio play failed:", err));
+  }
+};
+
 // Called when user clicks "Yes, sign out"
 const confirmLogout = async () => {
   showLogoutModal.value = false;
@@ -59,7 +72,7 @@ watch(() => route.fullPath, loadUser);
       <span class="brand">LOL Skin Gacha Collector</span>
 
       <!-- Logged-in nav -->
-      <nav v-if="isLoggedIn" class="nav-links">
+      <nav v-if="isLoggedIn" class="nav-links" @click="handleNavClick">
         <span class="welcome-text">Welcome, {{ displayName }}! |</span>
         <router-link to="/">Home</router-link>
         <router-link to="/collection">Collection</router-link>
@@ -70,7 +83,7 @@ watch(() => route.fullPath, loadUser);
       </nav>
 
       <!-- Guest nav -->
-      <nav v-else class="nav-links">
+      <nav v-else class="nav-links" @click="handleNavClick">
         <router-link to="/login">Log In</router-link>
         <router-link to="/register">Register</router-link>
       </nav>
