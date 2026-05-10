@@ -1,7 +1,7 @@
 import random
 from flask import Blueprint, jsonify, session
 from app import db
-from app.models import User, Skin, Rarity
+from app.models import User, Skin, Rarity, UserCollection
 
 gacha = Blueprint("gacha", __name__)
 
