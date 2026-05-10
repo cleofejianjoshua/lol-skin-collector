@@ -6,7 +6,7 @@
       <div class="header-title-row">
         <h1 class="page-title">Collection</h1>
         <span class="header-sep">|</span>
-        <span class="page-title shards-label" v-if="!loading">Shards <span class="shard-num">{{ tokenBalance }}</span></span>
+        <span class="page-title essence-label" v-if="!loading">Essence <span class="essence-num">{{ tokenBalance }}</span></span>
       </div>
       <p class="page-subtitle" v-if="!loading">
         {{ collection.length }} skin{{ collection.length !== 1 ? 's' : '' }} owned
@@ -283,13 +283,13 @@ function setDisplaySlot(idx) {
   line-height: 1;
 }
 
-.shards-label {
+.essence-label {
   color: var(--text-muted);
   background: none;
   -webkit-text-fill-color: var(--text-muted);
 }
 
-.shards-label .shard-num {
+.essence-label .essence-num {
   -webkit-text-fill-color: #fde68a;
   color: #fde68a;
 }
