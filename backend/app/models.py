@@ -19,6 +19,12 @@ class User(db.Model):
         cascade="all, delete-orphan"
     )
 
+    display_slots = db.relationship(
+        "DisplaySlot", 
+        back_populates="user", 
+        lazy=True, 
+        cascade="all, delete-orphan")
+
     def __repr__(self):
         return f"<User {self.username}>"
 
@@ -93,3 +99,19 @@ class UserCollection(db.Model):
 
     def __repr__(self):
         return f"<UserCollection user={self.user_id} skin={self.skin_id}>"
+    
+class DisplaySlot(db.Model):
+    __tablename__ = "display_slot"
+    id          = db.Column(db.Integer, primary_key=True)
+    user_id     = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
+    slot_index  = db.Column(db.Integer, nullable=False)
+    skin_id     = db.Column(db.Integer, db.ForeignKey("skins.id"))
+
+    __table_args__ = (
+        db.UniqueConstraint("user_id", "slot_index", name="uq_user_slot"),
+        db.CheckConstraint("slot_index BETWEEN 0 AND 3", name="ck_slot_index_range"),
+    )
+
+    user = db.relationship("User", back_populates="display_slots")
+    skin = db.relationship("Skin", lazy="joined")
+    
