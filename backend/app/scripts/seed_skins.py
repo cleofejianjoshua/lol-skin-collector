@@ -15,24 +15,21 @@ def get_latest_version():
 
 
 def get_champion_list(version):
-    """Summary list — used only to get champion keys."""
     url = f"https://ddragon.leagueoflegends.com/cdn/{version}/data/en_US/champion.json"
     return requests.get(url).json()["data"]
 
 
 def get_champion_detail(session, version, champ_key):
-    """Full champion data including skins list."""
     url = f"https://ddragon.leagueoflegends.com/cdn/{version}/data/en_US/champion/{champ_key}.json"
-    data = session.get(url).json()["data"]
-    return data[list(data.keys())[0]]  # key name isn't always champ_key (e.g. Wukong = MonkeyKing)
+    data = session.get(url, timeout=10).json()["data"]
+    return data[list(data.keys())[0]]
 
 
 def get_community_dragon_skins(session):
     url = "https://raw.communitydragon.org/latest/plugins/rcp-be-lol-game-data/global/default/v1/skins.json"
     print("Fetching Community Dragon skin data...")
-    raw = {int(k): v for k, v in session.get(url).json().items()}
+    raw = {int(k): v for k, v in session.get(url, timeout=30).json().items()}
 
-    # Build a set of all chroma IDs from the chromas arrays
     chroma_ids = set()
     for skin_data in raw.values():
         for chroma in skin_data.get("chromas", []):
@@ -40,7 +37,16 @@ def get_community_dragon_skins(session):
 
     return raw, chroma_ids
 
-def build_image_url(champ_key, skin_num):
+
+def build_image_url(skin_id, cd_skins, champ_key, skin_num):
+    cd_data = cd_skins.get(skin_id, {})
+    path = cd_data.get("loadScreenPath", "")
+
+    if path:
+        clean = path.lower().replace("/lol-game-data/assets/", "")
+        return f"https://raw.communitydragon.org/latest/plugins/rcp-be-lol-game-data/global/default/{clean}"
+
+    # Fallback to DDragon if Community Dragon has no path
     return f"https://ddragon.leagueoflegends.com/cdn/img/champion/loading/{champ_key}_{skin_num}.jpg"
 
 
@@ -67,7 +73,6 @@ def seed_skins():
     print(f"Using version: {version}")
 
     session = requests.Session()
-    session.request = lambda method, url, **kwargs: requests.Session.request(session, method, url, timeout=10, **kwargs)
 
     print("Fetching champion list...")
     champions = get_champion_list(version)
@@ -78,7 +83,8 @@ def seed_skins():
 
     rarity_cache = {r.rarity_name: r for r in Rarity.query.all()}
 
-    total_added = 0
+    added = 0
+    updated = 0
 
     for idx, champ_key in enumerate(champions, start=1):
         print(f"[{idx}/{total_champs}] Processing {champ_key}...")
@@ -91,7 +97,6 @@ def seed_skins():
             skin_num = skin["num"]
             skin_id = champ_id * 1000 + skin_num
 
-            # Skip chromas using the definitive chroma ID set from Community Dragon
             if skin_id in chroma_ids:
                 continue
 
@@ -106,25 +111,39 @@ def seed_skins():
                 print(f"  Skipping '{name}' — missing rarity in DB: {rarity_name}")
                 continue
 
-            exists = Skin.query.filter_by(
+            image_url = build_image_url(skin_id, cd_skins, champ_key, skin_num)
+            if not image_url:
+                print(f"  No image found for '{name}', skipping.")
+                continue
+
+            existing = Skin.query.filter_by(
                 skin_name=name,
                 champion=champ_name
             ).first()
 
-            if exists:
-                continue
-
-            db.session.add(Skin(
-                skin_name=name,
-                champion=champ_name,
-                rarity_id=rarity.id,
-                image_path=build_image_url(champ_key, skin_num),
-            ))
-            total_added += 1
+            if existing:
+                # Update only if something changed
+                changed = False
+                if existing.rarity_id != rarity.id:
+                    existing.rarity_id = rarity.id
+                    changed = True
+                if existing.image_path != image_url:
+                    existing.image_path = image_url
+                    changed = True
+                if changed:
+                    updated += 1
+            else:
+                db.session.add(Skin(
+                    skin_name=name,
+                    champion=champ_name,
+                    rarity_id=rarity.id,
+                    image_path=image_url,
+                ))
+                added += 1
 
         db.session.commit()
 
-    print(f"Seeding complete. {total_added} skins added.")
+    print(f"Seeding complete. {added} skins added, {updated} skins updated.")
 
 
 if __name__ == "__main__":
