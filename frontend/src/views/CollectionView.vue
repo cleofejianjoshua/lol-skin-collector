@@ -11,6 +11,16 @@
       <p class="page-subtitle" v-if="!loading">
         {{ collection.length }} skin{{ collection.length !== 1 ? 's' : '' }} owned
       </p>
+
+      <!-- Filter -->
+      <div class="filter-row" v-if="!loading && collection.length > 0">
+        <button class="filter-btn" :class="{ active: activeFilter === 'all' }" @click="activeFilter = 'all'">All</button>
+        <button class="filter-btn" :class="{ active: activeFilter === 'ultimate' }" @click="activeFilter = 'ultimate'">Ultimate</button>
+        <button class="filter-btn" :class="{ active: activeFilter === 'legendary' }" @click="activeFilter = 'legendary'">Legendary</button>
+        <button class="filter-btn" :class="{ active: activeFilter === 'epic' }" @click="activeFilter = 'epic'">Epic</button>
+        <button class="filter-btn" :class="{ active: activeFilter === 'rare' }" @click="activeFilter = 'rare'">Rare</button>
+        <button class="filter-btn" :class="{ active: activeFilter === 'common' }" @click="activeFilter = 'common'">Common</button>
+      </div>
     </div>
 
     <!-- Loading -->
@@ -24,10 +34,15 @@
       <p class="empty-msg">Your collection is empty.</p>
     </div>
 
+    <!-- Empty Filter Result -->
+    <div v-else-if="filteredCollection.length === 0" class="feedback-state">
+      <p class="empty-msg">No skins match the selected filter.</p>
+    </div>
+
     <!-- Gallery -->
     <div v-else class="skin-gallery">
       <div
-        v-for="entry in collection"
+        v-for="entry in filteredCollection"
         :key="entry.skin.name"
         class="card-wrapper"
         @click="openModal(entry)"
@@ -100,7 +115,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from "vue";
+import { ref, onMounted, computed } from "vue";
 import { useRouter } from "vue-router";
 import { fetchUserCollection } from "@/services/api.js";
 import SkinCard from "@/components/shared/SkinCard.vue";
@@ -116,6 +131,12 @@ const collection   = ref([]);
 const selected     = ref(null);
 const displaySlots = ref([null, null, null, null]);
 const tokenBalance = ref(0);
+const activeFilter = ref("all");
+
+const filteredCollection = computed(() => {
+  if (activeFilter.value === "all") return collection.value;
+  return collection.value.filter(entry => entry.skin.rarity === activeFilter.value);
+});
 
 const MOCK_COLLECTION = [
   { skin: { name: "Spirit Blossom Ahri", champion: "Ahri",   rarity: "legendary", image_path: "" }, count: 2 },
@@ -268,6 +289,38 @@ function saveSlots() {
   margin: 0;
   font-size: 0.88rem;
   color: var(--text-muted);
+}
+
+/* ── Filter ── */
+.filter-row {
+  display: flex;
+  gap: 8px;
+  margin-top: 16px;
+  flex-wrap: wrap;
+}
+
+.filter-btn {
+  padding: 6px 12px;
+  border-radius: 999px;
+  background: rgba(15,23,42,0.8);
+  border: 1px solid rgba(148,163,184,0.2);
+  color: var(--text-muted);
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  text-transform: capitalize;
+}
+
+.filter-btn:hover {
+  background: rgba(59,130,246,0.15);
+  color: #93c5fd;
+}
+
+.filter-btn.active {
+  background: rgba(59,130,246,0.25);
+  border-color: rgba(59,130,246,0.7);
+  color: #dbeafe;
 }
 
 /* ── Feedback states ── */
