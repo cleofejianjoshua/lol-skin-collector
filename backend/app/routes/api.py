@@ -102,12 +102,6 @@ def pick_rarity():
 
 @api.route("/gacha/pull", methods=["POST"])
 def gacha_pull():
-    """
-    Perform a single gacha pull.
-    Randomly picks a rarity, then picks a random skin of that rarity.
-    If no skins exist for that rarity, falls back to any skin.
-    Returns the skin and whether it was a duplicate.
-    """
     user = get_current_user()
     if not user:
         return jsonify({"error": "Not logged in"}), 401
@@ -116,24 +110,22 @@ def gacha_pull():
     if not all_skins:
         return jsonify({"error": "No skins available in the pool yet."}), 404
 
-    # Pick a rarity, then filter skins
-    rarity     = pick_rarity()
-    pool       = [s for s in all_skins if s.rarity == rarity]
+    rarity = pick_rarity()
+    pool   = [s for s in all_skins if s.rarity.rarity_name == rarity]
     if not pool:
         pool = all_skins  # fallback
 
     skin = random.choice(pool)
 
-    # Check if user already owns it
-    existing = UserCollection.query.filter_by(
-        user_id=user.id, skin_id=skin.id
-    ).first()
+    existing = UserCollection.query.filter_by(user_id=user.id, skin_id=skin.id).first()
 
-    is_duplicate = existing is not None
+    if existing:
+        existing.duplicate_count += 1
+        is_duplicate = True
+    else:
+        db.session.add(UserCollection(user_id=user.id, skin_id=skin.id))
+        is_duplicate = False
 
-    # Add to collection regardless (duplicates allowed — part of gacha)
-    entry = UserCollection(user_id=user.id, skin_id=skin.id)
-    db.session.add(entry)
     db.session.commit()
 
     return jsonify({
