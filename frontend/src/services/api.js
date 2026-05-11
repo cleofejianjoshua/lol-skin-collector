@@ -193,3 +193,13 @@ export async function clearDisplaySlot(slotIndex) {
   if (!res.ok) throw new Error(data.error || "Failed to clear slot");
   return data;
 }
+
+export async function unlockSkin(collectionId) {
+  const res = await fetch(`/api/collection/unlock/${collectionId}`, {
+    method: "POST",
+    credentials: "include",
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || "Failed to unlock skin");
+  return data;
+}

@@ -73,13 +73,13 @@ watch(() => route.fullPath, loadUser);
 
       <!-- Logged-in nav -->
       <nav v-if="isLoggedIn" class="nav-links" @click="handleNavClick">
-        <span class="welcome-text">Welcome, {{ displayName }}! | </span>  
+        <span class="welcome-text">Welcome, {{ displayName }}!</span>  
         <router-link to="/">Home</router-link>
         <router-link to="/collection">Collection</router-link>
         <router-link to="/gacha">Gacha</router-link>
-        <router-link to="/gold-forge">🪙 Gold Forge</router-link>
+        <router-link to="/gold-forge">Gold</router-link>
         <router-link to="/profile">Profile</router-link>
-        <a href="#" @click.prevent="promptLogout">Sign out</a>
+        <a href="#" @click.prevent="promptLogout">Logout</a>
       </nav>
 
       <!-- Guest nav -->

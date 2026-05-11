@@ -266,3 +266,34 @@ def clear_display_slot(slot_index):
     slot.skin_id = None
     db.session.commit()
     return jsonify({"message": "Slot cleared", "slot_index": slot_index})
+
+@api.route("/collection/unlock/<int:collection_id>", methods=["POST"])
+def unlock_skin(collection_id):
+    user = get_current_user()
+    if not user:
+        return jsonify({"error": "Not logged in"}), 401
+
+    entry = UserCollection.query.filter_by(id=collection_id, user_id=user.id).first()
+    if not entry:
+        return jsonify({"error": "Skin not found in collection"}), 404
+
+    if entry.is_owned:
+        return jsonify({"error": "Skin is already unlocked"}), 400
+
+    unlock_cost = entry.skin.rarity.item_cost
+    if (user.essence or 0) < unlock_cost:
+        return jsonify({"error": "Not enough essence"}), 400
+
+    user.essence -= unlock_cost
+    entry.is_owned = True
+
+    try:
+        db.session.commit()
+        return jsonify({
+            "message":     "Skin unlocked",
+            "essence":     user.essence,
+            "is_owned":    True,
+        })
+    except Exception:
+        db.session.rollback()
+        return jsonify({"error": "Failed to unlock skin"}), 500
