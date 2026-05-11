@@ -71,6 +71,9 @@ const error         = ref("");
 const pendingClicks = ref(0);
 let syncTimer       = null;
 
+const goldSound = typeof Audio !== 'undefined' ? new Audio('/sounds/sound_gold.mp3') : null;
+if (goldSound) goldSound.volume = 0.35;
+
 onMounted(async () => {
   // Load gold from DB
   try {
@@ -105,7 +108,10 @@ const clickGold = () => {
   gold.value++;
   pendingClicks.value++;
   error.value = "";
-
+  if (goldSound) {
+    goldSound.currentTime = 0;
+    goldSound.play().catch(e => console.log("Audio play failed:", e));
+  }
   // Debounce sync to DB
   if (syncTimer) clearTimeout(syncTimer);
   syncTimer = setTimeout(syncToDB, 1000); // Sync after 1s of no clicking

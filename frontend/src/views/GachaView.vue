@@ -136,7 +136,7 @@ const revealSound = typeof Audio !== 'undefined' ? new Audio('/sounds/sound_open
 if (revealSound) revealSound.volume = 0.5;
 
 const clickSound = typeof Audio !== 'undefined' ? new Audio('/sounds/sound_click.mp3') : null;
-if (clickSound) revealSound.volume = 0.5;
+if (clickSound) clickSound.volume = 0.5;
 
 const notEnoughShards = computed(() => gold.value < PULL_COST);
 
