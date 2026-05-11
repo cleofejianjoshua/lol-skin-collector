@@ -22,11 +22,16 @@ def pick_rarity():
     return random.choices(rarities, weights=weights, k=1)[0]
 
 
+PULL_COST = 10
+
 @gacha.route("/pull", methods=["POST"])
 def gacha_pull():
     user = get_current_user()
     if not user:
         return jsonify({"error": "Not logged in"}), 401
+
+    if (user.gold or 0) < PULL_COST:
+        return jsonify({"error": "Not enough gold"}), 400
 
     all_skins = Skin.query.all()
     if not all_skins:
@@ -35,7 +40,7 @@ def gacha_pull():
     rarity = pick_rarity()
     pool   = [s for s in all_skins if s.rarity.rarity_name == rarity]
     if not pool:
-        pool = all_skins  # fallback
+        pool = all_skins
 
     skin = random.choice(pool)
 
@@ -48,9 +53,15 @@ def gacha_pull():
         db.session.add(UserCollection(user_id=user.id, skin_id=skin.id))
         is_duplicate = False
 
-    db.session.commit()
+    user.gold -= PULL_COST
 
-    return jsonify({
-        "skin":         skin.to_dict(),
-        "is_duplicate": is_duplicate,
-    })
+    try:
+        db.session.commit()
+        return jsonify({
+            "skin":         skin.to_dict(),
+            "is_duplicate": is_duplicate,
+            "gold":         user.gold,
+        })
+    except Exception:
+        db.session.rollback()
+        return jsonify({"error": "Pull failed"}), 500

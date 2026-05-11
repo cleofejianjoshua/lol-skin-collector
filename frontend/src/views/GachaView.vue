@@ -209,29 +209,20 @@ const triggerPull = async () => {
   try {
     const [data] = await Promise.all([gachaPull(), delay]);
 
-    // Map backend response to match mock shape
     result.value = {
       skin: {
         ...data.skin,
-        name:  data.skin.name  || data.skin.skin_name,
+        name:   data.skin.name   || data.skin.skin_name,
         rarity: data.skin.rarity || data.skin.rarity_name,
       },
       is_duplicate: data.is_duplicate,
     };
+    gold.value     = data.gold;  // server already deducted PULL_COST
     demoMode.value = false;
   } catch {
     await delay;
-    result.value   = mockPull();  // fallback to mock on backend failure
+    result.value   = mockPull();
     demoMode.value = true;
-  }
-
-  gold.value -= PULL_COST;
-  try {
-    const goldData = await spendGold(PULL_COST);
-    gold.value = goldData.gold;
-  } catch (err) {
-    console.error("Failed to deduct gold:", err);
-    // Still allow the pull to complete; re-sync on next load
   }
 
   isPulling.value = false;

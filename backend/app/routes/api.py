@@ -27,7 +27,7 @@ def get_user():
         "username": user.username,
         "nickname": user.nickname,
         "email":    user.email,
-        "currency": user.currency,
+        "essence":  user.essence,
         "gold":     user.gold,
     })
 
@@ -102,13 +102,13 @@ def disenchant_skin(collection_id):
     else:
         db.session.delete(entry)
 
-    user.currency = (user.currency or 0) + disenchant_value
+    user.essence = (user.essence or 0) + disenchant_value
 
     try:
         db.session.commit()
         return jsonify({
             "message": "Skin disenchanted",
-            "currency": user.currency
+            "essence": user.essence
         })
     except Exception:
         db.session.rollback()
@@ -128,7 +128,6 @@ def get_gold():
 
 @api.route("/gold/add", methods=["POST"])
 def add_gold():
-    """Add gold to the current user's balance."""
     user = get_current_user()
     if not user:
         return jsonify({"error": "Not logged in"}), 401
@@ -138,12 +137,10 @@ def add_gold():
     if amount < 1:
         return jsonify({"error": "Amount must be at least 1"}), 400
 
-    # Use atomic increment to handle rapid concurrent requests safely
-    User.query.filter_by(id=user.id).update({User.gold: (User.gold or 0) + amount})
-    
+    user.gold = (user.gold or 0) + amount
+
     try:
         db.session.commit()
-        # Refresh to get the latest value
         return jsonify({"gold": user.gold})
     except Exception:
         db.session.rollback()

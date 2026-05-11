@@ -9,7 +9,7 @@ class User(db.Model):
     password = db.Column(db.String(255), nullable=False)
     nickname = db.Column(db.String(20))
     email    = db.Column(db.String(255))
-    currency = db.Column(db.Integer,default=0)
+    essence = db.Column(db.Integer,default=0)
     gold     = db.Column(db.Integer,default=0)
 
     # Relationship to skin collection
