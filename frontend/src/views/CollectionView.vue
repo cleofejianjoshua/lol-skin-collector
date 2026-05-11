@@ -165,7 +165,7 @@ onMounted(async () => {
 
     if (!userRes.username) { router.push({ name: "Login" }); return; }
 
-    tokenBalance.value = userRes.currency ?? 0;
+    tokenBalance.value = userRes.essence ?? 0;
     collection.value   = normalizeSkins(collectionData ?? []);
 
     const slotArray = [null, null, null, null];
@@ -198,7 +198,7 @@ async function disenchant() {
     });
     if (!res.ok) { console.error("Disenchant failed"); return; }
     const data = await res.json();
-    tokenBalance.value = data.currency;
+    tokenBalance.value = data.essence;
     entry.count -= 1;
     if (entry.count <= 0) {
       // Clear slot if this skin was displayed
