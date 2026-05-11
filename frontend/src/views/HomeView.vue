@@ -37,9 +37,7 @@
 import { ref, computed, onMounted } from "vue";
 import QuoteCard from "@/components/shared/QuoteCard.vue";
 import SkinCard from "@/components/shared/SkinCard.vue";
-import { fetchUser } from "@/services/api.js";
-
-const SLOTS_KEY = "lol_display_slots";
+import { fetchUser, fetchDisplaySlots } from "@/services/api.js";
 
 const username     = ref("");
 const nickname     = ref("");
@@ -49,17 +47,23 @@ const displaySlots = ref([null, null, null, null]);
 const displayName = computed(() => nickname.value || username.value);
 const isLoggedIn  = computed(() => username.value && username.value !== "Guest");
 
-function loadSlots() {
-  const saved = localStorage.getItem(SLOTS_KEY);
-  if (saved) displaySlots.value = JSON.parse(saved);
-}
-
 onMounted(async () => {
-  loadSlots();
   try {
-    const data = await fetchUser();
-    username.value = data.username || "Guest";
-    nickname.value = data.nickname || "";
+    const [userData, slots] = await Promise.all([
+      fetchUser(),
+      fetchDisplaySlots().catch(() => []),
+    ]);
+
+    username.value = userData.username || "Guest";
+    nickname.value = userData.nickname || "";
+
+    if (slots.length) {
+      const slotArray = [null, null, null, null];
+      for (const s of slots) {
+        slotArray[s.slot_index] = s.skin ?? null;
+      }
+      displaySlots.value = slotArray;
+    }
   } finally {
     isLoading.value = false;
   }

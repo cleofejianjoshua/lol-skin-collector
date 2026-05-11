@@ -120,77 +120,60 @@
 <script setup>
 import { ref, onMounted, computed } from "vue";
 import { useRouter } from "vue-router";
-import { fetchUserCollection } from "@/services/api.js";
+import { fetchUserCollection, fetchDisplaySlots, updateDisplaySlot, clearDisplaySlot } from "@/services/api.js";
 import SkinCard from "@/components/shared/SkinCard.vue";
 
 const router = useRouter();
 
 const TOKEN_VALUES = { common: 90, rare: 150, epic: 350, legendary: 600, ultimate: 1200 };
-const SLOTS_KEY    = "lol_display_slots";
 
 const loading      = ref(true);
 const collection   = ref([]);
 const selected     = ref(null);
-const displaySlots = ref([null, null, null, null]);
+const displaySlots = ref([null, null, null, null]); // [skin | null, ...]
 const tokenBalance = ref(0);
 const activeFilter = ref("all");
 
 const filteredCollection = computed(() => {
   if (activeFilter.value === "all") return collection.value;
-  return collection.value.filter(entry => entry.skin.rarity === activeFilter.value);
+  return collection.value.filter(e => e.skin.rarity === activeFilter.value);
 });
 
-const MOCK_COLLECTION = [
-  { skin: { name: "Spirit Blossom Ahri", champion: "Ahri",   rarity: "legendary", image_path: "" }, count: 2 },
-  { skin: { name: "Arcane Jinx",         champion: "Jinx",   rarity: "epic",      image_path: "" }, count: 1 },
-  { skin: { name: "Pulsefire Ezreal",    champion: "Ezreal", rarity: "epic",      image_path: "" }, count: 3 },
-  { skin: { name: "Star Guardian Lux",   champion: "Lux",    rarity: "rare",      image_path: "" }, count: 2 },
-  { skin: { name: "Bewitching Jinx",     champion: "Jinx",   rarity: "rare",      image_path: "" }, count: 1 },
-  { skin: { name: "Base Ahri",           champion: "Ahri",   rarity: "common",    image_path: "" }, count: 4 },
-  { skin: { name: "Base Jinx",           champion: "Jinx",   rarity: "common",    image_path: "" }, count: 1 },
-];
-
 function normalizeSkins(data) {
-  if (!Array.isArray(data)) {
-    console.warn("normalizeSkins: Expected array, got:", data);
-    return [];
-  }
+  if (!Array.isArray(data)) return [];
   const map = new Map();
   for (const entry of data) {
     if (!entry) continue;
-    // Backend returns UserCollection entries: { id, skin: {...}, duplicate_count }
-    // The nested 'skin' is the actual skin data
     const skin = entry.skin ?? entry;
     const key  = skin.id ?? skin.name;
     if (map.has(key)) {
       map.get(key).count += 1;
     } else {
-      const count = (entry.duplicate_count ?? 0) + 1;
-      map.set(key, { id: entry.id, skin, count });
+      map.set(key, { id: entry.id, skin, count: (entry.duplicate_count ?? 0) + 1 });
     }
   }
   return Array.from(map.values());
 }
 
 onMounted(async () => {
-  const savedSlots  = localStorage.getItem(SLOTS_KEY);
-  if (savedSlots) displaySlots.value = JSON.parse(savedSlots);
-
-  // Run auth check and collection fetch in parallel
   try {
-    const [userRes, data] = await Promise.all([
+    const [userRes, collectionData, slots] = await Promise.all([
       fetch("/api/user", { credentials: "include" }).then(r => r.json()),
-      fetchUserCollection().catch(() => [])
+      fetchUserCollection().catch(() => []),
+      fetchDisplaySlots().catch(() => []),
     ]);
 
-    if (!userRes.username) {
-      router.push({ name: "Login" });
-      return;
-    }
+    if (!userRes.username) { router.push({ name: "Login" }); return; }
+
     tokenBalance.value = userRes.currency ?? 0;
-    collection.value = normalizeSkins(data ?? []);
-  } catch (err) {
-    console.error("Collection load failed:", err);
+    collection.value   = normalizeSkins(collectionData ?? []);
+
+    const slotArray = [null, null, null, null];
+    for (const s of slots) {
+      slotArray[s.slot_index] = s.skin ?? null;
+    }
+    displaySlots.value = slotArray;
+  } catch {
     router.push({ name: "Login" });
   } finally {
     loading.value = false;
@@ -198,37 +181,33 @@ onMounted(async () => {
 });
 
 function getSlotForSkin(skin) {
-  const idx = displaySlots.value.findIndex(s => s && s.name === skin.name);
+  const idx = displaySlots.value.findIndex(s => s && s.id === skin.id);
   return idx >= 0 ? idx : null;
 }
 
 function openModal(entry) { selected.value = entry; }
-function closeModal()     { selected.value = null; }
+function closeModal()     { selected.value = null;  }
 
 async function disenchant() {
   if (!selected.value) return;
-  const entry  = selected.value;
-
-  try{
+  const entry = selected.value;
+  try {
     const res = await fetch(`/api/collection/disenchant/${entry.id}`, {
       method: "DELETE",
+      credentials: "include",
     });
-
-    if (!res.ok) {
-      const err = await res.json();
-      console.error("Disenchant failed:", err.error);
-      return;
-    }
-
+    if (!res.ok) { console.error("Disenchant failed"); return; }
     const data = await res.json();
-
     tokenBalance.value = data.currency;
-
     entry.count -= 1;
     if (entry.count <= 0) {
+      // Clear slot if this skin was displayed
+      const slotIdx = getSlotForSkin(entry.skin);
+      if (slotIdx !== null) {
+        await clearDisplaySlot(slotIdx);
+        displaySlots.value[slotIdx] = null;
+      }
       collection.value = collection.value.filter(e => e !== entry);
-      displaySlots.value = displaySlots.value.map(s => s && s.name === entry.skin.name ? null : s);
-      saveSlots();
       closeModal();
     }
   } catch (err) {
@@ -236,16 +215,26 @@ async function disenchant() {
   }
 }
 
-function setDisplaySlot(idx) {
+async function setDisplaySlot(idx) {
   if (!selected.value) return;
-  const skin  = selected.value.skin;
-  const slots = [...displaySlots.value];
-  for (let i = 0; i < slots.length; i++) {
-    if (slots[i] && slots[i].name === skin.name) slots[i] = null;
+  const skin = selected.value.skin;
+
+  // Clear this skin from any existing slot first
+  const currentSlot = getSlotForSkin(skin);
+  if (currentSlot !== null && currentSlot !== idx) {
+    await clearDisplaySlot(currentSlot);
+    displaySlots.value[currentSlot] = null;
   }
-  slots[idx] = { ...skin };
-  displaySlots.value = slots;
-  saveSlots();
+
+  // If already in this slot, clear it (toggle off)
+  if (currentSlot === idx) {
+    await clearDisplaySlot(idx);
+    displaySlots.value[idx] = null;
+    return;
+  }
+
+  await updateDisplaySlot(idx, skin.id);
+  displaySlots.value[idx] = { ...skin };
 }
 </script>
 

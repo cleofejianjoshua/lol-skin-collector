@@ -1,6 +1,6 @@
 from flask import Blueprint, request, jsonify, session
 from app import db
-from app.models import User, Skin, UserCollection
+from app.models import User, Skin, UserCollection, DisplaySlot
 import random
 
 api = Blueprint("api", __name__, url_prefix="/api")
@@ -205,3 +205,67 @@ def seed_skins():
 
     db.session.commit()
     return jsonify({"message": f"Seeded {added} skins."})
+
+@api.route("/display-slots", methods=["GET"])
+def get_display_slots():
+    user = get_current_user()
+    if not user:
+        return jsonify({"error": "Not logged in"}), 401
+
+    slots = DisplaySlot.query.filter_by(user_id=user.id).order_by(DisplaySlot.slot_index).all()
+
+    # Return all 4 slots, empty ones included
+    result = []
+    slot_map = {s.slot_index: s for s in slots}
+    for i in range(4):
+        slot = slot_map.get(i)
+        result.append({
+            "slot_index": i,
+            "skin": slot.skin.to_dict() if slot and slot.skin else None,
+        })
+
+    return jsonify(result)
+
+
+@api.route("/display-slots/<int:slot_index>", methods=["PUT"])
+def update_display_slot(slot_index):
+    user = get_current_user()
+    if not user:
+        return jsonify({"error": "Not logged in"}), 401
+
+    if slot_index < 0 or slot_index > 3:
+        return jsonify({"error": "Invalid slot index (0-3 only)"}), 400
+
+    data    = request.get_json()
+    skin_id = data.get("skin_id")
+    if not skin_id:
+        return jsonify({"error": "skin_id is required"}), 400
+
+    # Make sure user owns this skin
+    owned = UserCollection.query.filter_by(user_id=user.id, skin_id=skin_id).first()
+    if not owned:
+        return jsonify({"error": "You don't own this skin"}), 403
+
+    slot = DisplaySlot.query.filter_by(user_id=user.id, slot_index=slot_index).first()
+    if slot:
+        slot.skin_id = skin_id
+    else:
+        db.session.add(DisplaySlot(user_id=user.id, slot_index=slot_index, skin_id=skin_id))
+
+    db.session.commit()
+    return jsonify({"message": "Slot updated", "slot_index": slot_index, "skin_id": skin_id})
+
+
+@api.route("/display-slots/<int:slot_index>", methods=["DELETE"])
+def clear_display_slot(slot_index):
+    user = get_current_user()
+    if not user:
+        return jsonify({"error": "Not logged in"}), 401
+
+    slot = DisplaySlot.query.filter_by(user_id=user.id, slot_index=slot_index).first()
+    if not slot:
+        return jsonify({"error": "Slot is already empty"}), 404
+
+    slot.skin_id = None
+    db.session.commit()
+    return jsonify({"message": "Slot cleared", "slot_index": slot_index})

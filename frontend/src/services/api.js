@@ -162,3 +162,34 @@ export async function spendGold(amount) {
   if (!res.ok) throw new Error(data.error || "Failed to spend gold");
   return data;
 }
+
+// Display Slots
+
+export async function fetchDisplaySlots() {
+  const res = await fetch("/api/display-slots", { credentials: "include" });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || "Failed to fetch display slots");
+  return data; // [{ slot_index, skin }, ...]
+}
+
+export async function updateDisplaySlot(slotIndex, skinId) {
+  const res = await fetch(`/api/display-slots/${slotIndex}`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    credentials: "include",
+    body: JSON.stringify({ skin_id: skinId }),
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || "Failed to update slot");
+  return data;
+}
+
+export async function clearDisplaySlot(slotIndex) {
+  const res = await fetch(`/api/display-slots/${slotIndex}`, {
+    method: "DELETE",
+    credentials: "include",
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || "Failed to clear slot");
+  return data;
+}
