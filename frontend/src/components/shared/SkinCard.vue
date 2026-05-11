@@ -1,6 +1,6 @@
 <template>
   <div
-    class="skin-card"
+    class="skin-card rarity-themed"
     :class="[rarity, { 'is-empty': isEmpty }]"
   >
     <!-- Filled Skin Card -->
@@ -65,27 +65,19 @@ const rarity = computed(() => props.skin?.rarity || 'common');
 .skin-card {
   width: 308px;
   height: 560px;
-  border-radius: 32px;
+  border-radius: 0;
   background: rgba(15, 23, 42, 0.6);
   border: 2px solid rgba(148, 163, 184, 0.15);
   overflow: hidden;
   position: relative;
   box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
   backdrop-filter: blur(12px);
-  transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.4s ease, border-color 0.3s ease;
+  transition: box-shadow 0.4s ease, border-color 0.3s ease;
 }
-
-/* Rarity borders */
-.skin-card.rare      { border-color: rgba(59,130,246,0.35); }
-.skin-card.epic      { border-color: rgba(168,85,247,0.4); }
-.skin-card.legendary { border-color: rgba(234,179,8,0.5);  box-shadow: 0 0 30px rgba(234,179,8,0.15), 0 20px 40px rgba(0,0,0,0.4); }
-.skin-card.ultimate  { border-color: rgba(239,68,68,0.6);  box-shadow: 0 0 40px rgba(239,68,68,0.25), 0 20px 40px rgba(0,0,0,0.4); }
 
 /* Hover */
 .skin-card:hover {
-  transform: translateY(-8px);
   border-color: var(--accent);
-  box-shadow: 0 28px 50px rgba(0, 0, 0, 0.5), 0 0 20px rgba(59,130,246,0.15);
 }
 
 /* Background art */
@@ -104,7 +96,6 @@ const rarity = computed(() => props.skin?.rarity || 'common');
 }
 
 .skin-card:hover .skin-img {
-  transform: scale(1.05);
   filter: brightness(0.9) contrast(1.1);
 }
 

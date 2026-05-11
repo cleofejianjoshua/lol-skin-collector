@@ -1,5 +1,8 @@
 <template>
-  <div class="skin-slideshow-card" :class="{ 'is-loading': !currentSkin }">
+  <div 
+    class="skin-slideshow-card rarity-themed" 
+    :class="[{ 'is-loading': !currentSkin }, currentSkin?.rarity]"
+  >
     <transition name="fade-slide" mode="out-in">
       <div v-if="currentSkin" :key="currentSkin.name" class="slideshow-content">
         <!-- Background Image -->
@@ -47,15 +50,14 @@ const props = defineProps({
 
 const currentIndex = ref(0);
 const currentSkin = ref(null);
-let timer = null;
+const timer = ref(null);
 
 const startSlideshow = () => {
-  if (timer) clearInterval(timer);
+  if (timer.value) clearInterval(timer.value);
   if (props.skins.length > 0) {
-    // Start at a random index so multiple slideshows don't show the same card
     currentIndex.value = Math.floor(Math.random() * props.skins.length);
     currentSkin.value = props.skins[currentIndex.value];
-    timer = setInterval(nextSkin, props.interval);
+    timer.value = setInterval(nextSkin, props.interval);
   }
 };
 
@@ -71,12 +73,9 @@ watch(() => props.skins, (newSkins) => {
   }
 }, { deep: true });
 
-onMounted(() => {
-  startSlideshow();
-});
-
+onMounted(startSlideshow);
 onUnmounted(() => {
-  if (timer) clearInterval(timer);
+  if (timer.value) clearInterval(timer.value);
 });
 </script>
 
@@ -84,7 +83,7 @@ onUnmounted(() => {
 .skin-slideshow-card {
   width: 308px;
   height: 560px;
-  border-radius: 32px;
+  border-radius: 0;
   background: rgba(15, 23, 42, 0.6);
   border: 1px solid rgba(255, 255, 255, 0.08);
   overflow: hidden;
@@ -174,17 +173,15 @@ onUnmounted(() => {
 /* Transitions */
 .fade-slide-enter-active,
 .fade-slide-leave-active {
-  transition: all 0.6s ease;
+  transition: opacity 0.6s ease;
 }
 
 .fade-slide-enter-from {
   opacity: 0;
-  transform: translateX(20px);
 }
 
 .fade-slide-leave-to {
   opacity: 0;
-  transform: translateX(-20px);
 }
 
 .loading-state {
@@ -198,7 +195,7 @@ onUnmounted(() => {
   width: 30px;
   height: 30px;
   border: 2px solid rgba(255,255,255,0.1);
-  border-top-color: var(--accent);
+  border-top-color: #3b82f6;
   border-radius: 50%;
   animation: spin 1s linear infinite;
 }

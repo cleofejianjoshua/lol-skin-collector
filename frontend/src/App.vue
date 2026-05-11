@@ -77,7 +77,7 @@ watch(() => route.fullPath, loadUser);
         <router-link to="/">Home</router-link>
         <router-link to="/collection">Collection</router-link>
         <router-link to="/gacha">Gacha</router-link>
-        <router-link to="/shards">💎 Shards</router-link>
+        <router-link to="/gold-forge">🪙 Gold Forge</router-link>
         <router-link to="/profile">Profile</router-link>
         <a href="#" @click.prevent="promptLogout">Sign out</a>
       </nav>

@@ -117,3 +117,48 @@ export async function fetchUserCollection() {
   if (!res.ok) throw new Error(data.error || "Failed to fetch collection");
   return data;
 }
+
+// Gold
+
+/**
+ * Fetch the current user's gold balance from the database.
+ * Returns { gold: number }
+ */
+export async function fetchGold() {
+  const res = await fetch("/api/gold", { credentials: "include" });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || "Failed to fetch gold");
+  return data;
+}
+
+/**
+ * Add `amount` gold to the current user's balance.
+ * Returns { gold: number } with the updated balance.
+ */
+export async function addGold(amount = 1) {
+  const res = await fetch("/api/gold/add", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    credentials: "include",
+    body: JSON.stringify({ amount }),
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || "Failed to add gold");
+  return data;
+}
+
+/**
+ * Spend `amount` gold from the current user's balance.
+ * Returns { gold: number } with the updated balance.
+ */
+export async function spendGold(amount) {
+  const res = await fetch("/api/gold/spend", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    credentials: "include",
+    body: JSON.stringify({ amount }),
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || "Failed to spend gold");
+  return data;
+}

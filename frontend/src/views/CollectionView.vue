@@ -62,7 +62,7 @@
     <Teleport to="body">
       <Transition name="modal-fade">
         <div v-if="selected" class="modal-backdrop" @click.self="closeModal">
-          <div class="modal-panel" :class="selected.skin.rarity">
+          <div class="modal-panel rarity-themed" :class="selected.skin.rarity">
             <button class="modal-close" @click="closeModal">✕</button>
 
             <div class="modal-art-wrap">
@@ -368,14 +368,15 @@ function setDisplaySlot(idx) {
   width: 308px;
   height: 560px;
   cursor: pointer;
-  border-radius: 32px;
-  transition: transform 0.25s ease;
+  border-radius: 0;
+  transition: transform 0.25s ease, border-color 0.25s ease;
   outline: none;
 }
 
 .card-wrapper:hover,
 .card-wrapper:focus {
-  transform: translateY(-6px);
+  transform: translateY(-10px);
+  z-index: 5;
 }
 
 /* Dupe badge */
@@ -433,16 +434,16 @@ function setDisplaySlot(idx) {
   width: 100%;
   max-width: 720px;
   background: rgba(10, 16, 30, 0.96);
-  border-radius: 24px;
+  border-radius: 0;
   overflow: hidden;
   border: 1px solid rgba(148,163,184,0.15);
   box-shadow: 0 40px 80px rgba(0,0,0,0.6);
 }
 
-.modal-panel.rare      { border-color: rgba(59,130,246,0.4);  box-shadow: 0 0 60px rgba(59,130,246,0.15), 0 40px 80px rgba(0,0,0,0.6); }
-.modal-panel.epic      { border-color: rgba(168,85,247,0.45); box-shadow: 0 0 60px rgba(168,85,247,0.2),  0 40px 80px rgba(0,0,0,0.6); }
-.modal-panel.legendary { border-color: rgba(234,179,8,0.5);   box-shadow: 0 0 80px rgba(234,179,8,0.25),  0 40px 80px rgba(0,0,0,0.6); }
-.modal-panel.ultimate  { border-color: rgba(239, 68, 68, 0.8); box-shadow: 0 0 100px rgba(239, 68, 68, 0.4), 0 40px 80px rgba(0,0,0,0.6); }
+.modal-panel.rare      { border-color: rgba(59,130,246,0.4); }
+.modal-panel.epic      { border-color: rgba(168,85,247,0.45); }
+.modal-panel.legendary { border-color: rgba(234,179,8,0.5); }
+.modal-panel.ultimate  { border-color: rgba(239, 68, 68, 0.8); }
 
 .modal-close {
   position: absolute;

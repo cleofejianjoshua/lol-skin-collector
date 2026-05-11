@@ -28,6 +28,7 @@ def get_user():
         "nickname": user.nickname,
         "email":    user.email,
         "currency": user.currency,
+        "gold":     user.gold,
     })
 
 
@@ -112,6 +113,66 @@ def disenchant_skin(collection_id):
     except Exception:
         db.session.rollback()
         return jsonify({"error": "Failed to disenchant skin"}), 500
+
+
+# Gold
+
+@api.route("/gold", methods=["GET"])
+def get_gold():
+    """Return the current user's gold balance."""
+    user = get_current_user()
+    if not user:
+        return jsonify({"error": "Not logged in"}), 401
+    return jsonify({"gold": user.gold or 0})
+
+
+@api.route("/gold/add", methods=["POST"])
+def add_gold():
+    """Add gold to the current user's balance."""
+    user = get_current_user()
+    if not user:
+        return jsonify({"error": "Not logged in"}), 401
+
+    data   = request.get_json(silent=True) or {}
+    amount = int(data.get("amount", 1))
+    if amount < 1:
+        return jsonify({"error": "Amount must be at least 1"}), 400
+
+    # Use atomic increment to handle rapid concurrent requests safely
+    User.query.filter_by(id=user.id).update({User.gold: (User.gold or 0) + amount})
+    
+    try:
+        db.session.commit()
+        # Refresh to get the latest value
+        return jsonify({"gold": user.gold})
+    except Exception:
+        db.session.rollback()
+        return jsonify({"error": "Failed to add gold"}), 500
+
+
+@api.route("/gold/spend", methods=["POST"])
+def spend_gold():
+    """Spend gold from the current user's balance."""
+    user = get_current_user()
+    if not user:
+        return jsonify({"error": "Not logged in"}), 401
+
+    data   = request.get_json(silent=True) or {}
+    amount = int(data.get("amount", 0))
+    if amount < 1:
+        return jsonify({"error": "Amount must be at least 1"}), 400
+
+    current = user.gold or 0
+    if current < amount:
+        return jsonify({"error": "Not enough gold"}), 400
+
+    user.gold = current - amount
+    try:
+        db.session.commit()
+        return jsonify({"gold": user.gold})
+    except Exception:
+        db.session.rollback()
+        return jsonify({"error": "Failed to spend gold"}), 500
 
 
 # Seed skins (dev helper)

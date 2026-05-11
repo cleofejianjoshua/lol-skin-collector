@@ -6,7 +6,7 @@ import CollectionView from "@/views/CollectionView.vue";
 import ProfileView from "@/views/ProfileView.vue";
 import UpdateProfileView from "@/views/UpdateProfileView.vue";
 import GachaView from "@/views/GachaView.vue";
-import ShardsView from "@/views/ShardsView.vue";
+import GoldForgeView from "@/views/GoldForgeView.vue";
 
 const routes = [
   { path: "/",               name: "Home",          component: HomeView },
@@ -16,7 +16,7 @@ const routes = [
   { path: "/profile",        name: "Profile",       component: ProfileView },
   { path: "/profile/update", name: "UpdateProfile", component: UpdateProfileView },
   { path: "/gacha",          name: "Gacha",         component: GachaView },
-  { path: "/shards",         name: "Shards",        component: ShardsView },
+  { path: "/gold-forge",     name: "GoldForge",     component: GoldForgeView },
 ];
 
 

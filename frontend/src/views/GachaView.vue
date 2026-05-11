@@ -25,11 +25,11 @@
     <!-- Shard balance + cost -->
     <div class="shard-info">
       <div class="shard-balance">
-        <span class="shard-icon">💎</span>
-        <span>{{ shards }} Shards</span>
+        <span class="shard-icon">🪙</span>
+        <span>{{ gold }} Gold</span>
       </div>
       <span class="shard-divider">·</span>
-      <span class="shard-cost">Cost: <strong>{{ PULL_COST }} Shards</strong> per pull</span>
+      <span class="shard-cost">Cost: <strong>{{ PULL_COST }} Gold</strong> per pull</span>
     </div>
 
     <!-- Rarity odds -->
@@ -65,7 +65,7 @@
         </div>
 
         <!-- Front: result -->
-        <div class="card-face card-front" :class="result?.skin?.rarity">
+        <div class="card-face card-front rarity-themed" :class="result?.skin?.rarity">
           <div v-if="result" class="result-inner">
             <div class="rarity-shimmer"></div>
 
@@ -98,7 +98,7 @@
 
       <!-- Not enough shards warning -->
       <p v-if="notEnoughShards && !revealed" class="error-text">
-        Not enough shards. Go earn more!
+        Not enough gold. Go earn more!
       </p>
 
       <!-- Post-reveal actions -->
@@ -122,13 +122,12 @@
 
 <script setup>
 import { ref, computed, onMounted } from "vue";
-import { gachaPull, fetchSkins } from "@/services/api.js";
+import { gachaPull, fetchSkins, fetchGold, spendGold } from "@/services/api.js";
 import SkinSlideshow from "@/components/shared/SkinSlideshow.vue";
 
 const PULL_COST   = 10;
-const STORAGE_KEY = "lol_shards";
 
-const shards    = ref(0);
+const gold      = ref(0);
 const skins     = ref([]);
 const isPulling = ref(false);
 const revealed  = ref(false);
@@ -144,7 +143,7 @@ if (revealSound) revealSound.volume = 0.5;
 const clickSound = typeof Audio !== 'undefined' ? new Audio('/sounds/sound_click.mp3') : null;
 if (clickSound) revealSound.volume = 0.5;
 
-const notEnoughShards = computed(() => shards.value < PULL_COST);
+const notEnoughShards = computed(() => gold.value < PULL_COST);
 
 const rarities = [
   { name: "common",    label: "Common",    pct: "40%" },
@@ -155,8 +154,13 @@ const rarities = [
 ];
 
 onMounted(async () => {
-  const saved = localStorage.getItem(STORAGE_KEY);
-  if (saved !== null) shards.value = parseInt(saved, 10);
+  // Load gold from DB
+  try {
+    const data = await fetchGold();
+    gold.value = data.gold ?? 0;
+  } catch (err) {
+    console.error("Failed to load gold:", err);
+  }
 
   // Load skins for side panels
   try {
@@ -230,8 +234,14 @@ const triggerPull = async () => {
     demoMode.value = true;
   }
 
-  shards.value -= PULL_COST;
-  localStorage.setItem(STORAGE_KEY, shards.value);
+  gold.value -= PULL_COST;
+  try {
+    const goldData = await spendGold(PULL_COST);
+    gold.value = goldData.gold;
+  } catch (err) {
+    console.error("Failed to deduct gold:", err);
+    // Still allow the pull to complete; re-sync on next load
+  }
 
   isPulling.value = false;
   revealed.value  = true;
@@ -412,7 +422,7 @@ const resetPull = () => {
 .card-face {
   position: absolute;
   inset: 0;
-  border-radius: 20px;
+  border-radius: 0;
   backface-visibility: hidden;
   -webkit-backface-visibility: hidden;
   transition: transform 1.2s cubic-bezier(0.4, 0, 0.2, 1);
