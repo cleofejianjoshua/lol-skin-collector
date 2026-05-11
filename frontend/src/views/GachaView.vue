@@ -52,13 +52,17 @@
             </div>
 
             <!-- Front: result -->
-            <div class="card-face card-front rarity-themed" :class="result?.skin?.rarity">
+            <div class="card-face card-front rarity-themed" :class="[result?.skin?.rarity.name, { 'is-shard-pull': !result?.is_duplicate }]">
               <div v-if="result" class="result-inner">
                 <div class="rarity-shimmer"></div>
-                <span class="rarity-badge" :class="result.skin.rarity">
-                  <span v-if="result.skin.rarity === 'ultimate'" class="ultimate-dot"></span>
-                  {{ result.skin.rarity.toUpperCase() }}
+                <span class="rarity-badge" :class="result.skin.rarity.name">
+                  <span v-if="result.skin.rarity.name === 'ultimate'" class="ultimate-dot"></span>
+                  {{ result.skin.rarity.name.toUpperCase() }}
                 </span>
+
+                <!-- Shard Badge (Top Right) -->
+                <div class="shard-badge">SHARD</div>
+
 
                 <!-- Skin Art -->
                 <div class="skin-art-container">
@@ -68,7 +72,7 @@
                     :alt="result.skin.name"
                     class="skin-img"
                   />
-                  <div v-else class="skin-img-placeholder" :class="result.skin.rarity"></div>
+                  <div v-else class="skin-img-placeholder" :class="result.skin.rarity.name"></div>
                 </div>
 
                 <div class="skin-info">
@@ -116,7 +120,7 @@ import { ref, computed, onMounted } from "vue";
 import { gachaPull, fetchSkins, fetchGold, spendGold } from "@/services/api.js";
 import SkinSlideshow from "@/components/shared/SkinSlideshow.vue";
 
-const PULL_COST   = 10;
+const PULL_COST   = 25;
 
 const gold      = ref(0);
 const skins     = ref([]);
@@ -548,6 +552,22 @@ const resetPull = () => {
 .rarity-badge.legendary { background: rgba(55,35,5,0.9);     color: #fde68a; border: 1px solid rgba(234,179,8,0.5); }
 .rarity-badge.ultimate  { background: rgba(60,8,8,0.9);      color: #ef4444; border: 1px solid rgba(239,68,68,0.6); box-shadow: 0 0 15px rgba(239,68,68,0.4); display: flex; align-items: center; gap: 6px; }
 
+.shard-badge {
+  position: absolute;
+  top: 16px; right: 16px;
+  background: rgba(15, 23, 42, 0.7);
+  backdrop-filter: blur(8px);
+  color: #94a3b8;
+  font-size: 0.65rem;
+  font-weight: 800;
+  padding: 3px 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  z-index: 10;
+}
+
 .ultimate-dot {
   width: 6px;
   height: 6px;
@@ -615,6 +635,42 @@ const resetPull = () => {
   text-transform: uppercase;
   font-weight: 700;
   letter-spacing: 0.05em;
+}
+
+/* Shard Pull Styling */
+.is-shard-pull .skin-img {
+  filter: grayscale(0.8) brightness(0.6) contrast(1.1);
+  transition: filter 1s ease;
+}
+
+.shard-stamp-container {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) scale(4);
+  opacity: 0;
+  z-index: 10;
+  pointer-events: none;
+  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.shard-stamp-container.stamp-active {
+  transform: translate(-50%, -50%) scale(1) rotate(-15deg);
+  opacity: 1;
+}
+
+.shard-stamp {
+  font-size: 3.5rem;
+  font-weight: 900;
+  color: rgba(255, 255, 255, 0.15);
+  border: 6px solid rgba(255, 255, 255, 0.15);
+  padding: 8px 24px;
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  background: rgba(0, 0, 0, 0.2);
+  backdrop-filter: blur(2px);
+  box-shadow: 0 0 30px rgba(0, 0, 0, 0.4);
+  text-shadow: 0 0 15px rgba(255, 255, 255, 0.1);
 }
 
 /* Post-reveal */

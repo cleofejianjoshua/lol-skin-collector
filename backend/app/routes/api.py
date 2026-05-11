@@ -41,9 +41,6 @@ def update_profile():
     nickname = request.form.get("nickname")
     email    = request.form.get("email")
 
-    if not nickname or not email:
-        return jsonify({"error": "All fields are required"}), 400
-
     try:
         user.nickname = nickname
         user.email    = email
@@ -95,11 +92,16 @@ def disenchant_skin(collection_id):
     if not entry:
         return jsonify({"error": "Skin not found in collection"}), 404
 
+    # Rule: If it's permanent (unlocked), you can only disenchant if you have duplicates
+    if entry.is_owned and entry.duplicate_count <= 0:
+        return jsonify({"error": "Cannot disenchant an unlocked skin without duplicates"}), 400
+
     disenchant_value = entry.skin.rarity.disenchant_value
 
     if entry.duplicate_count > 0:
         entry.duplicate_count -= 1
     else:
+        # This will only happen for shards now, as we blocked it for permanent skins above
         db.session.delete(entry)
 
     user.essence = (user.essence or 0) + disenchant_value

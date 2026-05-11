@@ -55,7 +55,7 @@ class Skin(db.Model):
             "id":         self.id,
             "name":       self.skin_name,
             "champion":   self.champion,
-            "rarity":     self.rarity.rarity_name,
+            "rarity":     self.rarity.to_dict(),
             "image_path": self.image_path,
         }
 
@@ -74,6 +74,13 @@ class Rarity(db.Model):
 
     def __repr__(self):
         return f"<Rarity {self.rarity_name}>"
+
+    def to_dict(self):
+        return {
+            "name": self.rarity_name,
+            "unlock_cost": self.item_cost,
+            "disenchant_value": self.disenchant_value
+        }
 
 
 class UserCollection(db.Model):

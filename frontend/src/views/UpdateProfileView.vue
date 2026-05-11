@@ -14,7 +14,6 @@
             name="nickname"
             type="text"
             placeholder="Enter your nickname"
-            required
           />
         </label>
 
@@ -25,7 +24,6 @@
             name="email"
             type="email"
             placeholder="Enter your email"
-            required
           />
         </label>
 

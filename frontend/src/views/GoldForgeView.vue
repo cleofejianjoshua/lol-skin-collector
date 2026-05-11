@@ -31,7 +31,6 @@
           @mouseup="isClicked = false"
           @mouseleave="isClicked = false"
         >
-          <div class="coin-glow"></div>
           <div class="coin-body">
             <span class="coin-emoji">🪙</span>
           </div>
@@ -237,43 +236,29 @@ async function syncToDB() {
 .coin-btn:hover   { transform: scale(1.06); }
 .coin-btn.clicked { transform: scale(0.93); }
 
-.coin-glow {
-  position: absolute;
-  inset: -16px;
-  border-radius: 50%;
-  background: radial-gradient(circle, rgba(250,204,21,0.35), transparent 70%);
-  animation: glowPulse 2.5s ease-in-out infinite;
-  pointer-events: none;
-}
-
-@keyframes glowPulse {
-  0%, 100% { opacity: 0.6; transform: scale(1);    }
-  50%       { opacity: 1;   transform: scale(1.12); }
-}
 
 .coin-body {
   width: 180px;
   height: 180px;
   border-radius: 50%;
   background: radial-gradient(circle at 32% 28%, #fef08a, #eab308 50%, #713f12);
-  box-shadow: 0 0 60px rgba(234,179,8,0.5), 0 20px 50px rgba(0,0,0,0.6);
+  box-shadow: 0 10px 30px rgba(0,0,0,0.5);
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: box-shadow 0.15s ease;
+  transition: transform 0.15s ease;
 }
 
 .coin-btn:hover .coin-body {
-  box-shadow: 0 0 90px rgba(250,204,21,0.8), 0 20px 50px rgba(0,0,0,0.6);
+  box-shadow: 0 15px 40px rgba(0,0,0,0.6);
 }
 
 .coin-btn.clicked .coin-body {
-  box-shadow: 0 0 40px rgba(234,179,8,0.4), 0 10px 30px rgba(0,0,0,0.6);
+  box-shadow: 0 5px 15px rgba(0,0,0,0.4);
 }
 
 .coin-emoji {
   font-size: 5rem;
-  filter: drop-shadow(0 0 16px rgba(250,204,21,0.8));
   pointer-events: none;
 }
 

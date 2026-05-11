@@ -1,7 +1,7 @@
 <template>
   <div 
     class="skin-slideshow-card rarity-themed" 
-    :class="[{ 'is-loading': !currentSkin }, currentSkin?.rarity]"
+    :class="[{ 'is-loading': !currentSkin }, getRarityName(currentSkin)]"
   >
     <transition name="fade-slide" mode="out-in">
       <div v-if="currentSkin" :key="currentSkin.name" class="slideshow-content">
@@ -18,8 +18,8 @@
 
         <!-- Overlay Info -->
         <div class="skin-overlay">
-          <div class="rarity-tag" :class="currentSkin.rarity">
-            {{ currentSkin.rarity }}
+          <div class="rarity-tag" :class="getRarityName(currentSkin)">
+            {{ getRarityName(currentSkin) }}
           </div>
           <div class="text-info">
             <p class="champ-name">{{ currentSkin.champion }}</p>
@@ -51,6 +51,11 @@ const props = defineProps({
 const currentIndex = ref(0);
 const currentSkin = ref(null);
 const timer = ref(null);
+
+const getRarityName = (skin) => {
+  if (!skin || !skin.rarity) return 'common';
+  return typeof skin.rarity === 'object' ? skin.rarity.name : skin.rarity;
+};
 
 const startSlideshow = () => {
   if (timer.value) clearInterval(timer.value);

@@ -9,17 +9,24 @@
         <span class="page-title essence-label">Essence: <span class="essence-num">{{ tokenBalance }}</span></span>
       </div>
       <p class="page-subtitle">
-        {{ collection.length }} skin{{ collection.length !== 1 ? 's' : '' }} owned
+        {{ ownedCount }} permanent - {{ shardCount }} shard{{ shardCount !== 1 ? 's' : '' }}
       </p>
 
       <!-- Filter -->
-      <div class="filter-row" v-if="!loading && collection.length > 0">
-        <button class="filter-btn" :class="{ active: activeFilter === 'all' }" @click="activeFilter = 'all'">All</button>
-        <button class="filter-btn" :class="{ active: activeFilter === 'ultimate' }" @click="activeFilter = 'ultimate'">Ultimate</button>
-        <button class="filter-btn" :class="{ active: activeFilter === 'legendary' }" @click="activeFilter = 'legendary'">Legendary</button>
-        <button class="filter-btn" :class="{ active: activeFilter === 'epic' }" @click="activeFilter = 'epic'">Epic</button>
-        <button class="filter-btn" :class="{ active: activeFilter === 'rare' }" @click="activeFilter = 'rare'">Rare</button>
-        <button class="filter-btn" :class="{ active: activeFilter === 'common' }" @click="activeFilter = 'common'">Common</button>
+      <div class="filter-row-container" v-if="!loading && collection.length > 0">
+        <div class="filter-row">
+          <button class="filter-btn" :class="{ active: activeFilter === 'all' }" @click="activeFilter = 'all'">All Rarity</button>
+          <button class="filter-btn" :class="{ active: activeFilter === 'ultimate' }" @click="activeFilter = 'ultimate'">Ultimate</button>
+          <button class="filter-btn" :class="{ active: activeFilter === 'legendary' }" @click="activeFilter = 'legendary'">Legendary</button>
+          <button class="filter-btn" :class="{ active: activeFilter === 'epic' }" @click="activeFilter = 'epic'">Epic</button>
+          <button class="filter-btn" :class="{ active: activeFilter === 'rare' }" @click="activeFilter = 'rare'">Rare</button>
+          <button class="filter-btn" :class="{ active: activeFilter === 'common' }" @click="activeFilter = 'common'">Common</button>
+        </div>
+        <div class="filter-row secondary">
+          <button class="filter-btn" :class="{ active: statusFilter === 'all' }" @click="statusFilter = 'all'">All Status</button>
+          <button class="filter-btn" :class="{ active: statusFilter === 'permanent' }" @click="statusFilter = 'permanent'">Permanent</button>
+          <button class="filter-btn" :class="{ active: statusFilter === 'shards' }" @click="statusFilter = 'shards'">Shards</button>
+        </div>
       </div>
     </div>
 
@@ -50,9 +57,9 @@
         role="button"
         @keydown.enter="openModal(entry)"
       >
-        <SkinCard :skin="entry.skin" />
+        <SkinCard :skin="entry.skin" :isShard="!entry.is_owned" />
         <span v-if="entry.count > 1" class="dupe-badge">×{{ entry.count }}</span>
-        <span v-if="getSlotForSkin(entry.skin) !== null" class="slot-pip">
+        <span v-if="entry.is_owned && getSlotForSkin(entry.skin) !== null" class="slot-pip">
           Slot {{ getSlotForSkin(entry.skin) + 1 }}
         </span>
       </div>
@@ -65,33 +72,41 @@
           <div class="modal-container">
             
             <!-- Left: Card Art (Using universal SkinCard) -->
-            <div class="modal-card-side">
-              <SkinCard :skin="selected.skin" />
+            <div class="modal-card-side" :class="{ 'is-shard-preview': !selected.is_owned }">
+              <SkinCard :skin="selected.skin" :isShard="!selected.is_owned" />
               <!-- Optional: Add dupe count if needed, or keep it clean -->
               <span v-if="selected.count > 1" class="modal-dupe-badge">×{{ selected.count }}</span>
             </div>
 
             <!-- Right: Details/Actions Card -->
-            <div class="modal-actions-card rarity-themed" :class="selected.skin.rarity">
-              <button class="modal-close" @click="closeModal">✕</button>
+            <div class="modal-actions-card rarity-themed" :class="selected.skin.rarity.name">
               
               <div class="modal-details-content">
                 
                 <div class="modal-info-block">
-                  <p class="modal-worth">
-                    Disenchant value: <strong>{{ TOKEN_VALUES[selected.skin.rarity] }} Essence </strong>
-                  </p>
                   <p v-if="getSlotForSkin(selected.skin) !== null" class="modal-slot-info">
                     Assigned to <strong>Slot {{ getSlotForSkin(selected.skin) + 1 }}</strong>
                   </p>
                 </div>
 
                 <div class="modal-actions">
-                  <button class="disenchant-btn" @click="disenchant">
-                    Disenchant
-                  </button>
+                  <!-- Enchant Button -->
+                  <div v-if="!selected.is_owned" class="enchant-section">
+                    <p class="cost-text blue">ENCHANTMENT COST = {{ (typeof selected.skin.rarity === 'object' ? selected.skin.rarity.unlock_cost : null) ?? 0 }}</p>
+                    <button class="enchant-btn" @click="enchant">
+                      Enchant
+                    </button>
+                  </div>
 
-                  <div class="display-slot-section">
+                  <!-- Disenchant Button -->
+                  <div v-if="!selected.is_owned || selected.count > 1" class="disenchant-section">
+                    <p class="cost-text amber">DISENCHANT REWARD = {{ (typeof selected.skin.rarity === 'object' ? selected.skin.rarity.disenchant_value : null) ?? 0 }}</p>
+                    <button class="disenchant-btn" @click="disenchant">
+                      Disenchant
+                    </button>
+                  </div>
+
+                  <div v-if="selected.is_owned" class="display-slot-section">
                     <p class="section-label">Home Page Display</p>
                     <div class="slot-grid">
                       <button
@@ -120,12 +135,10 @@
 <script setup>
 import { ref, onMounted, computed } from "vue";
 import { useRouter } from "vue-router";
-import { fetchUserCollection, fetchDisplaySlots, updateDisplaySlot, clearDisplaySlot } from "@/services/api.js";
+import { fetchUserCollection, fetchDisplaySlots, updateDisplaySlot, clearDisplaySlot, unlockSkin } from "@/services/api.js";
 import SkinCard from "@/components/shared/SkinCard.vue";
 
 const router = useRouter();
-
-const TOKEN_VALUES = { common: 90, rare: 150, epic: 350, legendary: 600, ultimate: 1200 };
 
 const loading      = ref(true);
 const collection   = ref([]);
@@ -133,10 +146,30 @@ const selected     = ref(null);
 const displaySlots = ref([null, null, null, null]); // [skin | null, ...]
 const tokenBalance = ref(0);
 const activeFilter = ref("all");
+const statusFilter = ref("all"); // all, permanent, shards
+
+const ownedCount = computed(() => collection.value.filter(e => e.is_owned).length);
+const shardCount = computed(() => collection.value.filter(e => !e.is_owned).length);
 
 const filteredCollection = computed(() => {
-  if (activeFilter.value === "all") return collection.value;
-  return collection.value.filter(e => e.skin.rarity === activeFilter.value);
+  return collection.value.filter(e => {
+    // Rarity Filter
+    let rarityMatch = true;
+    if (activeFilter.value !== "all") {
+      const rarityName = typeof e.skin.rarity === 'object' ? e.skin.rarity.name : e.skin.rarity;
+      rarityMatch = (rarityName === activeFilter.value);
+    }
+
+    // Status Filter
+    let statusMatch = true;
+    if (statusFilter.value === "permanent") {
+      statusMatch = e.is_owned;
+    } else if (statusFilter.value === "shards") {
+      statusMatch = !e.is_owned;
+    }
+
+    return rarityMatch && statusMatch;
+  });
 });
 
 function normalizeSkins(data) {
@@ -146,10 +179,18 @@ function normalizeSkins(data) {
     if (!entry) continue;
     const skin = entry.skin ?? entry;
     const key  = skin.id ?? skin.name;
+    
     if (map.has(key)) {
-      map.get(key).count += 1;
+      const existing = map.get(key);
+      existing.count += 1;
+      if (entry.is_owned) existing.is_owned = true;
     } else {
-      map.set(key, { id: entry.id, skin, count: (entry.duplicate_count ?? 0) + 1 });
+      map.set(key, { 
+        id: entry.id, 
+        skin, 
+        count: 1, 
+        is_owned: !!entry.is_owned 
+      });
     }
   }
   return Array.from(map.values());
@@ -191,12 +232,22 @@ function closeModal()     { selected.value = null;  }
 async function disenchant() {
   if (!selected.value) return;
   const entry = selected.value;
+  
+  if (entry.is_owned && entry.count <= 1) {
+    alert("Cannot disenchant a permanent skin unless you have a duplicate.");
+    return;
+  }
+
   try {
     const res = await fetch(`/api/collection/disenchant/${entry.id}`, {
       method: "DELETE",
       credentials: "include",
     });
-    if (!res.ok) { console.error("Disenchant failed"); return; }
+    if (!res.ok) { 
+      const errorData = await res.json();
+      alert(errorData.error || "Disenchant failed");
+      return; 
+    }
     const data = await res.json();
     tokenBalance.value = data.essence;
     entry.count -= 1;
@@ -212,6 +263,20 @@ async function disenchant() {
     }
   } catch (err) {
     console.error("Network error during disenchant:", err);
+  }
+}
+
+async function enchant() {
+  if (!selected.value) return;
+  const entry = selected.value;
+  
+  try {
+    const data = await unlockSkin(entry.id);
+    tokenBalance.value = data.essence;
+    entry.is_owned = true;
+  } catch (err) {
+    alert(err.message || "Failed to unlock skin");
+    console.error("Enchant error:", err);
   }
 }
 
@@ -248,74 +313,83 @@ async function setDisplaySlot(idx) {
 
 /* ── Header ── */
 .page-header {
-  margin-bottom: 28px;
+  margin-bottom: 32px;
 }
 
 .header-title-row {
   display: flex;
-  align-items: baseline;
+  align-items: center;
   gap: 16px;
   margin-bottom: 4px;
 }
 
 .page-title {
   margin: 0;
-  font-size: 2rem;
+  font-size: 2.2rem;
   font-weight: 800;
-  background: linear-gradient(135deg, #f9fafb, #93c5fd);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  color: #fff;
+  letter-spacing: -0.02em;
 }
 
 .header-sep {
-  font-size: 2rem;
+  color: rgba(255,255,255,0.15);
+  font-size: 1.5rem;
   font-weight: 300;
-  color: rgba(148, 163, 184, 0.3);
-  line-height: 1;
 }
 
 .essence-label {
-  color: #a855f7;
-  background: none;
-  -webkit-text-fill-color: #a855f7;
+  font-size: 2.2rem;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: linear-gradient(135deg, #a855f7, #6366f1, #3b82f6);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  letter-spacing: -0.02em;
 }
 
-.essence-label .essence-num {
-  -webkit-text-fill-color: #fde68a;
-  color: #fde68a;
-  margin-left: 6px;
+.essence-num {
+  font-weight: 900;
 }
 
 .page-subtitle {
-  margin: 0;
-  font-size: 0.88rem;
+  margin: 0 0 24px;
+  font-size: 1rem;
   color: var(--text-muted);
 }
 
-/* ── Filter ── */
+/* ── Filters ── */
+.filter-row-container {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
 .filter-row {
   display: flex;
   gap: 8px;
-  margin-top: 16px;
   flex-wrap: wrap;
 }
 
+.filter-row.secondary {
+  opacity: 0.9;
+}
+
 .filter-btn {
-  padding: 6px 12px;
-  border-radius: 50px;
-  background: rgba(15,23,42,0.8);
-  border: 1px solid rgba(148,163,184,0.2);
+  background: rgba(15, 23, 42, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 8px 18px;
+  border-radius: 999px;
   color: var(--text-muted);
-  font-size: 0.8rem;
+  font-size: 0.85rem;
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.2s;
-  text-transform: capitalize;
+  transition: all 0.2s ease;
 }
 
 .filter-btn:hover {
-  background: rgba(59,130,246,0.15);
   color: #93c5fd;
 }
 
@@ -469,19 +543,6 @@ async function setDisplaySlot(idx) {
 .modal-actions-card.legendary { border-bottom: 3px solid rgba(234, 179, 8, 0.7); }
 .modal-actions-card.ultimate  { border-bottom: 3px solid rgba(239, 68, 68, 0.9); }
 
-.modal-close {
-  position: absolute;
-  top: 10px; right: 10px;
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  color: #94a3b8;
-  width: 26px; height: 26px;
-  cursor: pointer;
-  display: flex; align-items: center; justify-content: center;
-  transition: all 0.25s ease;
-  font-size: 0.65rem;
-}
-.modal-close:hover { background: rgba(255, 255, 255, 0.1); color: #fff; }
 
 .modal-info-block {
   margin-bottom: 16px;
@@ -516,6 +577,53 @@ async function setDisplaySlot(idx) {
   font-size: 1.2rem;
 }
 
+/* Enchantment Section */
+.enchant-section {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
+.enchant-btn {
+  width: 100%;
+  padding: 14px;
+  background: rgba(59, 130, 246, 0.08);
+  border: 1px solid rgba(59, 130, 246, 0.3);
+  border-radius: 0;
+  color: #60a5fa;
+  font-weight: 800;
+  font-size: 0.95rem;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  text-align: center;
+}
+
+.enchant-btn:hover {
+  background: rgba(59, 130, 246, 0.15);
+  border-color: rgba(59, 130, 246, 0.6);
+  color: #fff;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.enchant-btn:active {
+  transform: translateY(1px);
+}
+
+
+.enchant-hint {
+  font-size: 0.75rem;
+  color: rgba(148, 163, 184, 0.6);
+  text-align: center;
+  margin: 0;
+  font-style: italic;
+}
+
 .modal-actions {
   display: flex;
   flex-direction: column;
@@ -544,22 +652,63 @@ async function setDisplaySlot(idx) {
   border-color: rgba(245, 158, 11, 0.6);
   color: #fff;
   transform: translateY(-2px);
-  box-shadow: 0 10px 25px rgba(245, 158, 11, 0.2);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
 }
+
+/* Enchantment & Disenchantment Sections */
+.enchant-section, .disenchant-section {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 12px;
+}
+
+.cost-text {
+  margin: 0 0 4px;
+  font-size: 0.8rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+.cost-text.blue { color: #60a5fa; }
+.cost-text.amber { color: #fbbf24; }
+
+.value-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+
+.essence-icon {
+  font-size: 1.2rem;
+  filter: drop-shadow(0 0 5px rgba(168, 85, 247, 0.4));
+}
+
+.value-num {
+  font-size: 1.6rem;
+  font-weight: 900;
+  color: #fff;
+  letter-spacing: 0.02em;
+}
+
+.enchant-section .value-num { color: #60a5fa; }
+.disenchant-section .value-num { color: #fbbf24; }
 
 .display-slot-section {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 10px;
 }
 
 .section-label {
   margin: 0;
-  font-size: 0.7rem;
+  font-size: 0.72rem;
   color: #64748b;
   text-transform: uppercase;
   letter-spacing: 0.15em;
   font-weight: 800;
+  opacity: 0.8;
 }
 
 .slot-grid {

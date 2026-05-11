@@ -22,7 +22,7 @@ def pick_rarity():
     return random.choices(rarities, weights=weights, k=1)[0]
 
 
-PULL_COST = 10
+PULL_COST = 25
 
 @gacha.route("/pull", methods=["POST"])
 def gacha_pull():

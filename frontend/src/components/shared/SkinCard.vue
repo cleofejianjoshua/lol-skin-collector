@@ -1,7 +1,7 @@
 <template>
   <div
     class="skin-card rarity-themed"
-    :class="[rarity, { 'is-empty': isEmpty }]"
+    :class="[rarity, { 'is-empty': isEmpty, 'is-shard': isShard }]"
   >
     <!-- Filled Skin Card -->
     <template v-if="!isEmpty && skin">
@@ -20,6 +20,7 @@
             {{ rarity }}
           </div>
           <div v-if="slotNumber" class="slot-badge">Slot {{ slotNumber }}</div>
+          <div v-if="isShard" class="shard-badge">Shard</div>
         </div>
 
         <!-- Bottom: Skin Info -->
@@ -54,10 +55,17 @@ const props = defineProps({
   slotNumber: {
     type: [Number, String],
     default: null
+  },
+  isShard: {
+    type: Boolean,
+    default: false
   }
 });
 
-const rarity = computed(() => props.skin?.rarity || 'common');
+const rarity = computed(() => {
+  const r = props.skin?.rarity || 'common';
+  return typeof r === 'object' ? r.name : r;
+});
 </script>
 
 <style scoped>
@@ -96,6 +104,29 @@ const rarity = computed(() => props.skin?.rarity || 'common');
 
 .skin-card:hover .skin-img {
   filter: brightness(0.9) contrast(1.1);
+}
+
+/* Shard State */
+.skin-card.is-shard .skin-img {
+  filter: grayscale(1) brightness(0.5) contrast(1.2);
+}
+
+.skin-card.is-shard:hover .skin-img {
+  filter: grayscale(0.8) brightness(0.6) contrast(1.2);
+}
+
+.shard-badge {
+  font-size: 0.62rem;
+  font-weight: 800;
+  color: #fff;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  background: rgba(148, 163, 184, 0.4);
+  padding: 4px 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(4px);
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
 }
 
 .skin-placeholder {
