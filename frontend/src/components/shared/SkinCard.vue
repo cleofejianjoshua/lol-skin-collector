@@ -33,7 +33,6 @@
 
     <!-- Empty State -->
     <div v-else class="empty-state">
-      <div class="plus-icon">+</div>
       <p v-if="slotNumber">Slot {{ slotNumber }}</p>
       <p v-else>Empty</p>
     </div>
@@ -201,22 +200,6 @@ const rarity = computed(() => props.skin?.rarity || 'common');
   gap: 16px;
   color: rgba(148, 163, 184, 0.3);
   transition: color 0.3s ease;
-}
-
-.skin-card.is-empty:hover .empty-state {
-  color: var(--accent);
-}
-
-.plus-icon {
-  width: 54px;
-  height: 54px;
-  border-radius: 50%;
-  border: 2px dashed currentColor;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 24px;
-  font-weight: 300;
 }
 
 .empty-state p {

@@ -9,11 +9,9 @@
   max-width: 420px;
   padding: 34px 32px 30px;
   border-radius: var(--radius-lg);
-  background: linear-gradient(
-      145deg,
+  background: linear-gradient(145deg,
       rgba(255, 255, 255, 0.03),
-      rgba(6, 9, 20, 0.9)
-    ),
+      rgba(6, 9, 20, 0.9)),
     var(--card-bg);
   border: 1px solid var(--border-subtle);
   box-shadow: var(--shadow-elevated);
@@ -65,6 +63,7 @@
 }
 
 @media (max-width: 768px) {
+
   .profile-card,
   .skin-card {
     width: 100%;

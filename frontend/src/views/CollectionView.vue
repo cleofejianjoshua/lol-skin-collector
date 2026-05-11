@@ -2,13 +2,13 @@
   <div class="collection-page">
 
     <!-- Header -->
-    <div class="page-header">
+    <div class="page-header" v-if="!loading">
       <div class="header-title-row">
         <h1 class="page-title">Collection</h1>
         <span class="header-sep">|</span>
-        <span class="page-title essence-label" v-if="!loading">Essence <span class="essence-num">{{ tokenBalance }}</span></span>
+        <span class="page-title essence-label">Essence: <span class="essence-num">{{ tokenBalance }}</span></span>
       </div>
-      <p class="page-subtitle" v-if="!loading">
+      <p class="page-subtitle">
         {{ collection.length }} skin{{ collection.length !== 1 ? 's' : '' }} owned
       </p>
 
@@ -62,50 +62,53 @@
     <Teleport to="body">
       <Transition name="modal-fade">
         <div v-if="selected" class="modal-backdrop" @click.self="closeModal">
-          <div class="modal-panel rarity-themed" :class="selected.skin.rarity">
-            <button class="modal-close" @click="closeModal">✕</button>
-
-            <div class="modal-art-wrap">
-              <img v-if="selected.skin.image_path" :src="selected.skin.image_path" :alt="selected.skin.name" class="modal-img" />
-              <div v-else class="modal-art-bg" :class="selected.skin.rarity"></div>
-              <span class="modal-rarity-badge" :class="selected.skin.rarity">
-                <span v-if="selected.skin.rarity === 'ultimate'" class="ultimate-dot"></span>
-                {{ selected.skin.rarity.toUpperCase() }}
-              </span>
-              <span v-if="selected.count > 1" class="modal-dupe">×{{ selected.count }}</span>
+          <div class="modal-container">
+            
+            <!-- Left: Card Art (Using universal SkinCard) -->
+            <div class="modal-card-side">
+              <SkinCard :skin="selected.skin" />
+              <!-- Optional: Add dupe count if needed, or keep it clean -->
+              <span v-if="selected.count > 1" class="modal-dupe-badge">×{{ selected.count }}</span>
             </div>
 
-            <div class="modal-details">
-              <p class="modal-champ">{{ selected.skin.champion }}</p>
-              <h2 class="modal-name">{{ selected.skin.name }}</h2>
-              <p class="modal-worth">
-                Worth <strong>{{ TOKEN_VALUES[selected.skin.rarity] }} Tokens</strong> when disenchanted
-              </p>
-              <p v-if="getSlotForSkin(selected.skin) !== null" class="modal-slot-info">
-                Currently in Slot {{ getSlotForSkin(selected.skin) + 1 }}
-              </p>
+            <!-- Right: Details/Actions Card -->
+            <div class="modal-actions-card rarity-themed" :class="selected.skin.rarity">
+              <button class="modal-close" @click="closeModal">✕</button>
+              
+              <div class="modal-details-content">
+                
+                <div class="modal-info-block">
+                  <p class="modal-worth">
+                    Disenchant value: <strong>{{ TOKEN_VALUES[selected.skin.rarity] }} Essence </strong>
+                  </p>
+                  <p v-if="getSlotForSkin(selected.skin) !== null" class="modal-slot-info">
+                    Assigned to <strong>Slot {{ getSlotForSkin(selected.skin) + 1 }}</strong>
+                  </p>
+                </div>
 
-              <div class="modal-actions">
-                <button class="disenchant-btn" @click="disenchant">
-                  Disenchant:  +{{ TOKEN_VALUES[selected.skin.rarity] }} Tokens
-                </button>
+                <div class="modal-actions">
+                  <button class="disenchant-btn" @click="disenchant">
+                    Disenchant
+                  </button>
 
-                <div class="display-slot-section">
-                  <p class="section-label">Display on Home Page:</p>
-                  <div class="slot-grid">
-                    <button
-                      v-for="i in 4"
-                      :key="i"
-                      class="slot-btn"
-                      :class="{ 'slot-active': getSlotForSkin(selected.skin) === i - 1 }"
-                      @click="setDisplaySlot(i - 1)"
-                    >
-                      Slot {{ i }}
-                    </button>
+                  <div class="display-slot-section">
+                    <p class="section-label">Home Page Display</p>
+                    <div class="slot-grid">
+                      <button
+                        v-for="i in 4"
+                        :key="i"
+                        class="slot-btn"
+                        :class="{ 'slot-active': getSlotForSkin(selected.skin) === i - 1 }"
+                        @click="setDisplaySlot(i-1)"
+                      >
+                        Slot {{ i }}
+                      </button>
+                    </div>
                   </div>
                 </div>
               </div>
             </div>
+
           </div>
         </div>
       </Transition>
@@ -284,14 +287,15 @@ function setDisplaySlot(idx) {
 }
 
 .essence-label {
-  color: var(--text-muted);
+  color: #a855f7;
   background: none;
-  -webkit-text-fill-color: var(--text-muted);
+  -webkit-text-fill-color: #a855f7;
 }
 
 .essence-label .essence-num {
   -webkit-text-fill-color: #fde68a;
   color: #fde68a;
+  margin-left: 6px;
 }
 
 .page-subtitle {
@@ -310,7 +314,7 @@ function setDisplaySlot(idx) {
 
 .filter-btn {
   padding: 6px 12px;
-  border-radius: 999px;
+  border-radius: 50px;
   background: rgba(15,23,42,0.8);
   border: 1px solid rgba(148,163,184,0.2);
   color: var(--text-muted);
@@ -383,7 +387,7 @@ function setDisplaySlot(idx) {
 .dupe-badge {
   position: absolute;
   top: 12px; right: 12px;
-  z-index: 10;
+  z-index: 2;
   background: rgba(0,0,0,0.75);
   backdrop-filter: blur(6px);
   color: #f9fafb;
@@ -400,7 +404,7 @@ function setDisplaySlot(idx) {
   top: 12px;
   left: 50%;
   transform: translateX(-50%);
-  z-index: 10;
+  z-index: 2;
   background: rgba(59,130,246,0.85);
   color: #dbeafe;
   font-size: 0.65rem;
@@ -418,166 +422,155 @@ function setDisplaySlot(idx) {
 .modal-backdrop {
   position: fixed;
   inset: 0;
-  background: rgba(0,0,0,0.75);
-  backdrop-filter: blur(8px);
+  background: rgba(0,0,0,0.85);
+  backdrop-filter: blur(12px);
   z-index: 1000;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 24px;
+  padding: 40px;
 }
 
-.modal-panel {
-  position: relative;
+.modal-container {
   display: flex;
-  gap: 0;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
   width: 100%;
-  max-width: 720px;
-  background: rgba(10, 16, 30, 0.96);
-  border-radius: 0;
-  overflow: hidden;
-  border: 1px solid rgba(148,163,184,0.15);
-  box-shadow: 0 40px 80px rgba(0,0,0,0.6);
+  max-width: 308px;
+  transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
-.modal-panel.rare      { border-color: rgba(59,130,246,0.4); }
-.modal-panel.epic      { border-color: rgba(168,85,247,0.45); }
-.modal-panel.legendary { border-color: rgba(234,179,8,0.5); }
-.modal-panel.ultimate  { border-color: rgba(239, 68, 68, 0.8); }
+.modal-card-side {
+  width: 308px;
+  height: 560px;
+  flex-shrink: 0;
+  box-shadow: 0 30px 60px rgba(0,0,0,0.8);
+  position: relative;
+}
 
-.modal-close {
+.modal-dupe-badge {
   position: absolute;
   top: 14px; right: 14px;
   z-index: 10;
-  background: rgba(0,0,0,0.5);
-  border: 1px solid rgba(255,255,255,0.1);
-  color: var(--text-muted);
-  width: 32px; height: 32px;
-  border-radius: 50%;
-  cursor: pointer;
-  font-size: 0.85rem;
-  transition: background 0.2s, color 0.2s;
-  display: flex; align-items: center; justify-content: center;
+  background: rgba(0,0,0,0.8);
+  color: #fff;
+  padding: 4px 10px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  border: 1px solid rgba(255,255,255,0.2);
 }
-.modal-close:hover { background: rgba(255,255,255,0.1); color: #f9fafb; }
 
-.modal-art-wrap {
+.modal-actions-card {
+  width: 100%;
+  background: linear-gradient(165deg, rgba(15, 23, 42, 0.95) 0%, rgba(2, 6, 23, 0.98) 100%);
+  border: 1px solid rgba(148, 163, 184, 0.12);
+  border-radius: 0;
+  padding: 20px 24px;
   position: relative;
-  width: 308px;
-  flex-shrink: 0;
-  min-height: 560px;
-}
-
-.modal-img {
-  width: 100%; height: 100%;
-  object-fit: cover;
-}
-
-.modal-art-bg {
-  width: 100%; height: 100%;
-}
-.modal-art-bg.common    { background: linear-gradient(160deg, #1e293b 0%, #0f172a 100%); }
-.modal-art-bg.rare      { background: linear-gradient(160deg, #1e3a8a 0%, #0f172a 100%); }
-.modal-art-bg.epic      { background: linear-gradient(160deg, #581c87 0%, #1e293b 100%); }
-.modal-art-bg.legendary { background: linear-gradient(160deg, #92400e 0%, #1e293b 100%); }
-.modal-art-bg.ultimate  { background: linear-gradient(160deg, #450a0a 0%, #1e293b 100%); }
-
-.modal-rarity-badge {
-  position: absolute;
-  top: 14px; left: 14px;
-  font-size: 0.62rem; font-weight: 700;
-  letter-spacing: 0.1em;
-  padding: 4px 10px;
-  border-radius: 999px;
-}
-.modal-rarity-badge.common    { background: rgba(156,163,175,0.2); color: #d1d5db; border: 1px solid rgba(156,163,175,0.4); }
-.modal-rarity-badge.rare      { background: rgba(59,130,246,0.2);  color: #93c5fd; border: 1px solid rgba(59,130,246,0.5); }
-.modal-rarity-badge.epic      { background: rgba(168,85,247,0.2);  color: #d8b4fe; border: 1px solid rgba(168,85,247,0.5); }
-.modal-rarity-badge.legendary { background: rgba(234,179,8,0.2);   color: #fde68a; border: 1px solid rgba(234,179,8,0.6); }
-.modal-rarity-badge.ultimate  { background: rgba(239, 68, 68, 0.2); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.7); display: flex; align-items: center; gap: 6px; }
-
-.modal-dupe {
-  position: absolute;
-  bottom: 14px; right: 14px;
-  background: rgba(0,0,0,0.7);
-  color: #f9fafb;
-  font-size: 0.8rem; font-weight: 700;
-  padding: 4px 10px;
-  border-radius: 999px;
-  border: 1px solid rgba(255,255,255,0.15);
-}
-
-.modal-details {
-  flex: 1;
-  padding: 32px 28px;
   display: flex;
   flex-direction: column;
-  justify-content: center;
+  box-shadow: 0 40px 100px rgba(0,0,0,0.7);
+  backdrop-filter: blur(20px);
+}
+
+/* Rarity-themed borders for actions card - slightly more pronounced */
+.modal-actions-card.rare      { border-bottom: 3px solid rgba(59, 130, 246, 0.6); }
+.modal-actions-card.epic      { border-bottom: 3px solid rgba(168, 85, 247, 0.6); }
+.modal-actions-card.legendary { border-bottom: 3px solid rgba(234, 179, 8, 0.7); }
+.modal-actions-card.ultimate  { border-bottom: 3px solid rgba(239, 68, 68, 0.9); }
+
+.modal-close {
+  position: absolute;
+  top: 10px; right: 10px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: #94a3b8;
+  width: 26px; height: 26px;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: all 0.25s ease;
+  font-size: 0.65rem;
+}
+.modal-close:hover { background: rgba(255, 255, 255, 0.1); color: #fff; }
+
+.modal-info-block {
+  margin-bottom: 16px;
+  display: flex;
+  flex-direction: column;
   gap: 8px;
-}
-
-.modal-champ {
-  margin: 0;
-  font-size: 0.78rem;
-  color: var(--text-muted);
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-}
-
-.modal-name {
-  margin: 0;
-  font-size: 1.6rem;
-  font-weight: 800;
-  color: var(--text-main);
-  line-height: 1.15;
 }
 
 .modal-worth {
   margin: 0;
-  font-size: 0.85rem;
-  color: var(--text-muted);
+  font-size: 0.88rem;
+  color: #94a3b8;
+  letter-spacing: 0.01em;
 }
-.modal-worth strong { color: #fde68a; }
+.modal-worth strong { 
+  color: #fbbf24;
+  font-weight: 700;
+  text-shadow: 0 0 10px rgba(251, 191, 36, 0.3);
+}
 
 .modal-slot-info {
   margin: 0;
-  font-size: 0.8rem;
-  color: #93c5fd;
+  font-size: 0.82rem;
+  color: #60a5fa;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.modal-slot-info::before {
+  content: "•";
+  font-size: 1.2rem;
 }
 
 .modal-actions {
   display: flex;
   flex-direction: column;
-  gap: 14px;
-  margin-top: 12px;
+  gap: 12px;
 }
 
 .disenchant-btn {
-  padding: 12px 20px;
-  border-radius: 10px;
-  background: rgba(234,179,8,0.1);
-  border: 1px solid rgba(234,179,8,0.4);
-  color: #fde68a;
+  width: 100%;
+  padding: 14px;
+  background: rgba(245, 158, 11, 0.08);
+  border: 1px solid rgba(245, 158, 11, 0.25);
+  border-radius: 0;
+  color: #fbbf24;
   font-size: 0.9rem;
-  font-weight: 600;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
   cursor: pointer;
-  transition: background 0.2s, border-color 0.2s, transform 0.15s;
-  text-align: left;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  text-align: center;
+  position: relative;
+  overflow: hidden;
 }
 .disenchant-btn:hover {
-  background: rgba(234,179,8,0.2);
-  border-color: rgba(234,179,8,0.7);
-  transform: translateY(-1px);
+  background: rgba(245, 158, 11, 0.15);
+  border-color: rgba(245, 158, 11, 0.6);
+  color: #fff;
+  transform: translateY(-2px);
+  box-shadow: 0 10px 25px rgba(245, 158, 11, 0.2);
 }
 
-.display-slot-section { display: flex; flex-direction: column; gap: 10px; }
+.display-slot-section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
 
 .section-label {
   margin: 0;
-  font-size: 0.75rem;
-  color: var(--text-muted);
+  font-size: 0.7rem;
+  color: #64748b;
   text-transform: uppercase;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.15em;
+  font-weight: 800;
 }
 
 .slot-grid {
@@ -587,40 +580,59 @@ function setDisplaySlot(idx) {
 }
 
 .slot-btn {
-  padding: 9px 4px;
-  border-radius: 8px;
-  background: rgba(15,23,42,0.8);
-  border: 1px solid rgba(148,163,184,0.2);
-  color: var(--text-muted);
-  font-size: 0.8rem;
-  font-weight: 600;
+  padding: 12px 4px;
+  background: rgba(15, 23, 42, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 0;
+  color: #64748b;
+  font-size: 0.78rem;
+  font-weight: 700;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all 0.25s ease;
+  position: relative;
 }
 .slot-btn:hover {
-  background: rgba(59,130,246,0.15);
-  border-color: rgba(59,130,246,0.5);
-  color: #93c5fd;
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.15);
+  color: #cbd5e1;
+  transform: translateY(-2px);
 }
 .slot-btn.slot-active {
-  background: rgba(59,130,246,0.25);
-  border-color: rgba(59,130,246,0.7);
-  color: #dbeafe;
+  background: rgba(59, 130, 246, 0.1);
+  border-color: rgba(59, 130, 246, 0.5);
+  color: #fff;
+  box-shadow: inset 0 0 15px rgba(59, 130, 246, 0.15);
+}
+.slot-btn.slot-active::after {
+  content: "";
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  height: 2px;
+  background: #3b82f6;
 }
 
 /* ── Modal transition ── */
 .modal-fade-enter-active,
-.modal-fade-leave-active { transition: opacity 0.2s ease, transform 0.2s ease; }
+.modal-fade-leave-active { transition: opacity 0.4s ease; }
 .modal-fade-enter-from,
 .modal-fade-leave-to { opacity: 0; }
-.modal-fade-enter-from .modal-panel,
-.modal-fade-leave-to .modal-panel { transform: scale(0.95); }
+
+.modal-fade-enter-from .modal-container,
+.modal-fade-leave-to .modal-container { 
+  transform: scale(0.8) translateY(30px);
+  opacity: 0;
+}
 
 /* ── Responsive ── */
-@media (max-width: 600px) {
+@media (max-width: 768px) {
   .collection-page { padding: 24px 16px; }
-  .modal-panel { flex-direction: column; }
-  .modal-art-wrap { width: 100%; min-height: 220px; }
+  .modal-container { 
+    flex-direction: column; 
+    align-items: center;
+    gap: 20px;
+    padding-bottom: 40px;
+  }
+  .modal-actions-card { width: 100%; padding: 30px 20px; }
   .slot-grid { grid-template-columns: repeat(2, 1fr); }
 }
 </style>

@@ -8,108 +8,99 @@
 
       <!-- Center Content -->
       <div class="gacha-main-container">
-    <!-- Page Glow Overlay -->
-    <div
-      class="page-glow"
-      :class="{
-        'pulsing': isPulling,
-        ['reveal-' + result?.skin?.rarity]: revealed
-      }"
-    ></div>
+        <!-- Page Glow Overlay -->
+        <div
+          class="page-glow"
+          :class="{
+            'pulsing': isPulling,
+            ['reveal-' + result?.skin?.rarity]: revealed
+          }"
+        ></div>
 
-    <!-- Header -->
-    <div class="gacha-header">
-      <h1 class="gacha-title">Skin Gacha</h1>
-    </div>
-
-    <!-- Shard balance + cost -->
-    <div class="shard-info">
-      <div class="shard-balance">
-        <span class="shard-icon">🪙</span>
-        <span>{{ gold }} Gold</span>
-      </div>
-      <span class="shard-divider">·</span>
-      <span class="shard-cost">Cost: <strong>{{ PULL_COST }} Gold</strong> per pull</span>
-    </div>
-
-    <!-- Rarity odds -->
-    <div class="odds-card">
-      <div class="odds-list-horizontal">
-        <div class="odds-item" v-for="r in rarities" :key="r.name">
-          <span class="odds-dot" :class="r.name"></span>
-          <span class="odds-label-compact">{{ r.label }}:</span>
-          <span class="odds-pct-compact">{{ r.pct }}</span>
-        </div>
-      </div>
-    </div>
-
-    <!-- Pull area -->
-    <div class="pull-area">
-
-      <!-- Card -->
-      <div class="card-container" :class="{ flipped: revealed }">
-
-        <!-- Back: pull button -->
-        <div class="card-face card-back">
-          <button
-            class="pull-btn"
-            :class="{ pulling: isPulling, disabled: notEnoughShards }"
-            :disabled="isPulling || notEnoughShards"
-            @click="triggerPull"
-          >
-            <div class="pull-orb">
-              <span class="pull-label">{{ isPulling ? '...' : 'PULL' }}</span>
-            </div>
-          </button>
-          <p class="card-hint">{{ isPulling ? 'Summoning...' : 'Click to summon' }}</p>
+        <!-- Header -->
+        <div class="gacha-header">
+          <h1 class="gacha-title">Skin Gacha</h1>
         </div>
 
-        <!-- Front: result -->
-        <div class="card-face card-front rarity-themed" :class="result?.skin?.rarity">
-          <div v-if="result" class="result-inner">
-            <div class="rarity-shimmer"></div>
+        <!-- Shard balance + cost -->
+        <div class="shard-info">
+          <div class="shard-balance">
+            <span class="shard-icon">🪙</span>
+            <span>{{ gold }} Gold</span>
+          </div>
+          <span class="shard-divider">·</span>
+          <span class="shard-cost">Cost: <strong>{{ PULL_COST }} Gold</strong> per pull</span>
+        </div>
 
-            <span class="rarity-badge" :class="result.skin.rarity">
-              <span v-if="result.skin.rarity === 'ultimate'" class="ultimate-dot"></span>
-              {{ result.skin.rarity.toUpperCase() }}
-            </span>
-
-            <!-- Skin Art -->
-            <div class="skin-art-container">
-              <img
-                v-if="result.skin.image_path"
-                :src="result.skin.image_path"
-                :alt="result.skin.name"
-                class="skin-img"
-              />
-              <div v-else class="skin-img-placeholder" :class="result.skin.rarity"></div>
+        <!-- Pull area -->
+        <div class="pull-area">
+          <!-- Card -->
+          <div class="card-container" :class="{ flipped: revealed }">
+            <!-- Back: pull button -->
+            <div class="card-face card-back">
+              <button
+                class="pull-btn"
+                :class="{ pulling: isPulling, disabled: notEnoughShards }"
+                :disabled="isPulling || notEnoughShards"
+                @click="triggerPull"
+              >
+                <div class="pull-orb">
+                  <span class="pull-label">{{ isPulling ? '...' : 'PULL' }}</span>
+                </div>
+              </button>
+              <p class="card-hint">{{ isPulling ? 'Summoning...' : 'Click to summon' }}</p>
             </div>
 
-            <div class="skin-info">
-              <p class="skin-champion">{{ result.skin.champion }}</p>
-              <h2 class="skin-name">{{ result.skin.name }}</h2>
-              <p v-if="result.is_duplicate" class="duplicate-tag">✦ Duplicate</p>
-            </div>
+            <!-- Front: result -->
+            <div class="card-face card-front rarity-themed" :class="result?.skin?.rarity">
+              <div v-if="result" class="result-inner">
+                <div class="rarity-shimmer"></div>
+                <span class="rarity-badge" :class="result.skin.rarity">
+                  <span v-if="result.skin.rarity === 'ultimate'" class="ultimate-dot"></span>
+                  {{ result.skin.rarity.toUpperCase() }}
+                </span>
 
+                <!-- Skin Art -->
+                <div class="skin-art-container">
+                  <img
+                    v-if="result.skin.image_path"
+                    :src="result.skin.image_path"
+                    :alt="result.skin.name"
+                    class="skin-img"
+                  />
+                  <div v-else class="skin-img-placeholder" :class="result.skin.rarity"></div>
+                </div>
+
+                <div class="skin-info">
+                  <p class="skin-champion">{{ result.skin.champion }}</p>
+                  <h2 class="skin-name">{{ result.skin.name }}</h2>
+                  <p v-if="result.is_duplicate" class="duplicate-tag">✦ Duplicate</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Rarity odds (placed below card) -->
+          <div class="odds-card">
+            <div class="odds-list-horizontal">
+              <div class="odds-item" v-for="r in rarities" :key="r.name">
+                <span class="odds-dot" :class="r.name"></span>
+                <span class="odds-label-compact">{{ r.label }}:</span>
+                <span class="odds-pct-compact">{{ r.pct }}</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Not enough shards warning -->
+          <p v-if="notEnoughShards && !revealed" class="error-text">
+            Not enough gold. Go earn more!
+          </p>
+
+          <!-- Post-reveal actions (placed at the bottom) -->
+          <div v-if="revealed" class="pull-actions">
+            <button class="primary-btn" @click="resetPull">Pull Again</button>
           </div>
         </div>
-
-      </div>
-
-      <!-- Not enough shards warning -->
-      <p v-if="notEnoughShards && !revealed" class="error-text">
-        Not enough gold. Go earn more!
-      </p>
-
-      <!-- Post-reveal actions -->
-      <div v-if="revealed" class="pull-actions">
-        <button class="primary-btn" @click="resetPull">Pull Again</button>
-      </div>
-
-    </div>
-
-
-
       </div>
 
       <!-- Right Slideshow -->
@@ -370,7 +361,7 @@ const resetPull = () => {
 
 .gacha-title {
   margin: 0 0 4px;
-  font-size: 1.6rem;
+  font-size: 3.5rem;
   font-weight: 800;
   background: linear-gradient(135deg, #dbeafe, #60a5fa, #a78bfa);
   -webkit-background-clip: text;
@@ -636,7 +627,15 @@ const resetPull = () => {
 }
 
 /* Post-reveal */
-.pull-actions { margin-top: 4px; }
+.pull-actions { 
+  margin-top: 20px; 
+  animation: fadeIn 0.5s ease forwards;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
 
 .primary-btn { width: 180px; padding: 11px; }
 
