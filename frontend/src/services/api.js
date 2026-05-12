@@ -203,3 +203,10 @@ export async function unlockSkin(collectionId) {
   if (!res.ok) throw new Error(data.error || "Failed to unlock skin");
   return data;
 }
+
+export async function fetchGachaStatus() {
+  const res = await fetch("/api/gacha/status", { credentials: "include" });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || "Failed to fetch gacha status");
+  return data;
+}

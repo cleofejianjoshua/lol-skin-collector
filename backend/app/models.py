@@ -11,6 +11,7 @@ class User(db.Model):
     email    = db.Column(db.String(255))
     essence = db.Column(db.Integer,default=0)
     gold     = db.Column(db.Integer,default=0)
+    pull_count = db.Column(db.Integer,nullable=False,default=0)
 
     # Relationship to skin collection
     collection = db.relationship(

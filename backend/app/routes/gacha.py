@@ -22,7 +22,15 @@ def pick_rarity():
     return random.choices(rarities, weights=weights, k=1)[0]
 
 
-PULL_COST = 25
+PULL_COST     = 25
+PITY_INTERVAL = 10
+
+NORMAL_WEIGHTS = { "common": 40, "rare": 32, "epic": 18, "legendary": 9, "ultimate": 1 }
+PITY_WEIGHTS   = { "common": 20, "rare": 25, "epic": 38, "legendary": 15, "ultimate": 2 }
+
+def pick_rarity(is_pity=False):
+    weights = PITY_WEIGHTS if is_pity else NORMAL_WEIGHTS
+    return random.choices(list(weights.keys()), weights=list(weights.values()), k=1)[0]
 
 @gacha.route("/pull", methods=["POST"])
 def gacha_pull():
@@ -35,9 +43,12 @@ def gacha_pull():
 
     all_skins = Skin.query.all()
     if not all_skins:
-        return jsonify({"error": "No skins available in the pool yet."}), 404
+        return jsonify({"error": "No skins available"}), 404
 
-    rarity = pick_rarity()
+    user.pull_count = (user.pull_count or 0) + 1
+    is_pity = (user.pull_count % PITY_INTERVAL == 0)
+
+    rarity = pick_rarity(is_pity)
     pool   = [s for s in all_skins if s.rarity.rarity_name == rarity]
     if not pool:
         pool = all_skins
@@ -45,7 +56,6 @@ def gacha_pull():
     skin = random.choice(pool)
 
     existing = UserCollection.query.filter_by(user_id=user.id, skin_id=skin.id).first()
-
     if existing:
         existing.duplicate_count += 1
         is_duplicate = True
@@ -57,11 +67,25 @@ def gacha_pull():
 
     try:
         db.session.commit()
+        pulls_until_pity = PITY_INTERVAL - (user.pull_count % PITY_INTERVAL)
         return jsonify({
-            "skin":         skin.to_dict(),
-            "is_duplicate": is_duplicate,
-            "gold":         user.gold,
+            "skin":             skin.to_dict(),
+            "is_duplicate":     is_duplicate,
+            "gold":             user.gold,
+            "pulls_until_pity": pulls_until_pity,
         })
     except Exception:
         db.session.rollback()
         return jsonify({"error": "Pull failed"}), 500
+
+@gacha.route("/status", methods=["GET"])
+def gacha_status():
+    user = get_current_user()
+    if not user:
+        return jsonify({"error": "Not logged in"}), 401
+    pull_count      = user.pull_count or 0
+    pulls_until_pity = PITY_INTERVAL - (pull_count % PITY_INTERVAL)
+    return jsonify({
+        "pull_count":       pull_count,
+        "pulls_until_pity": pulls_until_pity,
+    })

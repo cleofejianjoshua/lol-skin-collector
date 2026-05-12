@@ -32,6 +32,10 @@
           <span class="shard-cost">Cost: <strong>{{ PULL_COST }} Gold</strong> per pull</span>
         </div>
 
+        <div class="shard-info">
+          <span class="shard-cost">Increased <strong>pull luck</strong> in <strong>{{chance_up}}</strong> pulls</span>
+        </div>
+
         <!-- Pull area -->
         <div class="pull-area">
           <!-- Card -->
@@ -128,6 +132,7 @@ const isPulling = ref(false);
 const revealed  = ref(false);
 const result    = ref(null);
 const demoMode  = ref(false);
+const chance_up = ref(10);
 
 const pullSound = typeof Audio !== 'undefined' ? new Audio('/sounds/sound_select.mp3') : null;
 if (pullSound) pullSound.volume = 0.5;
