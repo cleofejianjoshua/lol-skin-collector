@@ -85,7 +85,7 @@
         @keydown.enter="openModal(entry)"
       >
         <SkinCard :skin="entry.skin" :isShard="!entry.is_owned" />
-        <span v-if="entry.count > 1" class="dupe-badge">×{{ entry.count }}</span>
+        <span v-if="entry.count > 1" class="dupe-badge" :class="entry.skin.rarity.name || entry.skin.rarity">×{{ entry.count }}</span>
         <span v-if="entry.is_owned && getSlotForSkin(entry.skin) !== null" class="slot-pip">
           Slot {{ getSlotForSkin(entry.skin) + 1 }}
         </span>
@@ -102,11 +102,11 @@
             <div class="modal-card-side" :class="{ 'is-shard-preview': !selected.is_owned }">
               <SkinCard :skin="selected.skin" :isShard="!selected.is_owned" />
               <!-- Optional: Add dupe count if needed, or keep it clean -->
-              <span v-if="selected.count > 1" class="modal-dupe-badge">×{{ selected.count }}</span>
+              <span v-if="selected.count > 1" class="modal-dupe-badge" :class="selected.skin.rarity.name || selected.skin.rarity">×{{ selected.count }}</span>
             </div>
 
             <!-- Right: Details/Actions Card -->
-            <div class="modal-actions-card rarity-themed" :class="selected.skin.rarity.name">
+            <div class="modal-actions-card rarity-themed" :class="selected.skin.rarity.name || selected.skin.rarity">
               
               <div class="modal-details-content">
                 
@@ -530,16 +530,37 @@ async function setDisplaySlot(idx) {
 /* Dupe badge */
 .dupe-badge {
   position: absolute;
-  top: 12px; right: 12px;
-  z-index: 2;
-  background: rgba(0,0,0,0.75);
-  backdrop-filter: blur(6px);
-  color: #f9fafb;
-  font-size: 0.72rem;
-  font-weight: 700;
-  padding: 3px 8px;
+  bottom: 12px; right: 12px;
+  z-index: 10;
+  background: rgba(0,0,0,0.8);
+  backdrop-filter: blur(8px);
+  color: #ffffff;
+  font-size: 0.85rem;
+  font-weight: 800;
+  padding: 4px 12px;
   border-radius: 999px;
-  border: 1px solid rgba(255,255,255,0.15);
+  border: 1px solid rgba(255,255,255,0.2);
+  box-shadow: 0 4px 20px rgba(0,0,0,0.6);
+  pointer-events: none;
+  transition: all 0.3s ease;
+}
+
+/* Rarity Themed Badges (Small) */
+.dupe-badge.common, .modal-dupe-badge.common {
+  background: rgba(107, 114, 128, 0.85);
+}
+.dupe-badge.rare, .modal-dupe-badge.rare {
+  background: rgba(30, 64, 175, 0.85);
+}
+.dupe-badge.epic, .modal-dupe-badge.epic {
+  background: rgba(126, 34, 206, 0.85);
+}
+.dupe-badge.legendary, .modal-dupe-badge.legendary {
+  background: rgba(161, 98, 7, 0.85);
+}
+.dupe-badge.ultimate, .modal-dupe-badge.ultimate {
+  background: rgba(153, 27, 27, 0.85);
+  border-color: rgba(255, 255, 255, 0.3);
 }
 
 /* Slot pip */
@@ -595,14 +616,19 @@ async function setDisplaySlot(idx) {
 
 .modal-dupe-badge {
   position: absolute;
-  top: 14px; right: 14px;
-  z-index: 10;
+  bottom: 16px; right: 16px;
+  z-index: 20;
   background: rgba(0,0,0,0.8);
-  color: #fff;
-  padding: 4px 10px;
-  font-size: 0.8rem;
-  font-weight: 700;
+  backdrop-filter: blur(8px);
+  color: #ffffff;
+  font-size: 0.85rem;
+  font-weight: 800;
+  padding: 4px 12px;
+  border-radius: 999px;
   border: 1px solid rgba(255,255,255,0.2);
+  box-shadow: 0 4px 20px rgba(0,0,0,0.6);
+  pointer-events: none;
+  transition: all 0.3s ease;
 }
 
 .modal-actions-card {

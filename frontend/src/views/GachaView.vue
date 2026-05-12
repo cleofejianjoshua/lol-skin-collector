@@ -13,7 +13,7 @@
           class="page-glow"
           :class="{
             'pulsing': isPulling,
-            ['reveal-' + result?.skin?.rarity]: revealed
+            ['reveal-' + (result?.skin?.rarity?.name || result?.skin?.rarity)]: revealed
           }"
         ></div>
 
@@ -432,28 +432,28 @@ const resetPull = () => {
 .page-glow.reveal-ultimate  { animation: flashUltimate 2s ease-out forwards; opacity: 1; }
 
 @keyframes flashCommon {
-  0% { background: rgba(255, 255, 255, 0.4); }
-  15% { background: rgba(156, 163, 175, 0.3); }
+  0% { background: rgba(255, 255, 255, 0.8); }
+  5% { background: rgba(156, 163, 175, 0.4); }
   100% { background: transparent; }
 }
 @keyframes flashRare {
-  0% { background: rgba(255, 255, 255, 0.5); }
-  15% { background: rgba(59, 130, 246, 0.35); }
+  0% { background: rgba(255, 255, 255, 0.9); }
+  8% { background: rgba(59, 130, 246, 0.5); }
   100% { background: transparent; }
 }
 @keyframes flashEpic {
-  0% { background: rgba(255, 255, 255, 0.6); }
-  15% { background: rgba(168, 85, 247, 0.4); }
+  0% { background: rgba(255, 255, 255, 1); }
+  10% { background: rgba(168, 85, 247, 0.6); }
   100% { background: transparent; }
 }
 @keyframes flashLegendary {
-  0% { background: rgba(255, 255, 255, 0.7); }
-  15% { background: rgba(234, 179, 8, 0.5); }
+  0% { background: rgba(255, 255, 255, 1); }
+  12% { background: rgba(234, 179, 8, 0.7); }
   100% { background: transparent; }
 }
 @keyframes flashUltimate {
-  0% { background: rgba(255, 255, 255, 0.9); }
-  15% { background: rgba(239, 68, 68, 0.6); }
+  0% { background: rgba(255, 255, 255, 1); box-shadow: inset 0 0 100px rgba(255,255,255,1); }
+  15% { background: rgba(239, 68, 68, 0.8); }
   100% { background: transparent; }
 }
 
