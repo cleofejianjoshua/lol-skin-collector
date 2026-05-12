@@ -113,7 +113,7 @@ onUnmounted(() => {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  filter: brightness(0.7) contrast(1.1);
+  filter: brightness(1) contrast(1);
 }
 
 .bg-placeholder {
@@ -178,7 +178,7 @@ onUnmounted(() => {
 /* Transitions */
 .fade-slide-enter-active,
 .fade-slide-leave-active {
-  transition: opacity 0.6s ease;
+  transition: opacity 1s ease;
 }
 
 .fade-slide-enter-from {

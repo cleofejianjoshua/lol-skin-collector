@@ -772,7 +772,7 @@ const resetPull = () => {
 
 /* Shard Pull Styling */
 .is-shard-pull .skin-img {
-  filter: grayscale(0.8) brightness(0.6) contrast(1.1);
+  filter: brightness(.8);
   transition: filter 1s ease;
 }
 
