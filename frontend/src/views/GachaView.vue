@@ -32,8 +32,15 @@
           <span class="shard-cost">Cost: <strong>{{ PULL_COST }} Gold</strong> per pull</span>
         </div>
 
-        <div class="shard-info">
-          <span class="shard-cost">Increased <strong>pull luck</strong> in <strong>{{chance_up}}</strong> pulls</span>
+        <div class="shard-info" :class="{ pity: isPity }">
+          <span class="shard-cost">
+            <template v-if="isPity">
+              <strong>Boosted rates active ↑↑</strong>
+            </template>
+            <template v-else>
+              <strong>Boosted rates</strong> in <strong>{{ pulls_until_pity }}</strong> pull{{ pulls_until_pity !== 1 ? 's' : '' }}
+            </template>
+          </span>
         </div>
 
         <!-- Pull area -->
@@ -44,12 +51,12 @@
             <div class="card-face card-back">
               <button
                 class="pull-btn"
-                :class="{ pulling: isPulling, disabled: notEnoughShards }"
+                :class="{ pulling: isPulling, disabled: notEnoughShards, 'pity-pull': isPity }"
                 :disabled="isPulling || notEnoughShards"
                 @click="triggerPull"
               >
                 <div class="pull-orb">
-                  <span class="pull-label">{{ isPulling ? '...' : 'PULL' }}</span>
+                  <span class="pull-label">{{ isPulling ? '...' : isPity ? 'LUCKY PULL' : 'PULL' }}</span>
                 </div>
               </button>
               <p class="card-hint">{{ isPulling ? 'Summoning...' : 'Click to summon' }}</p>
@@ -89,9 +96,9 @@
           </div>
 
           <!-- Rarity odds (placed below card) -->
-          <div class="odds-card">
+          <div class="odds-card " :class="{ pity: isPity }">
             <div class="odds-list-horizontal">
-              <div class="odds-item" v-for="r in rarities" :key="r.name">
+              <div class="odds-item" v-for="r in displayedRarities" :key="r.name">
                 <span class="odds-dot" :class="r.name"></span>
                 <span class="odds-label-compact">{{ r.label }}:</span>
                 <span class="odds-pct-compact">{{ r.pct }}</span>
@@ -121,7 +128,7 @@
 
 <script setup>
 import { ref, computed, onMounted } from "vue";
-import { gachaPull, fetchSkins, fetchGold, spendGold } from "@/services/api.js";
+import { gachaPull, fetchSkins, fetchGold, spendGold, fetchGachaStatus } from "@/services/api.js";
 import SkinSlideshow from "@/components/shared/SkinSlideshow.vue";
 
 const PULL_COST   = 25;
@@ -132,7 +139,8 @@ const isPulling = ref(false);
 const revealed  = ref(false);
 const result    = ref(null);
 const demoMode  = ref(false);
-const chance_up = ref(10);
+const pulls_until_pity = ref(10);
+const isPity = computed(() => pulls_until_pity.value === 1);
 
 const pullSound = typeof Audio !== 'undefined' ? new Audio('/sounds/sound_select.mp3') : null;
 if (pullSound) pullSound.volume = 0.5;
@@ -153,13 +161,29 @@ const rarities = [
   { name: "ultimate",  label: "Ultimate",  pct: "1%"  }
 ];
 
+const displayedRarities = computed(() => {
+  if (isPity.value) {
+    return [
+      { name: "common",    label: "Common",    pct: "20% ↓" },
+      { name: "rare",      label: "Rare",      pct: "25% ↑" },
+      { name: "epic",      label: "Epic",      pct: "38% ↑" },
+      { name: "legendary", label: "Legendary", pct: "15% ↑" },
+      { name: "ultimate",  label: "Ultimate",  pct: "2% ↑"  },
+    ];
+  }
+  return rarities;
+});
+
 onMounted(async () => {
-  // Load gold from DB
   try {
-    const data = await fetchGold();
-    gold.value = data.gold ?? 0;
+    const [goldData, statusData] = await Promise.all([
+      fetchGold(),
+      fetchGachaStatus().catch(() => ({ pulls_until_pity: 10 })),
+    ]);
+    gold.value           = goldData.gold ?? 0;
+    pulls_until_pity.value = statusData.pulls_until_pity;
   } catch (err) {
-    console.error("Failed to load gold:", err);
+    console.error("Failed to load gacha data:", err);
   }
 
   // Load skins for side panels
@@ -227,6 +251,7 @@ const triggerPull = async () => {
       is_duplicate: data.is_duplicate,
     };
     gold.value     = data.gold;  // server already deducted PULL_COST
+    pulls_until_pity.value = data.pulls_until_pity;
     demoMode.value = false;
   } catch {
     await delay;
@@ -382,6 +407,11 @@ const resetPull = () => {
   color: var(--text-muted);
 }
 
+.shard-info.pity {
+  background: rgba(88, 28, 135, 0.25);
+  border-color: rgba(168, 85, 247, 0.3);
+}
+
 .shard-balance {
   display: flex;
   align-items: center;
@@ -469,7 +499,7 @@ const resetPull = () => {
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  transition: transform 0.15s ease, box-shadow 0.5s ease, background 0.5s ease;
 }
 
 .pull-btn:not(.disabled):hover .pull-orb {
@@ -484,6 +514,29 @@ const resetPull = () => {
 
 .pull-btn.pulling .pull-orb {
   animation: orbPulse 0.8s ease-in-out infinite;
+}
+
+.pull-btn.pity-pull .pull-orb {
+  background: radial-gradient(circle at 32% 28%, #c084fc, #a855f7 50%, #7e22ce);
+  box-shadow: 0 0 36px rgba(168, 85, 247, 0.5);
+}
+
+.pull-btn.pity-pull .pull-label {
+  color: #f3e8ff;
+}
+
+.pull-btn.pity-pull:not(.disabled):hover .pull-orb {
+  transform: scale(1.08);
+  box-shadow: 0 0 60px rgba(168, 85, 247, 0.75);
+}
+
+@keyframes orbPulsePity {
+  0%, 100% { box-shadow: 0 0 36px rgba(168, 85, 247, 0.5); }
+  50%       { box-shadow: 0 0 70px rgba(192, 132, 252, 0.85); }
+}
+
+.pull-btn.pity-pull.pulling .pull-orb {
+  animation: orbPulsePity 0.8s ease-in-out infinite;
 }
 
 @keyframes orbPulse {
@@ -680,7 +733,6 @@ const resetPull = () => {
 
 /* Post-reveal */
 .pull-actions { 
-  margin-top: 20px; 
   animation: fadeIn 0.5s ease forwards;
 }
 
@@ -699,6 +751,7 @@ const resetPull = () => {
   border-radius: 999px;
   padding: 4px 18px;
   backdrop-filter: blur(8px);
+  transition: background 0.5s ease, border-color 0.5s ease;
 }
 
 .odds-list-horizontal {
@@ -739,5 +792,11 @@ const resetPull = () => {
   font-size: 0.68rem;
   font-weight: 700;
   color: var(--text-main);
+}
+
+.pull-btn.pity-pull ~ .odds-card,
+.odds-card.pity {
+  background: rgba(88, 28, 135, 0.25);
+  border-color: rgba(168, 85, 247, 0.3);
 }
 </style>
