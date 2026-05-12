@@ -49,17 +49,36 @@
           <div class="card-container" :class="{ flipped: revealed }">
             <!-- Back: pull button -->
             <div class="card-face card-back">
-              <button
-                class="pull-btn"
-                :class="{ pulling: isPulling, disabled: notEnoughShards, 'pity-pull': isPity }"
-                :disabled="isPulling || notEnoughShards"
-                @click="triggerPull"
-              >
-                <div class="pull-orb">
-                  <span class="pull-label">{{ isPulling ? '...' : isPity ? 'LUCKY PULL' : 'PULL' }}</span>
+              <!-- Roulette display while pulling -->
+              <div v-if="isPulling" class="roulette-display" :class="rouletteRarity">
+                <div class="roulette-shimmer"></div>
+                <div class="roulette-rarity-tag" :class="rouletteRarity">
+                  <span v-if="rouletteRarity === 'ultimate'" class="ultimate-dot"></span>
+                  {{ rouletteRarity.toUpperCase() }}
                 </div>
-              </button>
-              <p class="card-hint">{{ isPulling ? 'Summoning...' : 'Click to summon' }}</p>
+                <div class="roulette-art">
+                  <div class="roulette-placeholder" :class="rouletteRarity"></div>
+                </div>
+                <div v-if="showSkinName" class="roulette-skin-name">
+                  {{ rouletteDisplaySkin?.name ?? '???' }}
+                </div>
+                <p class="card-hint">Summoning...</p>
+              </div>
+
+              <!-- Normal pull button -->
+              <template v-else>
+                <button
+                  class="pull-btn"
+                  :class="{ pulling: isPulling, disabled: notEnoughShards, 'pity-pull': isPity }"
+                  :disabled="isPulling || notEnoughShards"
+                  @click="triggerPull"
+                >
+                  <div class="pull-orb">
+                    <span class="pull-label">{{ isPity ? 'LUCKY PULL' : 'PULL' }}</span>
+                  </div>
+                </button>
+                <p class="card-hint">Click to summon</p>
+              </template>
             </div>
 
             <!-- Front: result -->
@@ -141,6 +160,62 @@ const result    = ref(null);
 const demoMode  = ref(false);
 const pulls_until_pity = ref(10);
 const isPity = computed(() => pulls_until_pity.value === 1);
+const showSkinName     = ref(true);
+const rouletteRarity   = ref("common");
+const rouletteSkins    = ref([]);
+let rouletteInterval   = null;
+
+const RARITY_ORDER = ["common", "rare", "epic", "legendary", "ultimate"];
+
+const rouletteDisplaySkin = computed(() => {
+  const pool = skins.value.filter(s => {
+    const r = typeof s.rarity === 'object' ? s.rarity.name : s.rarity;
+    return r === rouletteRarity.value;
+  });
+  if (!pool.length) return null;
+  return pool[Math.floor(Math.random() * pool.length)];
+});
+
+function startRoulette() {
+  // Filter skins per rarity for name display
+  rouletteSkins.value = skins.value;
+
+  let speed = 60;
+  let ticks  = 0;
+  const totalTicks = 120;
+
+  rouletteInterval = setInterval(() => {
+    ticks++;
+    if (pipSound) {
+    pipSound.currentTime = 0;
+    pipSound.play().catch(e => console.log("Audio play failed:", e));
+  }
+    // Pick weighted random rarity for visual effect
+    const pool = isPity.value
+      ? ["common","common","rare","rare","epic","epic","epic","legendary","ultimate"]
+      : ["common","common","common","rare","rare","epic","legendary"];
+    rouletteRarity.value = pool[Math.floor(Math.random() * pool.length)];
+
+    // Slow down toward the end
+    if (ticks > totalTicks * 0.6) speed = 120;
+    if (ticks > totalTicks * 0.85) speed = 220;
+
+    if (ticks >= totalTicks) {
+      clearInterval(rouletteInterval);
+      rouletteInterval = null;
+    }
+  }, speed);
+}
+
+function stopRoulette() {
+  if (rouletteInterval) {
+    clearInterval(rouletteInterval);
+    rouletteInterval = null;
+  }
+}
+
+const pipSound = typeof Audio !== 'undefined' ? new Audio('/sounds/sound_pip.mp3') : null;
+if (pipSound) pipSound.volume = 0.2;
 
 const pullSound = typeof Audio !== 'undefined' ? new Audio('/sounds/sound_select.mp3') : null;
 if (pullSound) pullSound.volume = 0.5;
@@ -231,6 +306,7 @@ function mockPull() {
 const triggerPull = async () => {
   if (isPulling.value || revealed.value || notEnoughShards.value) return;
   isPulling.value = true;
+  startRoulette(); // start here
 
   if (pullSound) {
     pullSound.currentTime = 0;
@@ -241,20 +317,19 @@ const triggerPull = async () => {
 
   try {
     const [data] = await Promise.all([gachaPull(), delay]);
+    stopRoulette();
+    rouletteRarity.value = data.skin.rarity; // land on actual rarity
 
     result.value = {
-      skin: {
-        ...data.skin,
-        name:   data.skin.name   || data.skin.skin_name,
-        rarity: data.skin.rarity || data.skin.rarity_name,
-      },
+      skin: { ...data.skin, name: data.skin.name || data.skin.skin_name, rarity: data.skin.rarity || data.skin.rarity_name },
       is_duplicate: data.is_duplicate,
     };
-    gold.value     = data.gold;  // server already deducted PULL_COST
+    gold.value             = data.gold;
     pulls_until_pity.value = data.pulls_until_pity;
-    demoMode.value = false;
+    demoMode.value         = false;
   } catch {
     await delay;
+    stopRoulette();
     result.value   = mockPull();
     demoMode.value = true;
   }
@@ -798,5 +873,100 @@ const resetPull = () => {
 .odds-card.pity {
   background: rgba(88, 28, 135, 0.25);
   border-color: rgba(168, 85, 247, 0.3);
+}
+
+/* Roulette */
+.roulette-display {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  position: relative;
+  overflow: hidden;
+  transition: background 0.1s ease;
+}
+
+.roulette-display.common    { background: linear-gradient(135deg, rgba(30,30,35,0.9), #0f172a); }
+.roulette-display.rare      { background: linear-gradient(135deg, rgba(15,30,60,0.9), #0f172a); }
+.roulette-display.epic      { background: linear-gradient(135deg, rgba(40,10,65,0.9), #0f172a); }
+.roulette-display.legendary { background: linear-gradient(135deg, rgba(55,35,5,0.9),  #0f172a); }
+.roulette-display.ultimate  { background: linear-gradient(135deg, rgba(60,8,8,0.9),   #0f172a); }
+
+.roulette-shimmer {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, transparent 40%, rgba(255,255,255,0.04) 50%, transparent 60%);
+  animation: shimmerSlide 0.4s linear infinite;
+  pointer-events: none;
+}
+
+@keyframes shimmerSlide {
+  0%   { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+
+.roulette-rarity-tag {
+  padding: 6px 16px;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  border: 1px solid rgba(255,255,255,0.2);
+  backdrop-filter: blur(4px);
+  transition: all 0.1s ease;
+}
+
+.roulette-rarity-tag.common    { color: #d1d5db; background: rgba(30,30,35,0.75);  border-color: rgba(156,163,175,0.4); }
+.roulette-rarity-tag.rare      { color: #93c5fd; background: rgba(15,30,60,0.8);   border-color: rgba(59,130,246,0.4); }
+.roulette-rarity-tag.epic      { color: #d8b4fe; background: rgba(40,10,65,0.8);   border-color: rgba(168,85,247,0.4); }
+.roulette-rarity-tag.legendary { color: #fde68a; background: rgba(55,35,5,0.85);   border-color: rgba(234,179,8,0.4); }
+.roulette-rarity-tag.ultimate  { color: #ef4444; background: rgba(60,8,8,0.85);    border-color: rgba(239,68,68,0.5); box-shadow: 0 0 8px rgba(239,68,68,0.3); }
+
+.roulette-art {
+  width: 180px;
+  height: 280px;
+  overflow: hidden;
+}
+
+.roulette-placeholder {
+  width: 100%;
+  height: 100%;
+  transition: background 0.1s ease;
+}
+
+.roulette-placeholder.common    { background: linear-gradient(135deg, #1e293b, #0f172a); }
+.roulette-placeholder.rare      { background: linear-gradient(135deg, #1e3a8a, #0f172a); }
+.roulette-placeholder.epic      { background: linear-gradient(135deg, #3b0764, #0f172a); }
+.roulette-placeholder.legendary { background: linear-gradient(135deg, #422006, #0f172a); }
+.roulette-placeholder.ultimate  { background: linear-gradient(135deg, #450a0a, #0f172a); }
+
+.roulette-skin-name {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: rgba(255,255,255,0.7);
+  text-align: center;
+  padding: 0 16px;
+  transition: opacity 0.1s ease;
+}
+
+.toggle-name-btn {
+  background: rgba(15, 23, 42, 0.4);
+  border: 1px solid var(--border-subtle);
+  border-radius: 999px;
+  padding: 4px 14px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.toggle-name-btn:hover {
+  color: #93c5fd;
+  border-color: rgba(59,130,246,0.4);
 }
 </style>
