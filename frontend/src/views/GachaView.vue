@@ -824,7 +824,7 @@ const resetPull = () => {
   background: rgba(15, 23, 42, 0.4);
   border: 1px solid var(--border-subtle);
   border-radius: 999px;
-  padding: 4px 18px;
+  padding: 8px 24px;
   backdrop-filter: blur(8px);
   transition: background 0.5s ease, border-color 0.5s ease;
 }
@@ -857,16 +857,17 @@ const resetPull = () => {
 .odds-dot.ultimate  { background: #ef4444; }
 
 .odds-label-compact {
-  font-size: 0.64rem;
+  font-size: 0.8rem;
   color: var(--text-muted);
   text-transform: uppercase;
   letter-spacing: 0.05em;
 }
 
 .odds-pct-compact {
-  font-size: 0.68rem;
-  font-weight: 700;
+  font-size: 0.95rem;
+  font-weight: 800;
   color: var(--text-main);
+  font-family: var(--font-mono, monospace);
 }
 
 .pull-btn.pity-pull ~ .odds-card,

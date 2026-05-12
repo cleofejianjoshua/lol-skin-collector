@@ -250,18 +250,14 @@ function normalizeSkins(data) {
     const skin = entry.skin ?? entry;
     const key  = skin.id ?? skin.name;
     
-    if (map.has(key)) {
-      const existing = map.get(key);
-      existing.count += 1;
-      if (entry.is_owned) existing.is_owned = true;
-    } else {
-      map.set(key, { 
-        id: entry.id, 
-        skin, 
-        count: 1, 
-        is_owned: !!entry.is_owned 
-      });
-    }
+    // The backend now returns a single record per skin with a duplicate_count.
+    // Total count is duplicate_count + 1 (the original).
+    map.set(key, { 
+      id: entry.id, 
+      skin, 
+      count: (entry.duplicate_count || 0) + 1, 
+      is_owned: !!entry.is_owned 
+    });
   }
   return Array.from(map.values());
 }
