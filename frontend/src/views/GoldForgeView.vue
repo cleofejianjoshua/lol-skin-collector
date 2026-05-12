@@ -40,6 +40,28 @@
 
         <p v-if="error" class="error-text">{{ error }}</p>
 
+        <!-- Gold Bonus Timer -->
+        <div class="gold-bonus-zone">
+          <!-- Countdown -->
+          <div v-if="!bonusReady" class="bonus-countdown-card">
+            <span class="bonus-countdown-label">🪙 Gold Bonus in</span>
+            <span class="bonus-timer">{{ formattedCountdown }}</span>
+            <div class="bonus-progress-bar">
+              <div class="bonus-progress-fill" :style="{ width: progressPercent + '%' }"></div>
+            </div>
+          </div>
+
+          <!-- Claim button -->
+          <div v-else class="bonus-ready-card">
+            <div class="bonus-ready-glow"></div>
+            <p class="bonus-ready-label">🎉 Gold Bonus Ready!</p>
+            <button class="bonus-claim-btn" :disabled="isClaiming" @click="claimBonus">
+              <span class="bonus-coin">🪙</span>
+              {{ isClaiming ? 'Claiming…' : 'Claim + 400 Gold' }}
+            </button>
+          </div>
+        </div>
+
       </div>
 
       <!-- Right Slideshow -->
@@ -51,8 +73,8 @@
 </template>
 
 <script setup>
-import { ref, onMounted, onUnmounted } from "vue";
-import { fetchSkins, fetchGold, addGold } from "@/services/api.js";
+import { ref, computed, onMounted, onUnmounted } from "vue";
+import { fetchSkins, fetchGold, addGold, claimGoldBonus as apiClaimGoldBonus } from "@/services/api.js";
 import SkinSlideshow from "@/components/shared/SkinSlideshow.vue";
 
 const MOCK_POOL = [
@@ -70,6 +92,53 @@ const isClicked     = ref(false);
 const error         = ref("");
 const pendingClicks = ref(0);
 let syncTimer       = null;
+
+// Gold bonus timer
+const BONUS_DURATION = 5 * 60;
+const secondsLeft    = ref(BONUS_DURATION);
+const bonusReady     = ref(false);
+const isClaiming     = ref(false);
+let bonusInterval    = null;
+
+const formattedCountdown = computed(() => {
+  const m = Math.floor(secondsLeft.value / 60).toString().padStart(2, "0");
+  const s = (secondsLeft.value % 60).toString().padStart(2, "0");
+  return `${m}:${s}`;
+});
+
+const progressPercent = computed(() =>
+  ((BONUS_DURATION - secondsLeft.value) / BONUS_DURATION) * 100
+);
+
+function startBonusTimer() {
+  if (bonusInterval) clearInterval(bonusInterval);
+  secondsLeft.value = BONUS_DURATION;
+  bonusReady.value  = false;
+  bonusInterval = setInterval(() => {
+    secondsLeft.value--;
+    if (secondsLeft.value <= 0) {
+      secondsLeft.value = 0;
+      bonusReady.value  = true;
+      clearInterval(bonusInterval);
+      bonusInterval = null;
+    }
+  }, 1000);
+}
+
+async function claimBonus() {
+  if (isClaiming.value) return;
+  isClaiming.value = true;
+  try {
+    const data = await apiClaimGoldBonus();
+    // Reflect the updated gold from the server immediately
+    gold.value = data.gold;
+  } catch (err) {
+    console.error("Failed to claim gold bonus:", err);
+  } finally {
+    isClaiming.value = false;
+    startBonusTimer();
+  }
+}
 
 const goldSound = typeof Audio !== 'undefined' ? new Audio('/sounds/sound_gold.mp3') : null;
 if (goldSound) goldSound.volume = 0.35;
@@ -96,10 +165,12 @@ onMounted(async () => {
     console.error("Failed to load skins for side panels:", err);
     skins.value = MOCK_POOL;
   }
+  startBonusTimer();
 });
 
 onUnmounted(() => {
   if (syncTimer) clearTimeout(syncTimer);
+  if (bonusInterval) clearInterval(bonusInterval);
   // Optional: final sync if leaving page with pending clicks
   if (pendingClicks.value > 0) syncToDB();
 });
@@ -279,5 +350,149 @@ async function syncToDB() {
   margin: 0;
   font-size: 0.9rem;
   color: #f87171;
+}
+
+/* ═══════════════════════════════════════
+   Gold Bonus Zone
+═══════════════════════════════════════ */
+.gold-bonus-zone {
+  width: 100%;
+  max-width: 400px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+/* Countdown card */
+.bonus-countdown-card {
+  width: 100%;
+  background: rgba(15, 23, 42, 0.75);
+  border: 1px solid rgba(234, 179, 8, 0.2);
+  border-radius: 20px;
+  padding: 22px 28px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  backdrop-filter: blur(8px);
+}
+
+.bonus-countdown-label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(251, 191, 36, 0.75);
+}
+
+.bonus-timer {
+  font-size: 3rem;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.1em;
+  color: #fbbf24;
+  text-shadow: 0 0 24px rgba(251, 191, 36, 0.5);
+  line-height: 1;
+}
+
+.bonus-progress-bar {
+  width: 100%;
+  height: 6px;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.bonus-progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #f59e0b, #fbbf24, #fde68a);
+  border-radius: 999px;
+  transition: width 1s linear;
+  box-shadow: 0 0 8px rgba(251, 191, 36, 0.55);
+}
+
+/* Ready card */
+.bonus-ready-card {
+  position: relative;
+  width: 100%;
+  background: rgba(15, 23, 42, 0.85);
+  border: 1px solid rgba(234, 179, 8, 0.45);
+  border-radius: 20px;
+  padding: 26px 28px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  backdrop-filter: blur(8px);
+  overflow: hidden;
+  animation: bonusReveal 0.55s cubic-bezier(0.175, 0.885, 0.32, 1.275) both;
+}
+
+@keyframes bonusReveal {
+  from { opacity: 0; transform: scale(0.88) translateY(12px); }
+  to   { opacity: 1; transform: scale(1)    translateY(0);     }
+}
+
+.bonus-ready-glow {
+  position: absolute;
+  inset: -40px;
+  background: radial-gradient(ellipse at center, rgba(251, 191, 36, 0.14), transparent 68%);
+  animation: bonusGlowPulse 2s ease-in-out infinite;
+  pointer-events: none;
+}
+
+@keyframes bonusGlowPulse {
+  0%, 100% { opacity: 0.6; transform: scale(1);   }
+  50%       { opacity: 1;   transform: scale(1.1); }
+}
+
+.bonus-ready-label {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 700;
+  color: #fde68a;
+  text-shadow: 0 0 10px rgba(251, 191, 36, 0.4);
+  position: relative;
+}
+
+.bonus-claim-btn {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 13px 34px;
+  border: none;
+  border-radius: 999px;
+  background: linear-gradient(135deg, #f59e0b, #d97706);
+  color: #1a0800;
+  font-size: 1.05rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+  position: relative;
+  transition: transform 0.15s ease, box-shadow 0.15s ease, opacity 0.15s ease;
+  box-shadow: 0 4px 20px rgba(245, 158, 11, 0.4), 0 2px 8px rgba(0,0,0,0.35);
+}
+
+.bonus-claim-btn:hover:not(:disabled) {
+  transform: scale(1.06);
+  box-shadow: 0 6px 28px rgba(251, 191, 36, 0.6), 0 2px 8px rgba(0,0,0,0.35);
+}
+
+.bonus-claim-btn:active:not(:disabled) { transform: scale(0.96); }
+
+.bonus-claim-btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.bonus-coin {
+  font-size: 1.25rem;
+  animation: coinSpin 2.4s ease-in-out infinite;
+  display: inline-block;
+}
+
+@keyframes coinSpin {
+  0%, 40%, 100% { transform: rotateY(0deg);   }
+  20%            { transform: rotateY(180deg); }
 }
 </style>

@@ -148,6 +148,20 @@ export async function addGold(amount = 1) {
 }
 
 /**
+ * Claim the 5-minute recurring gold bonus.
+ * Returns { gold, bonus_awarded } or throws if cooldown hasn't elapsed.
+ */
+export async function claimGoldBonus() {
+  const res = await fetch("/api/gold/bonus", {
+    method: "POST",
+    credentials: "include",
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || "Bonus not ready");
+  return data;
+}
+
+/**
  * Spend `amount` gold from the current user's balance.
  * Returns { gold: number } with the updated balance.
  */
