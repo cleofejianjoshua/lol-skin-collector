@@ -76,8 +76,10 @@ def get_collection():
     if not user:
         return jsonify({"error": "Not logged in"}), 401
 
-    entries = UserCollection.query.filter_by(user_id=user.id)\
-                .order_by(UserCollection.obtained_at.desc()).all()
+    # Use eager loading to fetch skin and rarity data in one go (prevents N+1 query problem)
+    entries = UserCollection.query.options(
+        db.joinedload(UserCollection.skin)
+    ).filter_by(user_id=user.id).order_by(UserCollection.obtained_at.desc()).all()
     return jsonify([e.to_dict() for e in entries])
 
 # Collection Disenchant
