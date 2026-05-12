@@ -38,7 +38,9 @@ import { ref, computed, onMounted } from "vue";
 import QuoteCard from "@/components/shared/QuoteCard.vue";
 import SkinCard from "@/components/shared/SkinCard.vue";
 import { fetchUser, fetchDisplaySlots } from "@/services/api.js";
+import { useSound } from "@/services/sound.js";
 
+const { pip, pull, reveal, click } = useSound();
 const username     = ref("");
 const nickname     = ref("");
 const isLoading    = ref(true);

@@ -149,6 +149,9 @@
 import { ref, computed, onMounted } from "vue";
 import { gachaPull, fetchSkins, fetchGold, spendGold, fetchGachaStatus } from "@/services/api.js";
 import SkinSlideshow from "@/components/shared/SkinSlideshow.vue";
+import { useSound } from "@/services/sound.js";
+
+const { pipSound, pullSound, revealSound, clickSound } = useSound();
 
 const PULL_COST   = 25;
 
@@ -186,10 +189,7 @@ function startRoulette() {
 
   rouletteInterval = setInterval(() => {
     ticks++;
-    if (pipSound) {
-    pipSound.currentTime = 0;
-    pipSound.play().catch(e => console.log("Audio play failed:", e));
-  }
+    pipSound.play();
     // Pick weighted random rarity for visual effect
     const pool = isPity.value
       ? ["common","common","rare","rare","epic","epic","epic","legendary","ultimate"]
@@ -213,18 +213,6 @@ function stopRoulette() {
     rouletteInterval = null;
   }
 }
-
-const pipSound = typeof Audio !== 'undefined' ? new Audio('/sounds/sound_pip.mp3') : null;
-if (pipSound) pipSound.volume = 0.2;
-
-const pullSound = typeof Audio !== 'undefined' ? new Audio('/sounds/sound_select.mp3') : null;
-if (pullSound) pullSound.volume = 0.5;
-
-const revealSound = typeof Audio !== 'undefined' ? new Audio('/sounds/sound_open.mp3') : null;
-if (revealSound) revealSound.volume = 0.5;
-
-const clickSound = typeof Audio !== 'undefined' ? new Audio('/sounds/sound_click.mp3') : null;
-if (clickSound) clickSound.volume = 0.5;
 
 const notEnoughShards = computed(() => gold.value < PULL_COST);
 
@@ -308,10 +296,7 @@ const triggerPull = async () => {
   isPulling.value = true;
   startRoulette(); // start here
 
-  if (pullSound) {
-    pullSound.currentTime = 0;
-    pullSound.play().catch(e => console.log("Audio play failed:", e));
-  }
+  pullSound.play();
 
   const delay = new Promise(res => setTimeout(res, 2000));
 
@@ -337,10 +322,7 @@ const triggerPull = async () => {
   isPulling.value = false;
   revealed.value  = true;
 
-  if (revealSound) {
-    revealSound.currentTime = 0;
-    revealSound.play().catch(e => console.log("Audio play failed:", e));
-  }
+  revealSound.play();
 };
 
 const resetPull = () => {
@@ -350,10 +332,7 @@ const resetPull = () => {
   setTimeout(() => {
     if (!revealed.value) result.value = null;
   }, 1200);
-  if (clickSound) {
-    clickSound.currentTime = 0;
-    clickSound.play().catch(e => console.log("Audio play failed:", e));
-  }
+  clickSound.play();
 };
 </script>
 

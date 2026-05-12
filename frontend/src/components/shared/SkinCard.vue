@@ -2,6 +2,7 @@
   <div
     class="skin-card rarity-themed"
     :class="[rarity, { 'is-empty': isEmpty, 'is-shard': isShard }]"
+    @mouseenter="!isEmpty && pipSound.play()"
   >
     <!-- Filled Skin Card -->
     <template v-if="!isEmpty && skin">
@@ -42,6 +43,9 @@
 
 <script setup>
 import { computed } from 'vue';
+import { useSound } from "@/services/sound.js";
+
+const { pipSound, pullSound, revealSound, clickSound } = useSound();
 
 const props = defineProps({
   skin: {

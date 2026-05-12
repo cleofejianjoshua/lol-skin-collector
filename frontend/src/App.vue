@@ -3,6 +3,9 @@ import { ref, onMounted, computed, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { fetchUser, logoutUser } from "@/services/api.js";
 import ConfirmModal from "@/components/shared/ConfirmModal.vue";
+import { useSound } from "@/services/sound.js";
+
+const { pipSound, pullSound, revealSound, clickSound } = useSound();
 
 const username = ref("Guest");
 const nickname = ref("");
