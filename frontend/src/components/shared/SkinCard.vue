@@ -7,7 +7,7 @@
     <template v-if="!isEmpty && skin">
       <!-- Background Art -->
       <div class="skin-art">
-        <img v-if="skin.image_path" :src="skin.image_path" :alt="skin.name" class="skin-img" loading="lazy" @load="e => e.target.classList.add('loaded')"/>
+        <img v-if="skin.image_path" :src="skin.image_path" :alt="skin.name" class="skin-img" />
         <div v-else class="skin-placeholder" :class="rarity"></div>
       </div>
 
@@ -99,12 +99,7 @@ const rarity = computed(() => {
   height: 100%;
   object-fit: cover;
   filter: brightness(0.8) contrast(1.05);
-  transition: transform 0.5s ease, filter 0.4s ease, opacity 0.4s ease;
-  opacity: 0;
-}
-
-.skin-img.loaded {
-  opacity: 1;
+  transition: transform 0.5s ease, filter 0.4s ease;
 }
 
 .skin-card:hover .skin-img {

@@ -16,33 +16,33 @@
       <div class="filter-row-container" v-if="!loading && collection.length > 0">
         <div class="filter-row">
           <button class="filter-btn" :class="{ active: activeFilter === 'all' }" @click="activeFilter = 'all'">
-            All Rarity <span class="filter-count">{{ getFilterCount('all') }}</span>
-          </button>
-          <button class="filter-btn" :class="{ active: activeFilter === 'ultimate' }" @click="activeFilter = 'ultimate'">
-            Ultimate <span class="filter-count">{{ getFilterCount('ultimate') }}</span>
-          </button>
-          <button class="filter-btn" :class="{ active: activeFilter === 'legendary' }" @click="activeFilter = 'legendary'">
-            Legendary <span class="filter-count">{{ getFilterCount('legendary') }}</span>
-          </button>
-          <button class="filter-btn" :class="{ active: activeFilter === 'epic' }" @click="activeFilter = 'epic'">
-            Epic <span class="filter-count">{{ getFilterCount('epic') }}</span>
-          </button>
-          <button class="filter-btn" :class="{ active: activeFilter === 'rare' }" @click="activeFilter = 'rare'">
-            Rare <span class="filter-count">{{ getFilterCount('rare') }}</span>
+            Any Rarity <span class="filter-count">{{ getFilterCount('all') }}</span>
           </button>
           <button class="filter-btn" :class="{ active: activeFilter === 'common' }" @click="activeFilter = 'common'">
             Common <span class="filter-count">{{ getFilterCount('common') }}</span>
           </button>
+          <button class="filter-btn" :class="{ active: activeFilter === 'rare' }" @click="activeFilter = 'rare'">
+            Rare <span class="filter-count">{{ getFilterCount('rare') }}</span>
+          </button>
+          <button class="filter-btn" :class="{ active: activeFilter === 'epic' }" @click="activeFilter = 'epic'">
+            Epic <span class="filter-count">{{ getFilterCount('epic') }}</span>
+          </button>
+          <button class="filter-btn" :class="{ active: activeFilter === 'legendary' }" @click="activeFilter = 'legendary'">
+            Legendary <span class="filter-count">{{ getFilterCount('legendary') }}</span>
+          </button>
+          <button class="filter-btn" :class="{ active: activeFilter === 'ultimate' }" @click="activeFilter = 'ultimate'">
+            Ultimate <span class="filter-count">{{ getFilterCount('ultimate') }}</span>
+          </button>
         </div>
         <div class="filter-row secondary">
           <button class="filter-btn" :class="{ active: statusFilter === 'all' }" @click="statusFilter = 'all'">
-            All Status <span class="filter-count">{{ getFilterCount(undefined, 'all') }}</span>
-          </button>
-          <button class="filter-btn" :class="{ active: statusFilter === 'permanent' }" @click="statusFilter = 'permanent'">
-            Permanent <span class="filter-count">{{ getFilterCount(undefined, 'permanent') }}</span>
+            Any Status
           </button>
           <button class="filter-btn" :class="{ active: statusFilter === 'shards' }" @click="statusFilter = 'shards'">
-            Shards <span class="filter-count">{{ getFilterCount(undefined, 'shards') }}</span>
+            Shards
+          </button>
+          <button class="filter-btn" :class="{ active: statusFilter === 'permanent' }" @click="statusFilter = 'permanent'">
+            Unlocked
           </button>
         </div>
       </div>
