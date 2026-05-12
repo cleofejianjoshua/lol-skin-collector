@@ -89,7 +89,7 @@ class UserCollection(db.Model):
     id          = db.Column(db.Integer, primary_key=True)
     user_id     = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
     skin_id     = db.Column(db.Integer, db.ForeignKey("skins.id"), nullable=False)
-    obtained_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
+    obtained_at = db.Column(db.DateTime, index=True, default=lambda: datetime.now(timezone.utc))
     duplicate_count = db.Column(db.Integer, nullable=False, default=0)
     is_owned    = db.Column(db.Boolean, nullable=False, default=False)
     __table_args__ = (
