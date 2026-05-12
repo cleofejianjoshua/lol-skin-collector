@@ -30,6 +30,15 @@
       </div>
     </div>
 
+    <!-- Skeleton Grid -->
+    <div v-if="loading" class="skin-gallery">
+      <div v-for="i in 10" :key="i" class="card-wrapper skeleton-card">
+        <div class="skeleton-img"></div>
+        <div class="skeleton-line short"></div>
+        <div class="skeleton-line"></div>
+      </div>
+    </div>
+
     <!-- Loading -->
     <div v-if="loading" class="feedback-state">
       <div class="spinner"></div>
@@ -772,5 +781,46 @@ async function setDisplaySlot(idx) {
   }
   .modal-actions-card { width: 100%; padding: 30px 20px; }
   .slot-grid { grid-template-columns: repeat(2, 1fr); }
+}
+
+/* ── Skeleton ── */
+.skeleton-card {
+  cursor: default;
+  pointer-events: none;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.skeleton-img {
+  width: 308px;
+  height: 480px;
+  background: linear-gradient(90deg,
+    rgba(255,255,255,0.04) 25%,
+    rgba(255,255,255,0.08) 50%,
+    rgba(255,255,255,0.04) 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.4s infinite;
+}
+
+.skeleton-line {
+  height: 14px;
+  border-radius: 4px;
+  background: linear-gradient(90deg,
+    rgba(255,255,255,0.04) 25%,
+    rgba(255,255,255,0.08) 50%,
+    rgba(255,255,255,0.04) 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.4s infinite;
+  width: 100%;
+}
+
+.skeleton-line.short { width: 60%; }
+
+@keyframes shimmer {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
 }
 </style>
