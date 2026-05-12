@@ -15,17 +15,35 @@
       <!-- Filter -->
       <div class="filter-row-container" v-if="!loading && collection.length > 0">
         <div class="filter-row">
-          <button class="filter-btn" :class="{ active: activeFilter === 'all' }" @click="activeFilter = 'all'">All Rarity</button>
-          <button class="filter-btn" :class="{ active: activeFilter === 'ultimate' }" @click="activeFilter = 'ultimate'">Ultimate</button>
-          <button class="filter-btn" :class="{ active: activeFilter === 'legendary' }" @click="activeFilter = 'legendary'">Legendary</button>
-          <button class="filter-btn" :class="{ active: activeFilter === 'epic' }" @click="activeFilter = 'epic'">Epic</button>
-          <button class="filter-btn" :class="{ active: activeFilter === 'rare' }" @click="activeFilter = 'rare'">Rare</button>
-          <button class="filter-btn" :class="{ active: activeFilter === 'common' }" @click="activeFilter = 'common'">Common</button>
+          <button class="filter-btn" :class="{ active: activeFilter === 'all' }" @click="activeFilter = 'all'">
+            All Rarity <span class="filter-count">{{ getFilterCount('all') }}</span>
+          </button>
+          <button class="filter-btn" :class="{ active: activeFilter === 'ultimate' }" @click="activeFilter = 'ultimate'">
+            Ultimate <span class="filter-count">{{ getFilterCount('ultimate') }}</span>
+          </button>
+          <button class="filter-btn" :class="{ active: activeFilter === 'legendary' }" @click="activeFilter = 'legendary'">
+            Legendary <span class="filter-count">{{ getFilterCount('legendary') }}</span>
+          </button>
+          <button class="filter-btn" :class="{ active: activeFilter === 'epic' }" @click="activeFilter = 'epic'">
+            Epic <span class="filter-count">{{ getFilterCount('epic') }}</span>
+          </button>
+          <button class="filter-btn" :class="{ active: activeFilter === 'rare' }" @click="activeFilter = 'rare'">
+            Rare <span class="filter-count">{{ getFilterCount('rare') }}</span>
+          </button>
+          <button class="filter-btn" :class="{ active: activeFilter === 'common' }" @click="activeFilter = 'common'">
+            Common <span class="filter-count">{{ getFilterCount('common') }}</span>
+          </button>
         </div>
         <div class="filter-row secondary">
-          <button class="filter-btn" :class="{ active: statusFilter === 'all' }" @click="statusFilter = 'all'">All Status</button>
-          <button class="filter-btn" :class="{ active: statusFilter === 'permanent' }" @click="statusFilter = 'permanent'">Permanent</button>
-          <button class="filter-btn" :class="{ active: statusFilter === 'shards' }" @click="statusFilter = 'shards'">Shards</button>
+          <button class="filter-btn" :class="{ active: statusFilter === 'all' }" @click="statusFilter = 'all'">
+            All Status <span class="filter-count">{{ getFilterCount(undefined, 'all') }}</span>
+          </button>
+          <button class="filter-btn" :class="{ active: statusFilter === 'permanent' }" @click="statusFilter = 'permanent'">
+            Permanent <span class="filter-count">{{ getFilterCount(undefined, 'permanent') }}</span>
+          </button>
+          <button class="filter-btn" :class="{ active: statusFilter === 'shards' }" @click="statusFilter = 'shards'">
+            Shards <span class="filter-count">{{ getFilterCount(undefined, 'shards') }}</span>
+          </button>
         </div>
       </div>
     </div>
@@ -144,7 +162,7 @@
 <script setup>
 import { ref, onMounted, computed } from "vue";
 import { useRouter } from "vue-router";
-import { fetchUserCollection, fetchDisplaySlots, updateDisplaySlot, clearDisplaySlot, unlockSkin } from "@/services/api.js";
+import { fetchUserCollection, fetchDisplaySlots, updateDisplaySlot, clearDisplaySlot, unlockSkin, fetchSkins } from "@/services/api.js";
 import SkinCard from "@/components/shared/SkinCard.vue";
 
 const router = useRouter();
@@ -156,6 +174,49 @@ const displaySlots = ref([null, null, null, null]); // [skin | null, ...]
 const tokenBalance = ref(0);
 const activeFilter = ref("all");
 const statusFilter = ref("all"); // all, permanent, shards
+const allSkins     = ref([]);
+
+const rarityTotals = computed(() => {
+  const totals = {
+    all: allSkins.value.length,
+    ultimate: 0,
+    legendary: 0,
+    epic: 0,
+    rare: 0,
+    common: 0
+  };
+  allSkins.value.forEach(s => {
+    const rName = typeof s.rarity === 'object' ? s.rarity.name : s.rarity;
+    if (totals[rName] !== undefined) totals[rName]++;
+  });
+  return totals;
+});
+
+function getFilterCount(rarity, status) {
+  // Use current selection if the other part is omitted
+  const r = rarity ?? activeFilter.value;
+  const s = status ?? statusFilter.value;
+
+  const userCount = collection.value.filter(e => {
+    let rMatch = true;
+    if (r !== 'all') {
+      const rName = typeof e.skin.rarity === 'object' ? e.skin.rarity.name : e.skin.rarity;
+      rMatch = (rName === r);
+    }
+    
+    let sMatch = true;
+    if (s === 'permanent') {
+      sMatch = e.is_owned;
+    } else if (s === 'shards') {
+      sMatch = !e.is_owned;
+    }
+    
+    return rMatch && sMatch;
+  }).length;
+
+  const total = rarityTotals.value[r] || 0;
+  return `${userCount}/${total}`;
+}
 
 const ownedCount = computed(() => collection.value.filter(e => e.is_owned).length);
 const shardCount = computed(() => collection.value.filter(e => !e.is_owned).length);
@@ -207,16 +268,18 @@ function normalizeSkins(data) {
 
 onMounted(async () => {
   try {
-    const [userRes, collectionData, slots] = await Promise.all([
+    const [userRes, collectionData, slots, allSkinsData] = await Promise.all([
       fetch("/api/user", { credentials: "include" }).then(r => r.json()),
       fetchUserCollection().catch(() => []),
       fetchDisplaySlots().catch(() => []),
+      fetchSkins().catch(() => []),
     ]);
 
     if (!userRes.username) { router.push({ name: "Login" }); return; }
 
     tokenBalance.value = userRes.essence ?? 0;
     collection.value   = normalizeSkins(collectionData ?? []);
+    allSkins.value     = allSkinsData ?? [];
 
     const slotArray = [null, null, null, null];
     for (const s of slots) {
@@ -406,6 +469,19 @@ async function setDisplaySlot(idx) {
   background: rgba(59,130,246,0.25);
   border-color: rgba(59,130,246,0.7);
   color: #dbeafe;
+}
+
+.filter-count {
+  margin-left: 6px;
+  opacity: 0.5;
+  font-size: 0.7rem;
+  font-weight: 500;
+  font-family: var(--font-mono, monospace);
+}
+
+.filter-btn.active .filter-count {
+  opacity: 0.9;
+  color: #fff;
 }
 
 /* ── Feedback states ── */
