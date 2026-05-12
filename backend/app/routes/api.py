@@ -1,6 +1,7 @@
 from flask import Blueprint, request, jsonify, session
 from app import db
 from app.models import User, Skin, UserCollection, DisplaySlot
+from datetime import datetime, timezone
 import random
 
 api = Blueprint("api", __name__, url_prefix="/api")
@@ -149,6 +150,47 @@ def add_gold():
     except Exception:
         db.session.rollback()
         return jsonify({"error": "Failed to add gold"}), 500
+
+
+BONUS_COOLDOWN_SECONDS = 5 * 60  # 5 minutes
+BONUS_AMOUNT = 400
+
+
+@api.route("/gold/bonus", methods=["POST"])
+def claim_gold_bonus():
+    """Award the 5-minute recurring gold bonus.
+
+    Cooldown is stored in the Flask session (resets automatically on logout).
+    No database column needed.
+    """
+    user = get_current_user()
+    if not user:
+        return jsonify({"error": "Not logged in"}), 401
+
+    now = datetime.now(timezone.utc)
+    last_ts = session.get("last_bonus_at")  # stored as ISO string
+
+    if last_ts is not None:
+        last = datetime.fromisoformat(last_ts)
+        if last.tzinfo is None:
+            last = last.replace(tzinfo=timezone.utc)
+        elapsed = (now - last).total_seconds()
+        if elapsed < BONUS_COOLDOWN_SECONDS:
+            remaining = int(BONUS_COOLDOWN_SECONDS - elapsed)
+            return jsonify({
+                "error": "Bonus not ready yet",
+                "remaining_seconds": remaining,
+            }), 429
+
+    user.gold = (user.gold or 0) + BONUS_AMOUNT
+    session["last_bonus_at"] = now.isoformat()  # persist in session, not DB
+
+    try:
+        db.session.commit()
+        return jsonify({"gold": user.gold, "bonus_awarded": BONUS_AMOUNT})
+    except Exception:
+        db.session.rollback()
+        return jsonify({"error": "Failed to award bonus"}), 500
 
 
 @api.route("/gold/spend", methods=["POST"])
