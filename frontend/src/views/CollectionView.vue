@@ -175,6 +175,7 @@ const tokenBalance = ref(0);
 const activeFilter = ref("all");
 const statusFilter = ref("all"); // all, permanent, shards
 const allSkins     = ref([]);
+let slotUpdate      = Promise.resolve();
 
 const rarityTotals = computed(() => {
   const totals = {
@@ -351,23 +352,39 @@ async function enchant() {
 async function setDisplaySlot(idx) {
   if (!selected.value) return;
   const skin = selected.value.skin;
-
-  // Clear this skin from any existing slot first
   const currentSlot = getSlotForSkin(skin);
+
+  // update UI immediately
   if (currentSlot !== null && currentSlot !== idx) {
-    await clearDisplaySlot(currentSlot);
     displaySlots.value[currentSlot] = null;
   }
-
-  // If already in this slot, clear it (toggle off)
-  if (currentSlot === idx) {
-    await clearDisplaySlot(idx);
+  const isRemoving = (currentSlot === idx);
+  if (isRemoving) {
     displaySlots.value[idx] = null;
-    return;
+  } else {
+    displaySlots.value[idx] = { ...skin };
   }
 
-  await updateDisplaySlot(idx, skin.id);
-  displaySlots.value[idx] = { ...skin };
+  // queue the backend sync to avoid race conditions
+  slotUpdate = slotUpdate.then(async () => {
+    try {
+      if (currentSlot !== null && currentSlot !== idx) {
+        await clearDisplaySlot(currentSlot);
+      }
+      if (isRemoving) {
+        await clearDisplaySlot(idx);
+      } else {
+        await updateDisplaySlot(idx, skin.id);
+      }
+    } catch (err) {
+      console.error("Slot update failed:", err);
+      // re-fetch actual slots from server on error to fix UI
+      const slots = await fetchDisplaySlots().catch(() => []);
+      const slotArray = [null, null, null, null];
+      for (const s of slots) slotArray[s.slot_index] = s.skin ?? null;
+      displaySlots.value = slotArray;
+    }
+  });
 }
 </script>
 
