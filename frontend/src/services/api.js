@@ -62,7 +62,7 @@ export async function fetchUser() {
   }
 }
 
-export async function fetchUserByUsername(username) {
+export async function fetchOtherUser(username) {
   const res = await fetch(`/api/user/${username}`, {
     method: "GET",
     credentials: "include",
@@ -71,6 +71,13 @@ export async function fetchUserByUsername(username) {
   const data = await res.json();
   if (!res.ok) throw new Error(data.error || "User not found");
   return data;
+}
+
+export async function fetchOtherDisplaySlots(username) {
+  const res = await fetch(`/api/display-slots/${username}`, { credentials: "include" });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || "Failed to fetch display slots");
+  return data; // [{ slot_index, skin }, ...]
 }
 
 export async function updateProfile({ nickname, email }) {

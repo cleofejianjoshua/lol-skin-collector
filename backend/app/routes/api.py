@@ -45,6 +45,26 @@ def get_other_user(username):
         "username": user.username,
     })
 
+@api.route("/display-slots/<username>", methods=["GET"])
+def get_other_display_slots(username):
+    user = User.query.filter_by(username=username).first()
+    if not user:
+        return jsonify({"error": "Not logged in"}), 401
+
+    slots = DisplaySlot.query.filter_by(user_id=user.id).order_by(DisplaySlot.slot_index).all()
+
+    # Return all 4 slots, empty ones included
+    result = []
+    slot_map = {s.slot_index: s for s in slots}
+    for i in range(4):
+        slot = slot_map.get(i)
+        result.append({
+            "slot_index": i,
+            "skin": slot.skin.to_dict() if slot and slot.skin else None,
+        })
+
+    return jsonify(result)
+
 @api.route("/update-profile", methods=["POST"])
 def update_profile():
     user = get_current_user()

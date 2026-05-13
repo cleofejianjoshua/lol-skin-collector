@@ -37,11 +37,12 @@
 import { ref, computed, onMounted } from "vue";
 import QuoteCard from "@/components/shared/QuoteCard.vue";
 import SkinCard from "@/components/shared/SkinCard.vue";
-import { fetchUser, fetchDisplaySlots } from "@/services/api.js";
+import { fetchUser, fetchDisplaySlots, fetchOtherDisplaySlots, fetchOtherUser } from "@/services/api.js";
 
 const username     = ref("");
 const nickname     = ref("");
 const isLoading    = ref(true);
+const search_user         = ref(null);
 const displaySlots = ref([null, null, null, null]);
 
 const displayName = computed(() => nickname.value || username.value);
@@ -51,7 +52,7 @@ onMounted(async () => {
   try {
     const [userData, slots] = await Promise.all([
       fetchUser(),
-      fetchDisplaySlots().catch(() => []),
+      fetchOtherDisplaySlots("neiltest4").catch(() => []),
     ]);
 
     username.value = userData.username || "Guest";
