@@ -227,11 +227,11 @@ const rarities = [
 const displayedRarities = computed(() => {
   if (isPity.value) {
     return [
-      { name: "common",    label: "Common",    pct: "20% ↓" },
-      { name: "rare",      label: "Rare",      pct: "25% ↑" },
-      { name: "epic",      label: "Epic",      pct: "38% ↑" },
-      { name: "legendary", label: "Legendary", pct: "15% ↑" },
-      { name: "ultimate",  label: "Ultimate",  pct: "2% ↑"  },
+      { name: "common",    label: "Common",    pct: "0% ↓"  },
+      { name: "rare",      label: "Rare",      pct: "15% ↓" },
+      { name: "epic",      label: "Epic",      pct: "45% ↑" },
+      { name: "legendary", label: "Legendary", pct: "36% ↑" },
+      { name: "ultimate",  label: "Ultimate",  pct: "4% ↑"  },
     ];
   }
   return rarities;

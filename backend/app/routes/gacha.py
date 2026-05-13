@@ -26,7 +26,7 @@ PULL_COST     = 25
 PITY_INTERVAL = 10
 
 NORMAL_WEIGHTS = { "common": 40, "rare": 32, "epic": 18, "legendary": 9, "ultimate": 1 }
-PITY_WEIGHTS   = { "common": 20, "rare": 25, "epic": 38, "legendary": 15, "ultimate": 2 }
+PITY_WEIGHTS   = { "common": 0, "rare": 15, "epic": 45, "legendary": 36, "ultimate": 4 }
 
 def pick_rarity(is_pity=False):
     weights = PITY_WEIGHTS if is_pity else NORMAL_WEIGHTS
