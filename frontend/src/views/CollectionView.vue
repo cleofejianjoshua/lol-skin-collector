@@ -12,9 +12,10 @@
         {{ ownedCount }} permanent - {{ shardCount }} shard{{ shardCount !== 1 ? 's' : '' }}
       </p>
 
-      <!-- Filter -->
+      <!-- Filter & Search -->
       <div class="filter-row-container" v-if="!loading && collection.length > 0">
-        <div class="filter-row">
+        <div class="filter-controls-main">
+          <div class="filter-row">
           <button class="filter-btn" :class="{ active: activeFilter === 'all' }" @click="setRarityFilter('all')" @mouseenter="pipSound.play()">
             All Rarity <span class="filter-count">{{ getFilterCount('all') }}</span>
           </button>
@@ -34,18 +35,29 @@
             Ultimate <span class="filter-count">{{ getFilterCount('ultimate') }}</span>
           </button>
         </div>
-        <div class="filter-row secondary">
-          <button class="filter-btn" :class="{ active: statusFilter === 'all' }" @click="setStatusFilter('all')" @mouseenter="pipSound.play()">
-            All Status
-          </button>
-          <button class="filter-btn" :class="{ active: statusFilter === 'shards' }" @click="setStatusFilter('shards')" @mouseenter="pipSound.play()">
-            Shards
-          </button>
-          <button class="filter-btn" :class="{ active: statusFilter === 'permanent' }" @click="setStatusFilter('permanent')" @mouseenter="pipSound.play()">
-            Unlocked
-          </button>
+
+        <div class="search-box">
+          <input 
+            v-model="searchQuery" 
+            type="text" 
+            placeholder="Search skin or champion..." 
+            class="search-input"
+          />
         </div>
       </div>
+
+      <div class="filter-row secondary">
+        <button class="filter-btn" :class="{ active: statusFilter === 'all' }" @click="setStatusFilter('all')" @mouseenter="pipSound.play()">
+          All Status
+        </button>
+        <button class="filter-btn" :class="{ active: statusFilter === 'shards' }" @click="setStatusFilter('shards')" @mouseenter="pipSound.play()">
+          Shards
+        </button>
+        <button class="filter-btn" :class="{ active: statusFilter === 'permanent' }" @click="setStatusFilter('permanent')" @mouseenter="pipSound.play()">
+          Unlocked
+        </button>
+      </div>
+    </div>
     </div>
 
     <!-- Skeleton Grid -->
@@ -179,6 +191,7 @@ const tokenBalance = ref(0);
 const activeFilter = ref("all");
 const statusFilter = ref("all"); // all, permanent, shards
 const allSkins     = ref([]);
+const searchQuery  = ref("");
 let slotUpdate      = Promise.resolve();
 
 const rarityTotals = computed(() => {
@@ -237,6 +250,8 @@ const ownedCount = computed(() => collection.value.filter(e => e.is_owned).lengt
 const shardCount = computed(() => collection.value.filter(e => !e.is_owned).length);
 
 const filteredCollection = computed(() => {
+  const query = searchQuery.value.toLowerCase().trim();
+  
   return collection.value.filter(e => {
     // Rarity Filter
     let rarityMatch = true;
@@ -253,7 +268,15 @@ const filteredCollection = computed(() => {
       statusMatch = !e.is_owned;
     }
 
-    return rarityMatch && statusMatch;
+    // Search Filter
+    let searchMatch = true;
+    if (query) {
+      const name = (e.skin.name || "").toLowerCase();
+      const champ = (e.skin.champion || "").toLowerCase();
+      searchMatch = name.includes(query) || champ.includes(query);
+    }
+
+    return rarityMatch && statusMatch && searchMatch;
   });
 });
 
@@ -466,6 +489,37 @@ async function setDisplaySlot(idx) {
   display: flex;
   flex-direction: column;
   gap: 12px;
+}
+
+.filter-controls-main {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  width: 100%;
+}
+
+.search-box {
+  flex: 1;
+  max-width: 320px;
+}
+
+.search-input {
+  width: 100%;
+  background: rgba(15, 23, 42, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 10px 20px;
+  border-radius: 999px;
+  color: #fff;
+  font-size: 0.85rem;
+  transition: all 0.2s ease;
+}
+
+.search-input:focus {
+  outline: none;
+  background: rgba(30, 41, 59, 0.8);
+  border-color: rgba(59, 130, 246, 0.5);
+  box-shadow: 0 0 15px rgba(59, 130, 246, 0.15);
 }
 
 .filter-row {
