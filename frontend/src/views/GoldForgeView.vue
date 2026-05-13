@@ -74,7 +74,7 @@
 
 <script setup>
 import { ref, computed, onMounted, onUnmounted } from "vue";
-import { fetchSkins, fetchGold, addGold, claimGoldBonus as apiClaimGoldBonus } from "@/services/api.js";
+import { fetchSkins, fetchGold, addGold } from "@/services/api.js";
 import SkinSlideshow from "@/components/shared/SkinSlideshow.vue";
 import { useSound } from "@/services/sound.js";
 
@@ -96,12 +96,14 @@ const error         = ref("");
 const pendingClicks = ref(0);
 let syncTimer       = null;
 
-// Gold bonus timer
-const BONUS_DURATION = 5 * 60;
-const secondsLeft    = ref(BONUS_DURATION);
-const bonusReady     = ref(false);
-const isClaiming     = ref(false);
-let bonusInterval    = null;
+// ─── Gold Bonus Timer (localStorage-backed, runs in background) ──────────────
+const BONUS_DURATION  = 5 * 60; // 300 seconds
+const BONUS_KEY       = "lol_bonus_start"; // localStorage key for start timestamp
+const BONUS_AMOUNT    = 400;
+const secondsLeft     = ref(BONUS_DURATION);
+const bonusReady      = ref(false);
+const isClaiming      = ref(false);
+let bonusInterval     = null;
 
 const formattedCountdown = computed(() => {
   const m = Math.floor(secondsLeft.value / 60).toString().padStart(2, "0");
@@ -113,33 +115,63 @@ const progressPercent = computed(() =>
   ((BONUS_DURATION - secondsLeft.value) / BONUS_DURATION) * 100
 );
 
-function startBonusTimer() {
+/** Stamp now as the start time and begin the live interval tick. */
+function startBonusTimer(startTimestamp = Date.now()) {
   if (bonusInterval) clearInterval(bonusInterval);
-  secondsLeft.value = BONUS_DURATION;
-  bonusReady.value  = false;
-  bonusInterval = setInterval(() => {
-    secondsLeft.value--;
-    if (secondsLeft.value <= 0) {
+  localStorage.setItem(BONUS_KEY, startTimestamp.toString());
+
+  function tick() {
+    const elapsed = Math.floor((Date.now() - startTimestamp) / 1000);
+    const remaining = BONUS_DURATION - elapsed;
+    if (remaining <= 0) {
       secondsLeft.value = 0;
       bonusReady.value  = true;
       clearInterval(bonusInterval);
       bonusInterval = null;
+    } else {
+      secondsLeft.value = remaining;
+      bonusReady.value  = false;
     }
-  }, 1000);
+  }
+
+  tick(); // immediate update
+  bonusInterval = setInterval(tick, 1000);
+}
+
+/** On mount: restore timer from localStorage if still running. */
+function restoreBonusTimer() {
+  const saved = localStorage.getItem(BONUS_KEY);
+  if (saved) {
+    const startTimestamp = parseInt(saved, 10);
+    const elapsed = Math.floor((Date.now() - startTimestamp) / 1000);
+    if (elapsed < BONUS_DURATION) {
+      // Timer still in progress — resume from where it left off
+      startBonusTimer(startTimestamp);
+      return;
+    }
+  }
+  // No saved timer or already expired — show bonus as ready immediately
+  // but only if there was a previous session (key existed)
+  if (saved) {
+    secondsLeft.value = 0;
+    bonusReady.value  = true;
+  } else {
+    // First visit ever — start fresh
+    startBonusTimer();
+  }
 }
 
 async function claimBonus() {
   if (isClaiming.value) return;
   isClaiming.value = true;
   try {
-    const data = await apiClaimGoldBonus();
-    // Reflect the updated gold from the server immediately
+    const data = await addGold(BONUS_AMOUNT);
     gold.value = data.gold;
   } catch (err) {
     console.error("Failed to claim gold bonus:", err);
   } finally {
     isClaiming.value = false;
-    startBonusTimer();
+    startBonusTimer(); // restart with a fresh timestamp
   }
 }
 
@@ -165,7 +197,7 @@ onMounted(async () => {
     console.error("Failed to load skins for side panels:", err);
     skins.value = MOCK_POOL;
   }
-  startBonusTimer();
+  restoreBonusTimer();
 });
 
 onUnmounted(() => {
