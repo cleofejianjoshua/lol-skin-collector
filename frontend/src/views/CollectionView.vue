@@ -119,7 +119,6 @@
                 <div class="modal-actions">
                   <!-- Enchant Button -->
                   <div v-if="!selected.is_owned" class="enchant-section">
-                    <p class="cost-text blue">ENCHANTMENT COST = {{ (typeof selected.skin.rarity === 'object' ? selected.skin.rarity.unlock_cost : null) ?? 0 }}</p>
                     <p class="cost-text blue">Cost - {{ (typeof selected.skin.rarity === 'object' ? selected.skin.rarity.unlock_cost : null) ?? 0 }} Essence</p>
                     <button class="enchant-btn" @click="enchant">
                       Enchant
