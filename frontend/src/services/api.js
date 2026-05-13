@@ -62,6 +62,17 @@ export async function fetchUser() {
   }
 }
 
+export async function fetchUserByUsername(username) {
+  const res = await fetch(`/api/user/${username}`, {
+    method: "GET",
+    credentials: "include",
+  });
+
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || "User not found");
+  return data;
+}
+
 export async function updateProfile({ nickname, email }) {
   const formData = new FormData();
   formData.append("nickname", nickname);
