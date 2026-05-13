@@ -116,7 +116,7 @@ def gacha_history():
     rows = (
         UserCollection.query
         .filter_by(user_id=user.id)
-        .order_by(UserCollection.obtained_at.asc())
+        .order_by(UserCollection.obtained_at.desc())
         .offset(offset)
         .limit(page_size)
         .all()
@@ -124,7 +124,7 @@ def gacha_history():
 
     pulls = []
     for idx, row in enumerate(rows):
-        pull_number = offset + idx + 1  # 1-based global pull number
+        pull_number = total - offset - idx  # Most recent = highest pull #
         pulls.append({
             "pull_number": pull_number,
             "skin_name":   row.skin.skin_name,

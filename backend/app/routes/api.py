@@ -31,7 +31,7 @@ def get_user():
         "essence":  user.essence,
         "gold":     user.gold,
         "pull_count":    user.pull_count,
-        "join_date": user.join_date.isoformat(),
+        "join_date": user.join_date.isoformat() if user.join_date else None,
     })
 
 
