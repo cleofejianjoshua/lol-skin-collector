@@ -35,15 +35,6 @@
             Ultimate <span class="filter-count">{{ getFilterCount('ultimate') }}</span>
           </button>
         </div>
-
-        <div class="search-box">
-          <input 
-            v-model="searchQuery" 
-            type="text" 
-            placeholder="Search skin or champion..." 
-            class="search-input"
-          />
-        </div>
       </div>
 
       <div class="filter-row secondary">
@@ -56,6 +47,14 @@
         <button class="filter-btn" :class="{ active: statusFilter === 'permanent' }" @click="setStatusFilter('permanent')" @mouseenter="pipSound.play()">
           Unlocked
         </button>
+        <div class="search-box">
+          <input 
+            v-model="searchQuery" 
+            type="text" 
+            placeholder="Search skin or champion..." 
+            class="search-input"
+          />
+        </div>
       </div>
     </div>
     </div>
@@ -501,7 +500,8 @@ async function setDisplaySlot(idx) {
 
 .search-box {
   flex: 1;
-  max-width: 320px;
+  max-width: 280px;
+  margin-left: 20px;
 }
 
 .search-input {
@@ -529,7 +529,7 @@ async function setDisplaySlot(idx) {
 }
 
 .filter-row.secondary {
-  opacity: 0.9;
+  margin-left: 10px;
 }
 
 .filter-btn {
