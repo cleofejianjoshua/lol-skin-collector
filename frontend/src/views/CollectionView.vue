@@ -6,7 +6,7 @@
       <div class="header-title-row">
         <h1 class="page-title">Collection</h1>
         <span class="header-sep">|</span>
-        <span class="page-title essence-label">Essence: <span class="essence-num">{{ tokenBalance }}</span></span>
+        <span class="page-title essence-label">Essence: <span class="essence-num">{{ essenceBalance }}</span></span>
       </div>
       <p class="page-subtitle">
         {{ ownedCount }} permanent - {{ shardCount }} shard{{ shardCount !== 1 ? 's' : '' }}
@@ -187,7 +187,7 @@ const loading      = ref(true);
 const collection   = ref([]);
 const selected     = ref(null);
 const displaySlots = ref([null, null, null, null]); // [skin | null, ...]
-const tokenBalance = ref(0);
+const essenceBalance = ref(0);
 const activeFilter = ref("all");
 const statusFilter = ref("all"); // all, permanent, shards
 const allSkins     = ref([]);
@@ -311,7 +311,7 @@ onMounted(async () => {
 
     if (!userRes.username) { router.push({ name: "Login" }); return; }
 
-    tokenBalance.value = userRes.essence ?? 0;
+    essenceBalance.value = userRes.essence ?? 0;
     collection.value   = normalizeSkins(collectionData ?? []);
     allSkins.value     = allSkinsData ?? [];
 
@@ -356,7 +356,7 @@ async function disenchant() {
       return; 
     }
     const data = await res.json();
-    tokenBalance.value = data.essence;
+    essenceBalance.value = data.essence;
     entry.count -= 1;
     if (entry.count <= 0) {
       // Clear slot if this skin was displayed
@@ -379,7 +379,7 @@ async function enchant() {
   
   try {
     const data = await unlockSkin(entry.id);
-    tokenBalance.value = data.essence;
+    essenceBalance.value = data.essence;
     entry.is_owned = true;
     revealSound.play();
   } catch (err) {

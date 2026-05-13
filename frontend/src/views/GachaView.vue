@@ -32,16 +32,6 @@
           <span class="shard-cost">Cost: <strong>{{ PULL_COST }} Gold</strong> per pull</span>
         </div>
 
-        <div class="shard-info" :class="{ pity: isPity }">
-          <span class="shard-cost">
-            <template v-if="isPity">
-              <strong>Boosted rates active ↑↑</strong>
-            </template>
-            <template v-else>
-              <strong>Boosted rates</strong> in <strong>{{ pulls_until_pity }}</strong> pull{{ pulls_until_pity !== 1 ? 's' : '' }}
-            </template>
-          </span>
-        </div>
 
         <!-- Pull area -->
         <div class="pull-area">
@@ -119,6 +109,17 @@
               </div>
             </div>
           </div>
+          
+          <div class="shard-info" :class="{ pity: isPity }">
+            <span class="shard-cost">
+              <template v-if="isPity">
+                <strong>Boosted rates active ↑↑</strong>
+              </template>
+              <template v-else>
+                <strong>Boosted rates</strong> in <strong>{{ pulls_until_pity }}</strong> pull{{ pulls_until_pity !== 1 ? 's' : '' }}
+              </template>
+            </span>
+          </div>
 
           <!-- Rarity odds (placed below card) -->
           <div class="odds-card " :class="{ pity: isPity }">
@@ -161,7 +162,7 @@ const { pipSound, pullSound, revealSound, clickSound } = useSound();
 
 const PULL_COST   = 25;
 
-const gold      = ref(0);
+const gold      = ref(null);
 const skins     = ref([]);
 const isPulling = ref(false);
 const revealed  = ref(false);
@@ -221,7 +222,7 @@ function stopRoulette() {
   }
 }
 
-const notEnoughShards = computed(() => gold.value < PULL_COST);
+const notEnoughShards = computed(() => gold.value !== null && gold.value < PULL_COST);
 
 const rarities = [
   { name: "common",    label: "Common",    pct: "40%" },
