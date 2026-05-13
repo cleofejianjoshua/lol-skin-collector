@@ -1,4 +1,4 @@
-from flask import Blueprint, jsonify
+from flask import Blueprint, jsonify, request
 from app import db
 from app.models import Skin, UserCollection
 from .api import get_current_user
@@ -81,4 +81,64 @@ def pull_total():
         return jsonify({"error": "Not logged in"}), 401
     return jsonify({
         "pull_count":       user.pull_count,
+    })
+
+
+@gacha.route("/history", methods=["GET"])
+def gacha_history():
+    """Return paginated pull history for the current user.
+
+    Uses UserCollection.obtained_at for ordering (oldest = pull #1).
+    Pull numbers are computed as a global rank across all the user's pulls.
+    """
+    user = get_current_user()
+    if not user:
+        return jsonify({"error": "Not logged in"}), 401
+
+    try:
+        page      = int(request.args.get("page", 1))
+        page_size = int(request.args.get("page_size", 5))
+    except ValueError:
+        return jsonify({"error": "Invalid pagination params"}), 400
+
+    if page < 1:
+        page = 1
+    if page_size < 1 or page_size > 50:
+        page_size = 5
+
+    # Total number of pulls (one row per skin, duplicates have duplicate_count > 0
+    # but each row was obtained once — we treat each UserCollection entry as 1 pull).
+    total = UserCollection.query.filter_by(user_id=user.id).count()
+    total_pages = max(1, -(-total // page_size))  # ceiling division
+
+    # Fetch the page ordered by oldest first so pull #1 = first skin obtained
+    offset = (page - 1) * page_size
+    rows = (
+        UserCollection.query
+        .filter_by(user_id=user.id)
+        .order_by(UserCollection.obtained_at.desc())
+        .offset(offset)
+        .limit(page_size)
+        .all()
+    )
+
+    pulls = []
+    for idx, row in enumerate(rows):
+        pull_number = total - offset - idx  # Most recent = highest pull #
+        pulls.append({
+            "pull_number": pull_number,
+            "skin_name":   row.skin.skin_name,
+            "champion":    row.skin.champion,
+            "rarity":      row.skin.rarity.rarity_name,
+            "image_path":  row.skin.image_path,
+            "obtained_at": row.obtained_at.strftime("%Y-%m-%d"),
+            "is_duplicate": row.duplicate_count > 0,
+        })
+
+    return jsonify({
+        "pulls":       pulls,
+        "total":       total,
+        "page":        page,
+        "page_size":   page_size,
+        "total_pages": total_pages,
     })

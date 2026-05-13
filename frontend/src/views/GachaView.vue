@@ -20,6 +20,10 @@
         <!-- Header -->
         <div class="gacha-header">
           <h1 class="gacha-title">Skin Gacha</h1>
+          <button class="history-btn" @click="openHistory" @mouseenter="pipSound.play()">
+            <span class="history-btn-icon">📜</span>
+            History
+          </button>
         </div>
 
         <!-- Shard balance + cost -->
@@ -150,11 +154,111 @@
       </aside>
     </div>
   </div>
+
+  <!-- ═══════════════ Pull History Modal ═══════════════ -->
+  <Teleport to="body">
+    <Transition name="modal-fade">
+      <div v-if="historyOpen" class="history-overlay" @click.self="closeHistory">
+        <div class="history-modal">
+
+          <!-- Modal Header -->
+          <div class="history-modal-header">
+            <div class="history-modal-title-group">
+              <span class="history-modal-icon">📜</span>
+              <h2 class="history-modal-title">Pull History</h2>
+            </div>
+            <button class="history-close-btn" @click="closeHistory" aria-label="Close">✕</button>
+          </div>
+          <div class="history-divider"></div>
+
+          <!-- Loading state -->
+          <div v-if="historyLoading" class="history-loading">
+            <div class="history-spinner"></div>
+            <span>Loading history…</span>
+          </div>
+
+          <!-- Empty state -->
+          <div v-else-if="historyData.total === 0" class="history-empty">
+            <span class="history-empty-icon">🎴</span>
+            <p>No pulls yet.<br/>Summon your first skin!</p>
+          </div>
+
+          <!-- Table -->
+          <template v-else>
+            <table class="history-table">
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>Skin</th>
+                  <th>Rarity</th>
+                  <th>Champion</th>
+                  <th>Date</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr
+                  v-for="pull in historyData.pulls"
+                  :key="pull.pull_number"
+                  class="history-row"
+                  :class="pull.rarity"
+                >
+                  <td class="col-num">{{ pull.pull_number }}</td>
+                  <td class="col-skin">
+                    <div class="skin-thumb-wrap">
+                      <img
+                        v-if="pull.image_path"
+                        :src="pull.image_path"
+                        :alt="pull.skin_name"
+                        class="skin-thumb"
+                      />
+                      <div v-else class="skin-thumb-placeholder" :class="pull.rarity"></div>
+                    </div>
+                    <span class="skin-name-cell">{{ pull.skin_name }}</span>
+                  </td>
+                  <td class="col-rarity">
+                    <span class="rarity-pill" :class="pull.rarity">
+                      <span v-if="pull.rarity === 'ultimate'" class="ultimate-dot"></span>
+                      {{ pull.rarity.charAt(0).toUpperCase() + pull.rarity.slice(1) }}
+                    </span>
+                  </td>
+                  <td class="col-champion">{{ pull.champion }}</td>
+                  <td class="col-date">{{ pull.obtained_at }}</td>
+                </tr>
+              </tbody>
+            </table>
+
+            <!-- Pagination -->
+            <div class="history-pagination">
+              <button
+                class="page-arrow"
+                :disabled="historyPage <= 1"
+                @click="changePage(historyPage - 1)"
+                aria-label="Previous page"
+              >◀</button>
+
+              <span class="page-indicator">
+                {{ historyPage }} <span class="page-sep">/</span> {{ historyData.total_pages }}
+              </span>
+
+              <button
+                class="page-arrow"
+                :disabled="historyPage >= historyData.total_pages"
+                @click="changePage(historyPage + 1)"
+                aria-label="Next page"
+              >▶</button>
+            </div>
+          </template>
+
+        </div>
+      </div>
+    </Transition>
+  </Teleport>
+
 </template>
 
 <script setup>
 import { ref, computed, onMounted } from "vue";
-import { gachaPull, fetchSkins, fetchGold, spendGold, fetchGachaStatus } from "@/services/api.js";
+import { gachaPull, fetchSkins, fetchGold, spendGold, fetchGachaStatus, fetchPullHistory } from "@/services/api.js";
 import SkinSlideshow from "@/components/shared/SkinSlideshow.vue";
 import { useSound } from "@/services/sound.js";
 
@@ -175,6 +279,42 @@ const rouletteRarity   = ref("common");
 const rouletteSkins    = ref([]);
 const popped = ref(false);
 let rouletteInterval   = null;
+
+// ── History modal state ──────────────────────────────────────
+const historyOpen    = ref(false);
+const historyLoading = ref(false);
+const historyPage    = ref(1);
+const HISTORY_PAGE_SIZE = 5;
+const historyData    = ref({ pulls: [], total: 0, page: 1, page_size: 5, total_pages: 1 });
+
+async function loadHistory(page = 1) {
+  historyLoading.value = true;
+  try {
+    historyData.value = await fetchPullHistory(page, HISTORY_PAGE_SIZE);
+    historyPage.value = page;
+  } catch (err) {
+    console.error("Failed to load pull history:", err);
+  } finally {
+    historyLoading.value = false;
+  }
+}
+
+function openHistory() {
+  historyOpen.value = true;
+  loadHistory(1);
+  clickSound.play();
+}
+
+function closeHistory() {
+  historyOpen.value = false;
+  clickSound.play();
+}
+
+function changePage(page) {
+  if (page < 1 || page > historyData.value.total_pages) return;
+  loadHistory(page);
+  pipSound.play();
+}
 
 const RARITY_ORDER = ["common", "rare", "epic", "legendary", "ultimate"];
 
@@ -977,5 +1117,352 @@ const resetPull = () => {
 .toggle-name-btn:hover {
   color: #93c5fd;
   border-color: rgba(59,130,246,0.4);
+}
+
+/* ═══════════════ History Button ═══════════════ */
+.history-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(15, 23, 42, 0.55);
+  border: 1px solid rgba(99, 155, 255, 0.25);
+  border-radius: 999px;
+  padding: 6px 16px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #93c5fd;
+  letter-spacing: 0.05em;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  backdrop-filter: blur(8px);
+  margin-top: 6px;
+}
+
+.history-btn:hover {
+  background: rgba(59, 130, 246, 0.18);
+  border-color: rgba(99, 155, 255, 0.5);
+  color: #bfdbfe;
+  box-shadow: 0 0 14px rgba(59,130,246,0.2);
+}
+
+.history-btn-icon { font-size: 0.9rem; }
+
+/* ═══════════════ History Modal Overlay ═══════════════ */
+.history-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.72);
+  backdrop-filter: blur(6px);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.modal-fade-enter-active,
+.modal-fade-leave-active {
+  transition: opacity 0.25s ease;
+}
+.modal-fade-enter-from,
+.modal-fade-leave-to {
+  opacity: 0;
+}
+.modal-fade-enter-active .history-modal,
+.modal-fade-leave-active .history-modal {
+  transition: transform 0.25s cubic-bezier(0.34, 1.4, 0.64, 1);
+}
+.modal-fade-enter-from .history-modal {
+  transform: scale(0.92) translateY(20px);
+}
+.modal-fade-leave-to .history-modal {
+  transform: scale(0.95) translateY(10px);
+}
+
+/* ═══════════════ History Modal Panel ═══════════════ */
+.history-modal {
+  width: min(780px, 94vw);
+  background: linear-gradient(145deg, rgba(10, 15, 30, 0.97), rgba(15, 22, 45, 0.97));
+  border: 1px solid rgba(99, 155, 255, 0.2);
+  border-radius: 16px;
+  box-shadow: 0 30px 80px rgba(0,0,0,0.7), 0 0 40px rgba(59,130,246,0.08);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  max-height: 90vh;
+}
+
+.history-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px 24px 16px;
+}
+
+.history-modal-title-group {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.history-modal-icon { font-size: 1.2rem; }
+
+.history-modal-title {
+  margin: 0;
+  font-size: 1.3rem;
+  font-weight: 800;
+  background: linear-gradient(135deg, #dbeafe, #93c5fd, #a78bfa);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  letter-spacing: 0.04em;
+}
+
+.history-close-btn {
+  background: none;
+  border: none;
+  color: #64748b;
+  font-size: 1rem;
+  cursor: pointer;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+.history-close-btn:hover {
+  background: rgba(239,68,68,0.15);
+  color: #f87171;
+}
+
+.history-divider {
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(99,155,255,0.3) 40%, rgba(167,139,250,0.3) 60%, transparent);
+  margin: 0 24px;
+}
+
+/* ═══════════════ Loading / Empty ═══════════════ */
+.history-loading,
+.history-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  padding: 48px 24px;
+  color: #64748b;
+  font-size: 0.9rem;
+  text-align: center;
+  line-height: 1.6;
+}
+
+.history-empty-icon { font-size: 2.5rem; }
+
+.history-spinner {
+  width: 32px;
+  height: 32px;
+  border: 3px solid rgba(99,155,255,0.2);
+  border-top-color: #60a5fa;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* ═══════════════ History Table ═══════════════ */
+.history-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 16px 0 0;
+  padding: 0 24px;
+  font-size: 0.82rem;
+  display: table;
+}
+
+.history-table thead tr {
+  background: rgba(255,255,255,0.03);
+}
+
+.history-table th {
+  padding: 10px 16px;
+  text-align: left;
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #475569;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+}
+
+.history-table th:first-child { padding-left: 24px; }
+.history-table th:last-child  { padding-right: 24px; }
+
+.history-row {
+  transition: background 0.15s ease;
+  border-bottom: 1px solid rgba(255,255,255,0.04);
+  animation: rowSlideIn 0.3s ease forwards;
+  opacity: 0;
+}
+
+@keyframes rowSlideIn {
+  from { opacity: 0; transform: translateX(-8px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+.history-row:nth-child(1) { animation-delay: 0.04s; }
+.history-row:nth-child(2) { animation-delay: 0.08s; }
+.history-row:nth-child(3) { animation-delay: 0.12s; }
+.history-row:nth-child(4) { animation-delay: 0.16s; }
+.history-row:nth-child(5) { animation-delay: 0.20s; }
+
+/* Left rarity accent bar via box-shadow */
+.history-row.common    { box-shadow: inset 3px 0 0 rgba(156,163,175,0.45); }
+.history-row.rare      { box-shadow: inset 3px 0 0 rgba(59,130,246,0.6);  background: rgba(59,130,246,0.04); }
+.history-row.epic      { box-shadow: inset 3px 0 0 rgba(168,85,247,0.6);  background: rgba(168,85,247,0.05); }
+.history-row.legendary { box-shadow: inset 3px 0 0 rgba(234,179,8,0.7);   background: rgba(234,179,8,0.05); }
+.history-row.ultimate  { box-shadow: inset 3px 0 0 rgba(239,68,68,0.8);   background: rgba(239,68,68,0.06); }
+
+.history-row td {
+  padding: 11px 16px;
+  vertical-align: middle;
+  color: #cbd5e1;
+}
+
+.history-table td:first-child { padding-left: 24px; }
+.history-table td:last-child  { padding-right: 24px; }
+
+.col-num {
+  color: #475569;
+  font-size: 0.7rem;
+  font-weight: 700;
+  font-family: monospace;
+  width: 36px;
+}
+
+.col-skin {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.skin-thumb-wrap {
+  flex-shrink: 0;
+  width: 36px;
+  height: 36px;
+  border-radius: 6px;
+  overflow: hidden;
+  border: 1px solid rgba(255,255,255,0.08);
+}
+
+.skin-thumb {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.skin-thumb-placeholder {
+  width: 100%;
+  height: 100%;
+}
+.skin-thumb-placeholder.common    { background: linear-gradient(135deg, #1e293b, #334155); }
+.skin-thumb-placeholder.rare      { background: linear-gradient(135deg, #1e3a8a, #1e293b); }
+.skin-thumb-placeholder.epic      { background: linear-gradient(135deg, #3b0764, #1e293b); }
+.skin-thumb-placeholder.legendary { background: linear-gradient(135deg, #422006, #1e293b); }
+.skin-thumb-placeholder.ultimate  { background: linear-gradient(135deg, #450a0a, #1e293b); }
+
+.skin-name-cell {
+  font-weight: 600;
+  color: #e2e8f0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 160px;
+}
+
+.col-rarity { width: 100px; }
+
+.rarity-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 0.65rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.rarity-pill.common    { background: rgba(30,30,35,0.8);  color: #d1d5db; border: 1px solid rgba(156,163,175,0.3); }
+.rarity-pill.rare      { background: rgba(15,30,60,0.8);  color: #93c5fd; border: 1px solid rgba(59,130,246,0.4); }
+.rarity-pill.epic      { background: rgba(40,10,65,0.8);  color: #d8b4fe; border: 1px solid rgba(168,85,247,0.4); }
+.rarity-pill.legendary { background: rgba(55,35,5,0.85); color: #fde68a; border: 1px solid rgba(234,179,8,0.5); }
+.rarity-pill.ultimate  { background: rgba(60,8,8,0.85);  color: #ef4444; border: 1px solid rgba(239,68,68,0.6); box-shadow: 0 0 8px rgba(239,68,68,0.3); }
+
+.col-champion {
+  color: #94a3b8;
+  font-size: 0.78rem;
+}
+
+.col-date {
+  color: #475569;
+  font-size: 0.72rem;
+  font-family: monospace;
+  white-space: nowrap;
+}
+
+/* ═══════════════ Pagination ═══════════════ */
+.history-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+  padding: 18px 24px;
+  border-top: 1px solid rgba(255,255,255,0.05);
+  margin-top: 4px;
+}
+
+.page-arrow {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(99,155,255,0.2);
+  color: #93c5fd;
+  font-size: 0.75rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.page-arrow:not(:disabled):hover {
+  background: rgba(59,130,246,0.2);
+  border-color: rgba(99,155,255,0.5);
+  box-shadow: 0 0 12px rgba(59,130,246,0.25);
+}
+
+.page-arrow:disabled {
+  opacity: 0.25;
+  cursor: not-allowed;
+}
+
+.page-indicator {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: #cbd5e1;
+  min-width: 60px;
+  text-align: center;
+  font-family: monospace;
+  letter-spacing: 0.05em;
+}
+
+.page-sep {
+  color: #475569;
+  margin: 0 4px;
 }
 </style>

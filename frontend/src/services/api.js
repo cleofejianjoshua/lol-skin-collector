@@ -235,3 +235,18 @@ export async function fetchGachaStatus() {
   if (!res.ok) throw new Error(data.error || "Failed to fetch gacha status");
   return data;
 }
+
+/**
+ * Fetch paginated pull history for the current user.
+ * @param {number} page     - 1-based page number
+ * @param {number} pageSize - rows per page (default 5)
+ * Returns { pulls, total, page, page_size, total_pages }
+ */
+export async function fetchPullHistory(page = 1, pageSize = 5) {
+  const res = await fetch(`/api/gacha/history?page=${page}&page_size=${pageSize}`, {
+    credentials: "include",
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || "Failed to fetch pull history");
+  return data;
+}
