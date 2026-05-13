@@ -1,7 +1,7 @@
 <template>
   <div
     class="skin-card rarity-themed"
-    :class="[rarity, { 'is-empty': isEmpty, 'is-shard': isShard }]"
+    :class="[rarity, { 'is-empty': isEmpty, 'is-shard': isShard, 'read-only': readOnly }]"
     @mouseenter="!isEmpty && pipSound.play()"
   >
     <!-- Filled Skin Card -->
@@ -61,6 +61,10 @@ const props = defineProps({
     default: null
   },
   isShard: {
+    type: Boolean,
+    default: false
+  },
+  readOnly: {
     type: Boolean,
     default: false
   }

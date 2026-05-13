@@ -21,7 +21,6 @@
         <div class="gacha-header">
           <h1 class="gacha-title">Skin Gacha</h1>
           <button class="history-btn" @click="openHistory" @mouseenter="pipSound.play()">
-            <span class="history-btn-icon">📜</span>
             History
           </button>
         </div>
@@ -164,7 +163,6 @@
           <!-- Modal Header -->
           <div class="history-modal-header">
             <div class="history-modal-title-group">
-              <span class="history-modal-icon">📜</span>
               <h2 class="history-modal-title">Pull History</h2>
             </div>
             <button class="history-close-btn" @click="closeHistory" aria-label="Close">✕</button>
@@ -179,7 +177,6 @@
 
           <!-- Empty state -->
           <div v-else-if="historyData.total === 0" class="history-empty">
-            <span class="history-empty-icon">🎴</span>
             <p>No pulls yet.<br/>Summon your first skin!</p>
           </div>
 

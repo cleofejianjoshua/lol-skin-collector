@@ -1,16 +1,33 @@
 <template>
   <div v-if="!isLoading" class="home-page" :class="{ 'logged-in': isLoggedIn }">
+    <!-- Social Search Section -->
+    <div class="social-search-container" v-if="isLoggedIn">
+      <div class="top-search-bar">
+        <input 
+          v-model="searchQuery" 
+          type="text" 
+          placeholder="Search player..." 
+          class="search-input"
+          @keyup.enter="handleSearch"
+        />
+        <button class="search-trigger-btn" @click="handleSearch">Search</button>
+      </div>
+      <button v-if="isViewingOthers" @click="resetToMyShowcase" class="back-btn small">
+        Back to my Showcase
+      </button>
+    </div>
+
     <!-- Header Section -->
     <header class="home-header">
-      <h1 v-if="isLoggedIn">Welcome Back, {{ displayName }}!</h1>
+      <h1 v-if="isLoggedIn">
+        <template v-if="isViewingOthers">Viewing {{ viewedUsername }}'s Showcase</template>
+        <template v-else>Welcome Back, {{ displayName }}!</template>
+      </h1>
       <h1 v-else>Welcome to LOL Skin Gacha Collector</h1>
 
       <p class="home-subtitle">
-        <template v-if="isLoggedIn">
+        <template v-if= "!isViewingOthers && isLoggedIn">
           Good to see you again, ready to collect some skins?
-        </template>
-        <template v-else>
-          Track your skins, remember your favorites, and never forget that one legendary you've always wanted.
         </template>
       </p>
 
@@ -27,6 +44,7 @@
           :skin="slot"
           :is-empty="!slot"
           :slot-number="idx + 1"
+          :read-only="isViewingOthers"
         />
       </div>
     </div>
@@ -42,17 +60,60 @@ import { fetchUser, fetchDisplaySlots, fetchOtherDisplaySlots, fetchOtherUser } 
 const username     = ref("");
 const nickname     = ref("");
 const isLoading    = ref(true);
-const search_user         = ref(null);
 const displaySlots = ref([null, null, null, null]);
+const searchQuery = ref("");
+const isViewingOthers = ref(false);
+const viewedUsername = ref("");
 
-const displayName = computed(() => nickname.value || username.value);
+const displayName = computed(() => {
+  if (isViewingOthers.value) return viewedUsername.value;
+  return nickname.value || username.value;
+});
 const isLoggedIn  = computed(() => username.value && username.value !== "Guest");
+
+const handleSearch = async () => {
+  if (!searchQuery.value) return;
+  
+  try {
+    const slots = await fetchOtherDisplaySlots(searchQuery.value);
+    const slotArray = [null, null, null, null];
+    for (const s of slots) {
+      slotArray[s.slot_index] = s.skin ?? null;
+    }
+    displaySlots.value = slotArray;
+    viewedUsername.value = searchQuery.value;
+    isViewingOthers.value = true;
+  } catch (err) {
+    alert("User not found or error fetching slots.");
+  }
+};
+
+const loadMySlots = async () => {
+  try {
+    const slots = await fetchDisplaySlots();
+    const slotArray = [null, null, null, null];
+    if (slots.length) {
+      for (const s of slots) {
+        slotArray[s.slot_index] = s.skin ?? null;
+      }
+    }
+    displaySlots.value = slotArray;
+  } catch (err) {
+    console.error("Error loading slots:", err);
+  }
+};
+
+const resetToMyShowcase = async () => {
+  isViewingOthers.value = false;
+  searchQuery.value = "";
+  await loadMySlots();
+};
 
 onMounted(async () => {
   try {
     const [userData, slots] = await Promise.all([
       fetchUser(),
-      fetchOtherDisplaySlots("neiltest4").catch(() => []),
+      fetchDisplaySlots().catch(() => []),
     ]);
 
     username.value = userData.username || "Guest";
@@ -73,6 +134,7 @@ onMounted(async () => {
 
 <style scoped>
 .home-page {
+  position: relative;
   max-width: 640px;
   padding: 48px 24px;
   margin: 0 auto;
@@ -103,6 +165,85 @@ onMounted(async () => {
   margin: 0 0 12px;
   color: var(--text-muted);
   font-size: 0.82rem;
+}
+
+/* Social Search Styles */
+.social-search-container {
+  position: absolute;
+  top: 20px;
+  left: 20px;
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.top-search-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.search-input {
+  width: 100%;
+  max-width: 220px;
+  background: rgba(15, 23, 42, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 8px 20px;
+  border-radius: 999px;
+  color: #fff;
+  font-size: 0.85rem;
+  transition: all 0.2s ease;
+}
+
+.search-input:focus {
+  outline: none;
+  background: rgba(30, 41, 59, 0.8);
+  border-color: rgba(59, 130, 246, 0.5);
+  box-shadow: 0 0 15px rgba(59, 130, 246, 0.15);
+}
+
+.search-trigger-btn {
+  background: radial-gradient(circle at 20% 0, #dbeafe, #60a5fa 40%, #1d4ed8);
+  color: #0b1120;
+  border: none;
+  border-radius: 999px;
+  padding: 8px 20px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.search-trigger-btn:hover {
+  filter: brightness(1.1);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+}
+
+.back-btn {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: var(--text-muted);
+  padding: 8px 24px;
+  border-radius: 999px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.back-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+.back-btn.small {
+  padding: 6px 16px;
+  font-size: 0.75rem;
+  margin-top: -4px;
 }
 
 .home-quote {
