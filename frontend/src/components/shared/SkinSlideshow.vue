@@ -68,13 +68,30 @@ const startSlideshow = () => {
 
 const nextSkin = () => {
   if (props.skins.length === 0) return;
+  
+  // Transition to the next skin
   currentIndex.value = (currentIndex.value + 1) % props.skins.length;
   currentSkin.value = props.skins[currentIndex.value];
+
+  // Preload the one AFTER the next one
+  const nextIdx = (currentIndex.value + 1) % props.skins.length;
+  const nextToPreload = props.skins[nextIdx];
+  if (nextToPreload && nextToPreload.image_path) {
+    const img = new Image();
+    img.src = nextToPreload.image_path;
+  }
 };
 
 watch(() => props.skins, (newSkins) => {
   if (newSkins && newSkins.length > 0 && !currentSkin.value) {
     startSlideshow();
+    // Preload the first few
+    newSkins.slice(0, 3).forEach(s => {
+      if (s.image_path) {
+        const img = new Image();
+        img.src = s.image_path;
+      }
+    });
   }
 }, { deep: true });
 
@@ -90,11 +107,12 @@ onUnmounted(() => {
   height: 560px;
   border-radius: 0;
   background: rgba(15, 23, 42, 0.6);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  border: 2px solid rgba(255, 255, 255, 0.08);
   overflow: hidden;
   position: relative;
   box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
   backdrop-filter: blur(12px);
+  transition: border-color 2s ease;
 }
 
 .slideshow-content {
@@ -113,7 +131,8 @@ onUnmounted(() => {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  filter: brightness(0.7) contrast(1.1);
+  filter: brightness(1.1) contrast(1.05);
+  transition: opacity 0.5s ease;
 }
 
 .bg-placeholder {
@@ -178,7 +197,7 @@ onUnmounted(() => {
 /* Transitions */
 .fade-slide-enter-active,
 .fade-slide-leave-active {
-  transition: opacity 0.6s ease;
+  transition: opacity 2s ease, transform 2s ease;
 }
 
 .fade-slide-enter-from {

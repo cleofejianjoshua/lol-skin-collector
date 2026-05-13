@@ -2,6 +2,7 @@
   <div
     class="skin-card rarity-themed"
     :class="[rarity, { 'is-empty': isEmpty, 'is-shard': isShard }]"
+    @mouseenter="!isEmpty && pipSound.play()"
   >
     <!-- Filled Skin Card -->
     <template v-if="!isEmpty && skin">
@@ -42,6 +43,9 @@
 
 <script setup>
 import { computed } from 'vue';
+import { useSound } from "@/services/sound.js";
+
+const { pipSound, pullSound, revealSound, clickSound } = useSound();
 
 const props = defineProps({
   skin: {
@@ -98,21 +102,21 @@ const rarity = computed(() => {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  filter: brightness(0.8) contrast(1.05);
+  filter: brightness(0.8);
   transition: transform 0.5s ease, filter 0.4s ease;
 }
 
 .skin-card:hover .skin-img {
-  filter: brightness(0.9) contrast(1.1);
+  filter: brightness(1);
 }
 
 /* Shard State */
 .skin-card.is-shard .skin-img {
-  filter: grayscale(1) brightness(0.5) contrast(1.2);
+  filter: grayscale(1) brightness(0.6);
 }
 
 .skin-card.is-shard:hover .skin-img {
-  filter: grayscale(0.8) brightness(0.6) contrast(1.2);
+  filter: grayscale(0.5) brightness(0.8);
 }
 
 .shard-badge {

@@ -3,6 +3,9 @@ import { ref, onMounted, computed, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { fetchUser, logoutUser } from "@/services/api.js";
 import ConfirmModal from "@/components/shared/ConfirmModal.vue";
+import { useSound } from "@/services/sound.js";
+
+const { pipSound, pullSound, revealSound, clickSound } = useSound();
 
 const username = ref("Guest");
 const nickname = ref("");
@@ -40,6 +43,11 @@ const handleNavClick = (e) => {
   }
 };
 
+const handleNavHover = (e) => {
+  const link = e.target.closest('a');
+  if (link) pipSound.play();
+};
+
 // Called when user clicks "Yes, sign out"
 const confirmLogout = async () => {
   showLogoutModal.value = false;
@@ -72,7 +80,7 @@ watch(() => route.fullPath, loadUser);
       <span class="brand">LOL Skin Gacha Collector</span>
 
       <!-- Logged-in nav -->
-      <nav v-if="isLoggedIn" class="nav-links" @click="handleNavClick">
+      <nav v-if="isLoggedIn" class="nav-links" @click="handleNavClick" @mouseover="handleNavHover">
         <span class="welcome-text">Welcome, {{ displayName }}!</span>  
         <router-link to="/">Home</router-link>
         <router-link to="/collection">Collection</router-link>
@@ -83,7 +91,7 @@ watch(() => route.fullPath, loadUser);
       </nav>
 
       <!-- Guest nav -->
-      <nav v-else class="nav-links" @click="handleNavClick">
+      <nav v-else class="nav-links" @click="handleNavClick" @mouseover="handleNavHover">
         <router-link to="/login">Log In</router-link>
         <router-link to="/register">Register</router-link>
       </nav>

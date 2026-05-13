@@ -76,6 +76,9 @@
 import { ref, computed, onMounted, onUnmounted } from "vue";
 import { fetchSkins, fetchGold, addGold } from "@/services/api.js";
 import SkinSlideshow from "@/components/shared/SkinSlideshow.vue";
+import { useSound } from "@/services/sound.js";
+
+const { clickSound, goldSound } = useSound();
 
 const MOCK_POOL = [
   { name: "Spirit Blossom Ahri",  champion: "Ahri",   rarity: "legendary", image_path: "" },
@@ -172,9 +175,6 @@ async function claimBonus() {
   }
 }
 
-const goldSound = typeof Audio !== 'undefined' ? new Audio('/sounds/sound_gold.mp3') : null;
-if (goldSound) goldSound.volume = 0.35;
-
 onMounted(async () => {
   // Load gold from DB
   try {
@@ -211,10 +211,7 @@ const clickGold = () => {
   gold.value++;
   pendingClicks.value++;
   error.value = "";
-  if (goldSound) {
-    goldSound.currentTime = 0;
-    goldSound.play().catch(e => console.log("Audio play failed:", e));
-  }
+  goldSound.play();
   // Debounce sync to DB
   if (syncTimer) clearTimeout(syncTimer);
   syncTimer = setTimeout(syncToDB, 1000); // Sync after 1s of no clicking
@@ -306,7 +303,7 @@ async function syncToDB() {
   gap: 14px;
   background: rgba(15, 23, 42, 0.7);
   border: 1px solid rgba(250, 204, 21, 0.3);
-  border-radius: 999px;
+  border-radius: 20px;
   padding: 16px 36px;
 }
 

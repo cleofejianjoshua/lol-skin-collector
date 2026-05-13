@@ -46,7 +46,12 @@
         <!-- Pull area -->
         <div class="pull-area">
           <!-- Card -->
-          <div class="card-container" :class="{ flipped: revealed }">
+          <div 
+            class="card-container" 
+            :class="{ flipped: revealed, popped : popped }"
+            @click="revealed && resetPull()"  
+            :style="{ cursor: revealed ? 'pointer' : 'default' }"
+          >
             <!-- Back: pull button -->
             <div class="card-face card-back">
               <!-- Roulette display while pulling -->
@@ -72,6 +77,7 @@
                   :class="{ pulling: isPulling, disabled: notEnoughShards, 'pity-pull': isPity }"
                   :disabled="isPulling || notEnoughShards"
                   @click="triggerPull"
+                  @mouseenter="pipSound.play()"
                 >
                   <div class="pull-orb">
                     <span class="pull-label">{{ isPity ? 'LUCKY PULL' : 'PULL' }}</span>
@@ -82,7 +88,7 @@
             </div>
 
             <!-- Front: result -->
-            <div class="card-face card-front rarity-themed" :class="[result?.skin?.rarity.name, { 'is-shard-pull': !result?.is_duplicate }]">
+            <div class="card-face card-front rarity-themed" :class="[result?.skin?.rarity.name, { 'is-shard-pull': !result?.is_duplicate }]" @mouseenter="pipSound.play()">
               <div v-if="result" class="result-inner">
                 <div class="rarity-shimmer"></div>
                 <span class="rarity-badge" :class="result.skin.rarity.name">
@@ -132,7 +138,7 @@
 
           <!-- Post-reveal actions (placed at the bottom) -->
           <div v-if="revealed" class="pull-actions">
-            <button class="primary-btn" @click="resetPull">Pull Again</button>
+            <button class="primary-btn" @click="resetPull" @mouseenter="pipSound.play()">Pull Again</button>
           </div>
         </div>
       </div>
@@ -149,6 +155,9 @@
 import { ref, computed, onMounted } from "vue";
 import { gachaPull, fetchSkins, fetchGold, spendGold, fetchGachaStatus } from "@/services/api.js";
 import SkinSlideshow from "@/components/shared/SkinSlideshow.vue";
+import { useSound } from "@/services/sound.js";
+
+const { pipSound, pullSound, revealSound, clickSound } = useSound();
 
 const PULL_COST   = 25;
 
@@ -163,6 +172,7 @@ const isPity = computed(() => pulls_until_pity.value === 1);
 const showSkinName     = ref(true);
 const rouletteRarity   = ref("common");
 const rouletteSkins    = ref([]);
+const popped = ref(false);
 let rouletteInterval   = null;
 
 const RARITY_ORDER = ["common", "rare", "epic", "legendary", "ultimate"];
@@ -186,10 +196,7 @@ function startRoulette() {
 
   rouletteInterval = setInterval(() => {
     ticks++;
-    if (pipSound) {
-    pipSound.currentTime = 0;
-    pipSound.play().catch(e => console.log("Audio play failed:", e));
-  }
+    pipSound.play();
     // Pick weighted random rarity for visual effect
     const pool = isPity.value
       ? ["common","common","rare","rare","epic","epic","epic","legendary","ultimate"]
@@ -214,18 +221,6 @@ function stopRoulette() {
   }
 }
 
-const pipSound = typeof Audio !== 'undefined' ? new Audio('/sounds/sound_pip.mp3') : null;
-if (pipSound) pipSound.volume = 0.2;
-
-const pullSound = typeof Audio !== 'undefined' ? new Audio('/sounds/sound_select.mp3') : null;
-if (pullSound) pullSound.volume = 0.5;
-
-const revealSound = typeof Audio !== 'undefined' ? new Audio('/sounds/sound_open.mp3') : null;
-if (revealSound) revealSound.volume = 0.5;
-
-const clickSound = typeof Audio !== 'undefined' ? new Audio('/sounds/sound_click.mp3') : null;
-if (clickSound) clickSound.volume = 0.5;
-
 const notEnoughShards = computed(() => gold.value < PULL_COST);
 
 const rarities = [
@@ -239,11 +234,11 @@ const rarities = [
 const displayedRarities = computed(() => {
   if (isPity.value) {
     return [
-      { name: "common",    label: "Common",    pct: "20% ↓" },
-      { name: "rare",      label: "Rare",      pct: "25% ↑" },
-      { name: "epic",      label: "Epic",      pct: "38% ↑" },
-      { name: "legendary", label: "Legendary", pct: "15% ↑" },
-      { name: "ultimate",  label: "Ultimate",  pct: "2% ↑"  },
+      { name: "common",    label: "Common",    pct: "0% ↓"  },
+      { name: "rare",      label: "Rare",      pct: "15% ↓" },
+      { name: "epic",      label: "Epic",      pct: "45% ↑" },
+      { name: "legendary", label: "Legendary", pct: "36% ↑" },
+      { name: "ultimate",  label: "Ultimate",  pct: "4% ↑"  },
     ];
   }
   return rarities;
@@ -306,19 +301,25 @@ function mockPull() {
 const triggerPull = async () => {
   if (isPulling.value || revealed.value || notEnoughShards.value) return;
   isPulling.value = true;
-  startRoulette(); // start here
-
-  if (pullSound) {
-    pullSound.currentTime = 0;
-    pullSound.play().catch(e => console.log("Audio play failed:", e));
-  }
+  startRoulette();
+  pullSound.play();
 
   const delay = new Promise(res => setTimeout(res, 2000));
 
   try {
     const [data] = await Promise.all([gachaPull(), delay]);
     stopRoulette();
-    rouletteRarity.value = data.skin.rarity; // land on actual rarity
+    rouletteRarity.value = data.skin.rarity;
+
+    // Preload image before flipping the card
+    if (data.skin.image_path) {
+      await new Promise(resolve => {
+        const img = new Image();
+        img.onload = resolve;
+        img.onerror = resolve; // resolve anyway on error
+        img.src = data.skin.image_path;
+      });
+    }
 
     result.value = {
       skin: { ...data.skin, name: data.skin.name || data.skin.skin_name, rarity: data.skin.rarity || data.skin.rarity_name },
@@ -336,11 +337,10 @@ const triggerPull = async () => {
 
   isPulling.value = false;
   revealed.value  = true;
+  revealSound.play();
 
-  if (revealSound) {
-    revealSound.currentTime = 0;
-    revealSound.play().catch(e => console.log("Audio play failed:", e));
-  }
+  popped.value = true;
+  setTimeout(() => { popped.value = false; }, 1000);
 };
 
 const resetPull = () => {
@@ -350,10 +350,7 @@ const resetPull = () => {
   setTimeout(() => {
     if (!revealed.value) result.value = null;
   }, 1200);
-  if (clickSound) {
-    clickSound.currentTime = 0;
-    clickSound.play().catch(e => console.log("Audio play failed:", e));
-  }
+  clickSound.play();
 };
 </script>
 
@@ -772,7 +769,7 @@ const resetPull = () => {
 
 /* Shard Pull Styling */
 .is-shard-pull .skin-img {
-  filter: grayscale(0.8) brightness(0.6) contrast(1.1);
+  filter: brightness(.8);
   transition: filter 1s ease;
 }
 
@@ -907,6 +904,16 @@ const resetPull = () => {
 @keyframes shimmerSlide {
   0%   { transform: translateX(-100%); }
   100% { transform: translateX(100%); }
+}
+
+.card-container.popped {
+  animation: cardPop 1s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+@keyframes cardPop {
+  0%   { transform: scale(1)    translateY(0);    }
+  40%  { transform: scale(1.08) translateY(-12px); }
+  100% { transform: scale(1)    translateY(0);    }
 }
 
 .roulette-rarity-tag {

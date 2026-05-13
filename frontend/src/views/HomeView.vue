@@ -124,6 +124,15 @@ onMounted(async () => {
   flex-wrap: wrap;
 }
 
+.showcase-grid :deep(.skin-card) {
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+
+.showcase-grid :deep(.skin-card):hover {
+  transform: translateY(-10px);
+  box-shadow: 0 30px 60px rgba(0, 0, 0, 0.6);
+}
+
 @media (max-width: 1024px) {
   .showcase-grid { gap: 24px; }
 }

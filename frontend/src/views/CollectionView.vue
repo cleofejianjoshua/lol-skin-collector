@@ -12,40 +12,52 @@
         {{ ownedCount }} permanent - {{ shardCount }} shard{{ shardCount !== 1 ? 's' : '' }}
       </p>
 
-      <!-- Filter -->
+      <!-- Filter & Search -->
       <div class="filter-row-container" v-if="!loading && collection.length > 0">
-        <div class="filter-row">
-          <button class="filter-btn" :class="{ active: activeFilter === 'all' }" @click="activeFilter = 'all'">
-            Any Rarity <span class="filter-count">{{ getFilterCount('all') }}</span>
+        <div class="filter-controls-main">
+          <div class="filter-row">
+          <button class="filter-btn" :class="{ active: activeFilter === 'all' }" @click="setRarityFilter('all')" @mouseenter="pipSound.play()">
+            All Rarity <span class="filter-count">{{ getFilterCount('all') }}</span>
           </button>
-          <button class="filter-btn" :class="{ active: activeFilter === 'common' }" @click="activeFilter = 'common'">
+          <button class="filter-btn" :class="{ active: activeFilter === 'common' }" @click="setRarityFilter('common')" @mouseenter="pipSound.play()">
             Common <span class="filter-count">{{ getFilterCount('common') }}</span>
           </button>
-          <button class="filter-btn" :class="{ active: activeFilter === 'rare' }" @click="activeFilter = 'rare'">
+          <button class="filter-btn" :class="{ active: activeFilter === 'rare' }" @click="setRarityFilter('rare')" @mouseenter="pipSound.play()">
             Rare <span class="filter-count">{{ getFilterCount('rare') }}</span>
           </button>
-          <button class="filter-btn" :class="{ active: activeFilter === 'epic' }" @click="activeFilter = 'epic'">
+          <button class="filter-btn" :class="{ active: activeFilter === 'epic' }" @click="setRarityFilter('epic')" @mouseenter="pipSound.play()">
             Epic <span class="filter-count">{{ getFilterCount('epic') }}</span>
           </button>
-          <button class="filter-btn" :class="{ active: activeFilter === 'legendary' }" @click="activeFilter = 'legendary'">
+          <button class="filter-btn" :class="{ active: activeFilter === 'legendary' }" @click="setRarityFilter('legendary')" @mouseenter="pipSound.play()">
             Legendary <span class="filter-count">{{ getFilterCount('legendary') }}</span>
           </button>
-          <button class="filter-btn" :class="{ active: activeFilter === 'ultimate' }" @click="activeFilter = 'ultimate'">
+          <button class="filter-btn" :class="{ active: activeFilter === 'ultimate' }" @click="setRarityFilter('ultimate')" @mouseenter="pipSound.play()">
             Ultimate <span class="filter-count">{{ getFilterCount('ultimate') }}</span>
           </button>
         </div>
-        <div class="filter-row secondary">
-          <button class="filter-btn" :class="{ active: statusFilter === 'all' }" @click="statusFilter = 'all'">
-            Any Status
-          </button>
-          <button class="filter-btn" :class="{ active: statusFilter === 'shards' }" @click="statusFilter = 'shards'">
-            Shards
-          </button>
-          <button class="filter-btn" :class="{ active: statusFilter === 'permanent' }" @click="statusFilter = 'permanent'">
-            Unlocked
-          </button>
+
+        <div class="search-box">
+          <input 
+            v-model="searchQuery" 
+            type="text" 
+            placeholder="Search skin or champion..." 
+            class="search-input"
+          />
         </div>
       </div>
+
+      <div class="filter-row secondary">
+        <button class="filter-btn" :class="{ active: statusFilter === 'all' }" @click="setStatusFilter('all')" @mouseenter="pipSound.play()">
+          All Status
+        </button>
+        <button class="filter-btn" :class="{ active: statusFilter === 'shards' }" @click="setStatusFilter('shards')" @mouseenter="pipSound.play()">
+          Shards
+        </button>
+        <button class="filter-btn" :class="{ active: statusFilter === 'permanent' }" @click="setStatusFilter('permanent')" @mouseenter="pipSound.play()">
+          Unlocked
+        </button>
+      </div>
+    </div>
     </div>
 
     <!-- Skeleton Grid -->
@@ -119,16 +131,16 @@
                 <div class="modal-actions">
                   <!-- Enchant Button -->
                   <div v-if="!selected.is_owned" class="enchant-section">
-                    <p class="cost-text blue">ENCHANTMENT COST = {{ (typeof selected.skin.rarity === 'object' ? selected.skin.rarity.unlock_cost : null) ?? 0 }}</p>
-                    <button class="enchant-btn" @click="enchant">
-                      Enchant
+                    <p class="cost-text blue">Cost - {{ (typeof selected.skin.rarity === 'object' ? selected.skin.rarity.unlock_cost : null) ?? 0 }} Essence</p>
+                    <button class="enchant-btn" @click="enchant" @mouseenter="pipSound.play()">
+                      Unlock
                     </button>
                   </div>
 
                   <!-- Disenchant Button -->
                   <div v-if="!selected.is_owned || selected.count > 1" class="disenchant-section">
-                    <p class="cost-text amber">DISENCHANT REWARD = {{ (typeof selected.skin.rarity === 'object' ? selected.skin.rarity.disenchant_value : null) ?? 0 }}</p>
-                    <button class="disenchant-btn" @click="disenchant">
+                    <p class="cost-text amber">Cost - {{ (typeof selected.skin.rarity === 'object' ? selected.skin.rarity.disenchant_value : null) ?? 0 }} Essence</p>
+                    <button class="disenchant-btn" @click="disenchant" @mouseenter="pipSound.play()">
                       Disenchant
                     </button>
                   </div>
@@ -142,6 +154,7 @@
                         class="slot-btn"
                         :class="{ 'slot-active': getSlotForSkin(selected.skin) === i - 1 }"
                         @click="setDisplaySlot(i-1)"
+                        @mouseenter="pipSound.play()"
                       >
                         Slot {{ i }}
                       </button>
@@ -164,6 +177,9 @@ import { ref, onMounted, computed } from "vue";
 import { useRouter } from "vue-router";
 import { fetchUserCollection, fetchDisplaySlots, updateDisplaySlot, clearDisplaySlot, unlockSkin, fetchSkins } from "@/services/api.js";
 import SkinCard from "@/components/shared/SkinCard.vue";
+import { useSound } from "@/services/sound.js";
+
+const { clickSound, pullSound, revealSound, pipSound } = useSound();
 
 const router = useRouter();
 
@@ -175,6 +191,8 @@ const tokenBalance = ref(0);
 const activeFilter = ref("all");
 const statusFilter = ref("all"); // all, permanent, shards
 const allSkins     = ref([]);
+const searchQuery  = ref("");
+let slotUpdate      = Promise.resolve();
 
 const rarityTotals = computed(() => {
   const totals = {
@@ -191,6 +209,16 @@ const rarityTotals = computed(() => {
   });
   return totals;
 });
+
+function setRarityFilter(val) {
+  activeFilter.value = val;
+  clickSound.play();
+}
+
+function setStatusFilter(val) {
+  statusFilter.value = val;
+  clickSound.play();
+}
 
 function getFilterCount(rarity, status) {
   // Use current selection if the other part is omitted
@@ -222,6 +250,8 @@ const ownedCount = computed(() => collection.value.filter(e => e.is_owned).lengt
 const shardCount = computed(() => collection.value.filter(e => !e.is_owned).length);
 
 const filteredCollection = computed(() => {
+  const query = searchQuery.value.toLowerCase().trim();
+  
   return collection.value.filter(e => {
     // Rarity Filter
     let rarityMatch = true;
@@ -238,7 +268,15 @@ const filteredCollection = computed(() => {
       statusMatch = !e.is_owned;
     }
 
-    return rarityMatch && statusMatch;
+    // Search Filter
+    let searchMatch = true;
+    if (query) {
+      const name = (e.skin.name || "").toLowerCase();
+      const champ = (e.skin.champion || "").toLowerCase();
+      searchMatch = name.includes(query) || champ.includes(query);
+    }
+
+    return rarityMatch && statusMatch && searchMatch;
   });
 });
 
@@ -294,7 +332,7 @@ function getSlotForSkin(skin) {
   return idx >= 0 ? idx : null;
 }
 
-function openModal(entry) { selected.value = entry; }
+function openModal(entry) { selected.value = entry; clickSound.play();}
 function closeModal()     { selected.value = null;  }
 
 async function disenchant() {
@@ -307,6 +345,7 @@ async function disenchant() {
   }
 
   try {
+    pullSound.play();
     const res = await fetch(`/api/collection/disenchant/${entry.id}`, {
       method: "DELETE",
       credentials: "include",
@@ -342,6 +381,7 @@ async function enchant() {
     const data = await unlockSkin(entry.id);
     tokenBalance.value = data.essence;
     entry.is_owned = true;
+    revealSound.play();
   } catch (err) {
     alert(err.message || "Failed to unlock skin");
     console.error("Enchant error:", err);
@@ -351,23 +391,39 @@ async function enchant() {
 async function setDisplaySlot(idx) {
   if (!selected.value) return;
   const skin = selected.value.skin;
-
-  // Clear this skin from any existing slot first
   const currentSlot = getSlotForSkin(skin);
+
+  // update UI immediately
   if (currentSlot !== null && currentSlot !== idx) {
-    await clearDisplaySlot(currentSlot);
     displaySlots.value[currentSlot] = null;
   }
-
-  // If already in this slot, clear it (toggle off)
-  if (currentSlot === idx) {
-    await clearDisplaySlot(idx);
+  const isRemoving = (currentSlot === idx);
+  if (isRemoving) {
     displaySlots.value[idx] = null;
-    return;
+  } else {
+    displaySlots.value[idx] = { ...skin };
   }
 
-  await updateDisplaySlot(idx, skin.id);
-  displaySlots.value[idx] = { ...skin };
+  // queue the backend sync to avoid race conditions
+  slotUpdate = slotUpdate.then(async () => {
+    try {
+      if (currentSlot !== null && currentSlot !== idx) {
+        await clearDisplaySlot(currentSlot);
+      }
+      if (isRemoving) {
+        await clearDisplaySlot(idx);
+      } else {
+        await updateDisplaySlot(idx, skin.id);
+      }
+    } catch (err) {
+      console.error("Slot update failed:", err);
+      // re-fetch actual slots from server on error to fix UI
+      const slots = await fetchDisplaySlots().catch(() => []);
+      const slotArray = [null, null, null, null];
+      for (const s of slots) slotArray[s.slot_index] = s.skin ?? null;
+      displaySlots.value = slotArray;
+    }
+  });
 }
 </script>
 
@@ -433,6 +489,37 @@ async function setDisplaySlot(idx) {
   display: flex;
   flex-direction: column;
   gap: 12px;
+}
+
+.filter-controls-main {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  width: 100%;
+}
+
+.search-box {
+  flex: 1;
+  max-width: 320px;
+}
+
+.search-input {
+  width: 100%;
+  background: rgba(15, 23, 42, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 10px 20px;
+  border-radius: 999px;
+  color: #fff;
+  font-size: 0.85rem;
+  transition: all 0.2s ease;
+}
+
+.search-input:focus {
+  outline: none;
+  background: rgba(30, 41, 59, 0.8);
+  border-color: rgba(59, 130, 246, 0.5);
+  box-shadow: 0 0 15px rgba(59, 130, 246, 0.15);
 }
 
 .filter-row {
@@ -744,8 +831,8 @@ async function setDisplaySlot(idx) {
   border: 1px solid rgba(245, 158, 11, 0.25);
   border-radius: 0;
   color: #fbbf24;
-  font-size: 0.9rem;
-  font-weight: 700;
+  font-size: 0.95rem;
+  font-weight: 800;
   text-transform: uppercase;
   letter-spacing: 0.12em;
   cursor: pointer;
@@ -774,7 +861,6 @@ async function setDisplaySlot(idx) {
   margin: 0 0 4px;
   font-size: 0.8rem;
   font-weight: 800;
-  text-transform: uppercase;
   letter-spacing: 0.08em;
 }
 .cost-text.blue { color: #60a5fa; }
