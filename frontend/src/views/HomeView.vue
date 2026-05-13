@@ -38,9 +38,7 @@ import { ref, computed, onMounted } from "vue";
 import QuoteCard from "@/components/shared/QuoteCard.vue";
 import SkinCard from "@/components/shared/SkinCard.vue";
 import { fetchUser, fetchDisplaySlots } from "@/services/api.js";
-import { useSound } from "@/services/sound.js";
 
-const { pip, pull, reveal, click } = useSound();
 const username     = ref("");
 const nickname     = ref("");
 const isLoading    = ref(true);
@@ -124,6 +122,15 @@ onMounted(async () => {
   gap: 60px;
   padding: 20px;
   flex-wrap: wrap;
+}
+
+.showcase-grid :deep(.skin-card) {
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+
+.showcase-grid :deep(.skin-card):hover {
+  transform: translateY(-10px);
+  box-shadow: 0 30px 60px rgba(0, 0, 0, 0.6);
 }
 
 @media (max-width: 1024px) {
