@@ -16,7 +16,7 @@
       <div class="filter-row-container" v-if="!loading && collection.length > 0">
         <div class="filter-row">
           <button class="filter-btn" :class="{ active: activeFilter === 'all' }" @click="activeFilter = 'all'">
-            Any Rarity <span class="filter-count">{{ getFilterCount('all') }}</span>
+            All Rarity <span class="filter-count">{{ getFilterCount('all') }}</span>
           </button>
           <button class="filter-btn" :class="{ active: activeFilter === 'common' }" @click="activeFilter = 'common'">
             Common <span class="filter-count">{{ getFilterCount('common') }}</span>
@@ -36,7 +36,7 @@
         </div>
         <div class="filter-row secondary">
           <button class="filter-btn" :class="{ active: statusFilter === 'all' }" @click="statusFilter = 'all'">
-            Any Status
+            All Status
           </button>
           <button class="filter-btn" :class="{ active: statusFilter === 'shards' }" @click="statusFilter = 'shards'">
             Shards
@@ -120,6 +120,7 @@
                   <!-- Enchant Button -->
                   <div v-if="!selected.is_owned" class="enchant-section">
                     <p class="cost-text blue">ENCHANTMENT COST = {{ (typeof selected.skin.rarity === 'object' ? selected.skin.rarity.unlock_cost : null) ?? 0 }}</p>
+                    <p class="cost-text blue">Cost - {{ (typeof selected.skin.rarity === 'object' ? selected.skin.rarity.unlock_cost : null) ?? 0 }} Essence</p>
                     <button class="enchant-btn" @click="enchant">
                       Enchant
                     </button>
@@ -127,7 +128,7 @@
 
                   <!-- Disenchant Button -->
                   <div v-if="!selected.is_owned || selected.count > 1" class="disenchant-section">
-                    <p class="cost-text amber">DISENCHANT REWARD = {{ (typeof selected.skin.rarity === 'object' ? selected.skin.rarity.disenchant_value : null) ?? 0 }}</p>
+                    <p class="cost-text amber">Cost - {{ (typeof selected.skin.rarity === 'object' ? selected.skin.rarity.disenchant_value : null) ?? 0 }} Essence</p>
                     <button class="disenchant-btn" @click="disenchant">
                       Disenchant
                     </button>
@@ -744,8 +745,8 @@ async function setDisplaySlot(idx) {
   border: 1px solid rgba(245, 158, 11, 0.25);
   border-radius: 0;
   color: #fbbf24;
-  font-size: 0.9rem;
-  font-weight: 700;
+  font-size: 0.95rem;
+  font-weight: 800;
   text-transform: uppercase;
   letter-spacing: 0.12em;
   cursor: pointer;
@@ -774,7 +775,6 @@ async function setDisplaySlot(idx) {
   margin: 0 0 4px;
   font-size: 0.8rem;
   font-weight: 800;
-  text-transform: uppercase;
   letter-spacing: 0.08em;
 }
 .cost-text.blue { color: #60a5fa; }

@@ -271,7 +271,7 @@ async function syncToDB() {
   gap: 14px;
   background: rgba(15, 23, 42, 0.7);
   border: 1px solid rgba(250, 204, 21, 0.3);
-  border-radius: 999px;
+  border-radius: 20px;
   padding: 16px 36px;
 }
 
