@@ -32,6 +32,16 @@
               <p>{{ email }}</p>
             </div>
 
+            <div class="info-field">  
+              <span>Account Created:</span>
+              <p>{{ join_date }}</p>
+            </div>
+            
+            <div class="info-field">  
+              <span>Total Pulls:</span>
+              <p>{{ pull_count }}</p>
+            </div>
+
             <button class="primary-btn" @click="goUpdateProfile">
               Update Profile
             </button>
@@ -63,6 +73,8 @@ const errorMsg = ref("");
 const username = ref("");
 const nickname = ref("");
 const email = ref("");
+const pull_count = ref("");
+const join_date = ref("");
 const skins = ref([]);
 
 const MOCK_POOL = [
@@ -84,6 +96,8 @@ const loadProfile = async () => {
       throw new Error(data.error || "Failed to load profile.");
     }
 
+    pull_count.value = data.pull_count || "0";
+    join_date.value = data.join_date || ""
     username.value = data.username || "Unknown user";
     nickname.value = data.nickname || "";
     email.value = data.email || "No email set";

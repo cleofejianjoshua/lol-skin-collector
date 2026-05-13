@@ -1,5 +1,5 @@
 from app import db
-from datetime import datetime, timezone
+from datetime import datetime, timezone, date
 
 
 class User(db.Model):
@@ -11,7 +11,8 @@ class User(db.Model):
     email    = db.Column(db.String(255))
     essence = db.Column(db.Integer,default=0)
     gold     = db.Column(db.Integer,default=0)
-    pull_count = db.Column(db.Integer,nullable=False,default=0)
+    pull_count = db.Column(db.Integer,default=0)
+    join_date  = db.Column(db.Date,index=True,default=lambda: date.today())
 
     # Relationship to skin collection
     collection = db.relationship(

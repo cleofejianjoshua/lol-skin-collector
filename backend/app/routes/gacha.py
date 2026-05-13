@@ -6,22 +6,6 @@ import random
 
 gacha = Blueprint("gacha", __name__, url_prefix="/api/gacha")
 
-# Rarity weights: Ultimate 1%, legendary 9%, epic 18%, rare 32%, common 40%
-RARITY_WEIGHTS = {
-    "ultimate":  1,
-    "legendary": 9,
-    "epic":      18,
-    "rare":      32,
-    "common":    40,
-}
-
-
-def pick_rarity():
-    rarities = list(RARITY_WEIGHTS.keys())
-    weights  = list(RARITY_WEIGHTS.values())
-    return random.choices(rarities, weights=weights, k=1)[0]
-
-
 PULL_COST     = 25
 PITY_INTERVAL = 10
 
@@ -88,4 +72,13 @@ def gacha_status():
     return jsonify({
         "pull_count":       pull_count,
         "pulls_until_pity": pulls_until_pity,
+    })
+
+@gacha.route("/pull_total", methods=["GET"])
+def pull_total():
+    user = get_current_user()
+    if not user:
+        return jsonify({"error": "Not logged in"}), 401
+    return jsonify({
+        "pull_count":       user.pull_count,
     })

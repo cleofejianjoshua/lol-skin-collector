@@ -30,6 +30,8 @@ def get_user():
         "email":    user.email,
         "essence":  user.essence,
         "gold":     user.gold,
+        "pull_count":    user.pull_count,
+        "join_date": user.join_date.isoformat(),
     })
 
 
