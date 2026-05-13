@@ -31,9 +31,19 @@ def get_user():
         "essence":  user.essence,
         "gold":     user.gold,
         "pull_count":    user.pull_count,
-        "join_date": user.join_date.isoformat(),
+        "join_date": user.join_date.isoformat() if user.join_date else None,
     })
 
+@api.route("/user/<username>", methods=["GET"])
+def get_other_user(username):
+    user = User.query.filter_by(username=username).first()
+
+    if not user:
+        return jsonify({"error": "User not found"}), 404
+
+    return jsonify({
+        "username": user.username,
+    })
 
 @api.route("/update-profile", methods=["POST"])
 def update_profile():
