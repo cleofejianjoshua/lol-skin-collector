@@ -1,8 +1,3 @@
-<!-- Reusable brand logo + title block.
-     Props:
-       title    (String) — e.g. "LOL Skin Collector"
-       subtitle (String) — e.g. "Sign in to manage your collection."
--->
 <template>
   <div class="brand">
     <div class="logo-circle">

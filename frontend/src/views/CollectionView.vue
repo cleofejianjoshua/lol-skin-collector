@@ -1,7 +1,7 @@
 <template>
   <div class="collection-page">
 
-    <!-- Header -->
+    <!-- header -->
     <div class="page-header" v-if="!loading">
       <div class="header-title-row">
         <h1 class="page-title">Collection</h1>
@@ -9,10 +9,10 @@
         <span class="page-title essence-label">Essence: <span class="essence-num">{{ essenceBalance }}</span></span>
       </div>
       <p class="page-subtitle">
-        {{ ownedCount }} permanent - {{ shardCount }} shard{{ shardCount !== 1 ? 's' : '' }}
+        {{ ownedCount }} permanent - {{ goldCount }} gold
       </p>
 
-      <!-- Filter & Search -->
+      <!-- filter & search -->
       <div class="filter-row-container" v-if="!loading && collection.length > 0">
         <div class="filter-controls-main">
           <div class="filter-row">
@@ -41,8 +41,8 @@
         <button class="filter-btn" :class="{ active: statusFilter === 'all' }" @click="setStatusFilter('all')" @mouseenter="pipSound.play()">
           All Status
         </button>
-        <button class="filter-btn" :class="{ active: statusFilter === 'shards' }" @click="setStatusFilter('shards')" @mouseenter="pipSound.play()">
-          Shards
+        <button class="filter-btn" :class="{ active: statusFilter === 'gold' }" @click="setStatusFilter('gold')" @mouseenter="pipSound.play()">
+          Gold
         </button>
         <button class="filter-btn" :class="{ active: statusFilter === 'permanent' }" @click="setStatusFilter('permanent')" @mouseenter="pipSound.play()">
           Unlocked
@@ -59,7 +59,7 @@
     </div>
     </div>
 
-    <!-- Skeleton Grid -->
+    <!-- skeleton grid -->
     <div v-if="loading" class="skin-gallery">
       <div v-for="i in 10" :key="i" class="card-wrapper skeleton-card">
         <div class="skeleton-img"></div>
@@ -68,23 +68,23 @@
       </div>
     </div>
 
-    <!-- Loading -->
+    <!-- loading -->
     <div v-if="loading" class="feedback-state">
       <div class="spinner"></div>
       <p>Loading collection…</p>
     </div>
 
-    <!-- Empty -->
+    <!-- empty -->
     <div v-else-if="collection.length === 0" class="feedback-state">
       <p class="empty-msg">Your collection is empty.</p>
     </div>
 
-    <!-- Empty Filter Result -->
+    <!-- empty filter result -->
     <div v-else-if="filteredCollection.length === 0" class="feedback-state">
       <p class="empty-msg">No skins match the selected filter.</p>
     </div>
 
-    <!-- Gallery -->
+    <!-- gallery -->
     <div v-else class="skin-gallery">
       <div
         v-for="entry in filteredCollection"
@@ -95,7 +95,7 @@
         role="button"
         @keydown.enter="openModal(entry)"
       >
-        <SkinCard :skin="entry.skin" :isShard="!entry.is_owned" />
+        <SkinCard :skin="entry.skin" :isGold="!entry.is_owned" />
         <span v-if="entry.count > 1" class="dupe-badge" :class="entry.skin.rarity.name || entry.skin.rarity">×{{ entry.count }}</span>
         <span v-if="entry.is_owned && getSlotForSkin(entry.skin) !== null" class="slot-pip">
           Slot {{ getSlotForSkin(entry.skin) + 1 }}
@@ -103,20 +103,19 @@
       </div>
     </div>
 
-    <!-- Modal -->
+    <!-- modal -->
     <Teleport to="body">
       <Transition name="modal-fade">
         <div v-if="selected" class="modal-backdrop" @click.self="closeModal">
           <div class="modal-container">
             
-            <!-- Left: Card Art (Using universal SkinCard) -->
-            <div class="modal-card-side" :class="{ 'is-shard-preview': !selected.is_owned }">
-              <SkinCard :skin="selected.skin" :isShard="!selected.is_owned" />
-              <!-- Optional: Add dupe count if needed, or keep it clean -->
+            <!-- left card art -->
+            <div class="modal-card-side" :class="{ 'is-gold-preview': !selected.is_owned }">
+              <SkinCard :skin="selected.skin" :isGold="!selected.is_owned" />>
               <span v-if="selected.count > 1" class="modal-dupe-badge" :class="selected.skin.rarity.name || selected.skin.rarity">×{{ selected.count }}</span>
             </div>
 
-            <!-- Right: Details/Actions Card -->
+            <!-- right details/actions card -->
             <div class="modal-actions-card rarity-themed" :class="selected.skin.rarity.name || selected.skin.rarity">
               
               <div class="modal-details-content">
@@ -128,7 +127,7 @@
                 </div>
 
                 <div class="modal-actions">
-                  <!-- Enchant Button -->
+                  <!-- enchant button -->
                   <div v-if="!selected.is_owned" class="enchant-section">
                     <p class="cost-text blue">Cost - {{ (typeof selected.skin.rarity === 'object' ? selected.skin.rarity.unlock_cost : null) ?? 0 }} Essence</p>
                     <button class="enchant-btn" @click="enchant" @mouseenter="pipSound.play()">
@@ -136,7 +135,7 @@
                     </button>
                   </div>
 
-                  <!-- Disenchant Button -->
+                  <!-- disenchant button -->
                   <div v-if="!selected.is_owned || selected.count > 1" class="disenchant-section">
                     <p class="cost-text amber">Cost - {{ (typeof selected.skin.rarity === 'object' ? selected.skin.rarity.disenchant_value : null) ?? 0 }} Essence</p>
                     <button class="disenchant-btn" @click="disenchant" @mouseenter="pipSound.play()">
@@ -185,10 +184,10 @@ const router = useRouter();
 const loading      = ref(true);
 const collection   = ref([]);
 const selected     = ref(null);
-const displaySlots = ref([null, null, null, null]); // [skin | null, ...]
+const displaySlots = ref([null, null, null, null]);
 const essenceBalance = ref(0);
 const activeFilter = ref("all");
-const statusFilter = ref("all"); // all, permanent, shards
+const statusFilter = ref("all"); // all, permanent, gold
 const allSkins     = ref([]);
 const searchQuery  = ref("");
 let slotUpdate      = Promise.resolve();
@@ -220,7 +219,7 @@ function setStatusFilter(val) {
 }
 
 function getFilterCount(rarity, status) {
-  // Use current selection if the other part is omitted
+  // use current selection if the other part is omitted
   const r = rarity ?? activeFilter.value;
   const s = status ?? statusFilter.value;
 
@@ -234,7 +233,7 @@ function getFilterCount(rarity, status) {
     let sMatch = true;
     if (s === 'permanent') {
       sMatch = e.is_owned;
-    } else if (s === 'shards') {
+    } else if (s === 'gold') {
       sMatch = !e.is_owned;
     }
     
@@ -246,28 +245,28 @@ function getFilterCount(rarity, status) {
 }
 
 const ownedCount = computed(() => collection.value.filter(e => e.is_owned).length);
-const shardCount = computed(() => collection.value.filter(e => !e.is_owned).length);
+const goldCount = computed(() => collection.value.filter(e => !e.is_owned).length);
 
 const filteredCollection = computed(() => {
   const query = searchQuery.value.toLowerCase().trim();
   
   return collection.value.filter(e => {
-    // Rarity Filter
+    // rarity filter
     let rarityMatch = true;
     if (activeFilter.value !== "all") {
       const rarityName = typeof e.skin.rarity === 'object' ? e.skin.rarity.name : e.skin.rarity;
       rarityMatch = (rarityName === activeFilter.value);
     }
 
-    // Status Filter
+    // status filter
     let statusMatch = true;
     if (statusFilter.value === "permanent") {
       statusMatch = e.is_owned;
-    } else if (statusFilter.value === "shards") {
+    } else if (statusFilter.value === "gold") {
       statusMatch = !e.is_owned;
     }
 
-    // Search Filter
+    // search filter
     let searchMatch = true;
     if (query) {
       const name = (e.skin.name || "").toLowerCase();
@@ -287,8 +286,8 @@ function normalizeSkins(data) {
     const skin = entry.skin ?? entry;
     const key  = skin.id ?? skin.name;
     
-    // The backend now returns a single record per skin with a duplicate_count.
-    // Total count is duplicate_count + 1 (the original).
+    // returns a single record per skin with a duplicate_count
+    // duplicate_count + 1
     map.set(key, { 
       id: entry.id, 
       skin, 
@@ -358,7 +357,7 @@ async function disenchant() {
     essenceBalance.value = data.essence;
     entry.count -= 1;
     if (entry.count <= 0) {
-      // Clear slot if this skin was displayed
+      // clear slot if a skin was displayed
       const slotIdx = getSlotForSkin(entry.skin);
       if (slotIdx !== null) {
         await clearDisplaySlot(slotIdx);
@@ -434,7 +433,7 @@ async function setDisplaySlot(idx) {
   margin: 0 auto;
 }
 
-/* ── Header ── */
+/* header */
 .page-header {
   margin-bottom: 32px;
 }
@@ -483,7 +482,7 @@ async function setDisplaySlot(idx) {
   color: var(--text-muted);
 }
 
-/* ── Filters ── */
+/*  filters  */
 .filter-row-container {
   display: flex;
   flex-direction: column;
@@ -567,7 +566,7 @@ async function setDisplaySlot(idx) {
   color: #fff;
 }
 
-/* ── Feedback states ── */
+/* feedback states  */
 .feedback-state {
   display: flex;
   flex-direction: column;
@@ -590,14 +589,14 @@ async function setDisplaySlot(idx) {
 .empty-icon { font-size: 2.5rem; }
 .empty-msg  { margin: 0; font-size: 1rem; }
 
-/* ── Gallery Grid ── */
+/* gallery grid */
 .skin-gallery {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(308px, 1fr));
   gap: 32px;
 }
 
-/* ── Card Wrapper (overlays for collection-specific badges) ── */
+/* overlays for collection-specific badges */
 .card-wrapper {
   position: relative;
   width: 308px;
@@ -614,7 +613,7 @@ async function setDisplaySlot(idx) {
   z-index: 5;
 }
 
-/* Dupe badge */
+/* duplicate badge */
 .dupe-badge {
   position: absolute;
   bottom: 12px; right: 12px;
@@ -632,7 +631,7 @@ async function setDisplaySlot(idx) {
   transition: all 0.3s ease;
 }
 
-/* Rarity Themed Badges (Small) */
+/* rarity dupe badges */
 .dupe-badge.common, .modal-dupe-badge.common {
   background: rgba(107, 114, 128, 0.85);
 }
@@ -650,7 +649,7 @@ async function setDisplaySlot(idx) {
   border-color: rgba(255, 255, 255, 0.3);
 }
 
-/* Slot pip */
+/* slot pip */
 .slot-pip {
   position: absolute;
   top: 12px;
@@ -670,7 +669,7 @@ async function setDisplaySlot(idx) {
   white-space: nowrap;
 }
 
-/* ── Modal ── */
+/* modal */
 .modal-backdrop {
   position: fixed;
   inset: 0;
@@ -731,7 +730,7 @@ async function setDisplaySlot(idx) {
   backdrop-filter: blur(20px);
 }
 
-/* Rarity-themed borders for actions card - slightly more pronounced */
+/* rarity border for actions card */
 .modal-actions-card.rare      { border-bottom: 3px solid rgba(59, 130, 246, 0.6); }
 .modal-actions-card.epic      { border-bottom: 3px solid rgba(168, 85, 247, 0.6); }
 .modal-actions-card.legendary { border-bottom: 3px solid rgba(234, 179, 8, 0.7); }
@@ -745,17 +744,7 @@ async function setDisplaySlot(idx) {
   gap: 8px;
 }
 
-.modal-worth {
-  margin: 0;
-  font-size: 0.88rem;
-  color: #94a3b8;
-  letter-spacing: 0.01em;
-}
-.modal-worth strong { 
-  color: #fbbf24;
-  font-weight: 700;
-  text-shadow: 0 0 10px rgba(251, 191, 36, 0.3);
-}
+
 
 .modal-slot-info {
   margin: 0;
@@ -771,7 +760,7 @@ async function setDisplaySlot(idx) {
   font-size: 1.2rem;
 }
 
-/* Enchantment Section */
+/* enchantment & disenchantment */
 .enchant-section {
   display: flex;
   flex-direction: column;
@@ -849,7 +838,6 @@ async function setDisplaySlot(idx) {
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
 }
 
-/* Enchantment & Disenchantment Sections */
 .enchant-section, .disenchant-section {
   display: flex;
   flex-direction: column;
@@ -942,7 +930,7 @@ async function setDisplaySlot(idx) {
   background: #3b82f6;
 }
 
-/* ── Modal transition ── */
+/* modal transition */
 .modal-fade-enter-active,
 .modal-fade-leave-active { transition: opacity 0.4s ease; }
 .modal-fade-enter-from,
@@ -954,7 +942,7 @@ async function setDisplaySlot(idx) {
   opacity: 0;
 }
 
-/* ── Responsive ── */
+/* responsive */
 @media (max-width: 768px) {
   .collection-page { padding: 24px 16px; }
   .modal-container { 
@@ -967,7 +955,7 @@ async function setDisplaySlot(idx) {
   .slot-grid { grid-template-columns: repeat(2, 1fr); }
 }
 
-/* ── Skeleton ── */
+/* skeleton load */
 .skeleton-card {
   cursor: default;
   pointer-events: none;

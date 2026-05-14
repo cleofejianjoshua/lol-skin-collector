@@ -1,6 +1,6 @@
 <template>
   <div v-if="!isLoading" class="home-page" :class="{ 'logged-in': isLoggedIn }">
-    <!-- Social Search Section -->
+    <!-- search others -->
     <div class="social-search-container" v-if="isLoggedIn">
       <div class="top-search-bar">
         <input 
@@ -17,7 +17,7 @@
       </button>
     </div>
 
-    <!-- Header Section -->
+    <!-- header section -->
     <header class="home-header">
       <h1 v-if="isLoggedIn">
         <template v-if="isViewingOthers">Viewing {{ viewedUsername }}'s Showcase</template>
@@ -35,7 +35,7 @@
       <QuoteCard v-else />
     </header>
 
-    <!-- Showcase Section (Only when logged in) -->
+    <!-- showcase section -->
     <div v-if="isLoggedIn" class="showcase-container">
       <div class="showcase-grid">
         <SkinCard
@@ -167,7 +167,7 @@ onMounted(async () => {
   font-size: 0.82rem;
 }
 
-/* Social Search Styles */
+/* search styles */
 .social-search-container {
   position: absolute;
   top: 20px;
@@ -253,7 +253,7 @@ onMounted(async () => {
   opacity: 0.6;
 }
 
-/* Showcase Grid */
+/* showcase Grid */
 .showcase-container {
   margin-top: 0;
 }

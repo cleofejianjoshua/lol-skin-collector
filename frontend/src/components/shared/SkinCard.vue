@@ -1,30 +1,30 @@
 <template>
   <div
     class="skin-card rarity-themed"
-    :class="[rarity, { 'is-empty': isEmpty, 'is-shard': isShard, 'read-only': readOnly }]"
+    :class="[rarity, { 'is-empty': isEmpty, 'is-gold': isGold, 'read-only': readOnly }]"
     @mouseenter="!isEmpty && pipSound.play()"
   >
-    <!-- Filled Skin Card -->
+    <!-- filled skin Card -->
     <template v-if="!isEmpty && skin">
-      <!-- Background Art -->
+      <!-- background Art -->
       <div class="skin-art">
         <img v-if="skin.image_path" :src="skin.image_path" :alt="skin.name" class="skin-img" />
         <div v-else class="skin-placeholder" :class="rarity"></div>
       </div>
 
-      <!-- Gradient Overlay -->
+      <!-- gradient overlay -->
       <div class="skin-overlay">
-        <!-- Top Row: Rarity (left) + Slot# (right) -->
+        <!-- top row rarity (left) + Slot (right) -->
         <div class="top-row">
           <div class="rarity-tag" :class="rarity">
             <span v-if="rarity === 'ultimate'" class="ultimate-dot"></span>
             {{ rarity }}
           </div>
           <div v-if="slotNumber" class="slot-badge">Slot {{ slotNumber }}</div>
-          <div v-if="isShard" class="shard-badge">Shard</div>
+          <div v-if="isGold" class="gold-badge">Gold</div>
         </div>
 
-        <!-- Bottom: Skin Info -->
+        <!-- bottom skin info -->
         <div class="skin-text-info">
           <p class="champ-name">{{ skin.champion }}</p>
           <h4 class="skin-name">{{ skin.name }}</h4>
@@ -33,7 +33,7 @@
       </div>
     </template>
 
-    <!-- Empty State -->
+    <!-- empty state -->
     <div v-else class="empty-state">
       <p v-if="slotNumber">Slot {{ slotNumber }}</p>
       <p v-else>Empty</p>
@@ -60,7 +60,7 @@ const props = defineProps({
     type: [Number, String],
     default: null
   },
-  isShard: {
+  isGold: {
     type: Boolean,
     default: false
   },
@@ -90,12 +90,12 @@ const rarity = computed(() => {
   transition: box-shadow 0.4s ease, border-color 0.3s ease;
 }
 
-/* Hover */
+/* hover */
 .skin-card:hover {
   border-color: var(--accent);
 }
 
-/* Background art */
+/* background art */
 .skin-art {
   position: absolute;
   inset: 0;
@@ -114,16 +114,16 @@ const rarity = computed(() => {
   filter: brightness(1);
 }
 
-/* Shard State */
-.skin-card.is-shard .skin-img {
+/* gold state */
+.skin-card.is-gold .skin-img {
   filter: grayscale(1) brightness(0.6);
 }
 
-.skin-card.is-shard:hover .skin-img {
+.skin-card.is-gold:hover .skin-img {
   filter: grayscale(0.5) brightness(0.8);
 }
 
-.shard-badge {
+.gold-badge {
   font-size: 0.62rem;
   font-weight: 800;
   color: #fff;
@@ -148,7 +148,7 @@ const rarity = computed(() => {
 .skin-placeholder.legendary { background: linear-gradient(135deg, #422006, #0f172a); }
 .skin-placeholder.ultimate  { background: linear-gradient(135deg, #450a0a, #0f172a); }
 
-/* Overlay */
+/* overlay */
 .skin-overlay {
   position: absolute;
   inset: 0;
@@ -160,7 +160,7 @@ const rarity = computed(() => {
   background: linear-gradient(to bottom, rgba(0,0,0,0.3) 0%, transparent 40%, rgba(0,0,0,0.85) 100%);
 }
 
-/* Top row: rarity tag left, slot badge right */
+/* top row: rarity tag left, slot badge right */
 .top-row {
   display: flex;
   justify-content: space-between;
@@ -209,7 +209,7 @@ const rarity = computed(() => {
   backdrop-filter: blur(4px);
 }
 
-/* Bottom text info */
+/* bottom text info */
 .skin-text-info { text-align: left; }
 
 .champ-name {
@@ -228,7 +228,7 @@ const rarity = computed(() => {
   line-height: 1.2;
 }
 
-/* Empty State */
+/* empty state */
 .empty-state {
   position: absolute;
   inset: 0;

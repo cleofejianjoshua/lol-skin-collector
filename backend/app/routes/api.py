@@ -136,7 +136,7 @@ def disenchant_skin(collection_id):
     if entry.duplicate_count > 0:
         entry.duplicate_count -= 1
     else:
-        # This will only happen for shards now, as we blocked it for permanent skins above
+        # hhis will only happen for gold now, as we blocked it for permanent skins above
         db.session.delete(entry)
 
     user.essence = (user.essence or 0) + disenchant_value

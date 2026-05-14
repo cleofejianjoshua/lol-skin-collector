@@ -1,21 +1,14 @@
-/* ================================================
-   MAIN.CSS — Global base styles & design tokens
-   Component styles live in src/assets/css/components/
-   and are imported via src/assets/css/index.css
-================================================ */
+/* main css */
 
 :root {
   color-scheme: dark;
   --bg: radial-gradient(circle at top, rgba(15, 23, 42, 0.85) 0, rgba(15, 23, 42, 0.96) 40%, #020617 100%);
   --card-bg: rgba(13, 18, 33, 0.96);
   --accent: #3b82f6;
-  --accent-soft: rgba(59, 130, 246, 0.1);
-  --accent-strong: rgba(59, 130, 246, 0.25);
   --border-subtle: rgba(255, 255, 255, 0.06);
   --text-main: #f9fafb;
   --text-muted: #9ca3af;
   --danger: #f97373;
-  --success: #4ade80;
   --shadow-elevated: 0 24px 60px rgba(0, 0, 0, 0.75);
   --radius-lg: 18px;
   --radius-pill: 999px;

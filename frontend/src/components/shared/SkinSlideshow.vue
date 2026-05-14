@@ -5,7 +5,7 @@
   >
     <transition name="fade-slide" mode="out-in">
       <div v-if="currentSkin" :key="currentSkin.name" class="slideshow-content">
-        <!-- Background Image -->
+        <!-- background Image -->
         <div class="skin-bg">
           <img 
             v-if="currentSkin.image_path" 
@@ -16,7 +16,7 @@
           <div v-else class="bg-placeholder" :class="currentSkin.rarity"></div>
         </div>
 
-        <!-- Overlay Info -->
+        <!-- overlay Info -->
         <div class="skin-overlay">
           <div class="rarity-tag" :class="getRarityName(currentSkin)">
             {{ getRarityName(currentSkin) }}
@@ -69,11 +69,11 @@ const startSlideshow = () => {
 const nextSkin = () => {
   if (props.skins.length === 0) return;
   
-  // Transition to the next skin
+  // transition to the next skin
   currentIndex.value = (currentIndex.value + 1) % props.skins.length;
   currentSkin.value = props.skins[currentIndex.value];
 
-  // Preload the one AFTER the next one
+  // preload the one AFTER the next one
   const nextIdx = (currentIndex.value + 1) % props.skins.length;
   const nextToPreload = props.skins[nextIdx];
   if (nextToPreload && nextToPreload.image_path) {
@@ -85,7 +85,7 @@ const nextSkin = () => {
 watch(() => props.skins, (newSkins) => {
   if (newSkins && newSkins.length > 0 && !currentSkin.value) {
     startSlideshow();
-    // Preload the first few
+    // preload the first few
     newSkins.slice(0, 3).forEach(s => {
       if (s.image_path) {
         const img = new Image();
@@ -194,7 +194,7 @@ onUnmounted(() => {
   line-height: 1.2;
 }
 
-/* Transitions */
+/* transitions */
 .fade-slide-enter-active,
 .fade-slide-leave-active {
   transition: opacity 2s ease, transform 2s ease;

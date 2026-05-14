@@ -1,9 +1,4 @@
-/* ================================================
-   RARITY THEMES
-   Universal rarity-based colors and borders.
-   Used by SkinCard, SkinSlideshow, and Modals.
-   ================================================ */
-
+/* rarity - universal rarity colors and borders */
 :root {
   --rarity-common: #94a3b8;
   --rarity-rare: #3b82f6;
@@ -18,26 +13,26 @@
 }
 
 /* Common */
-.rarity-themed.common, .rarity--common {
+.rarity-themed.common {
   border-color: rgba(148, 163, 184, 0.3) !important;
 }
 
 /* Rare */
-.rarity-themed.rare, .rarity--rare {
+.rarity-themed.rare {
   border-color: var(--rarity-rare) !important;
 }
 
 /* Epic */
-.rarity-themed.epic, .rarity--epic {
+.rarity-themed.epic {
   border-color: var(--rarity-epic) !important;
 }
 
 /* Legendary */
-.rarity-themed.legendary, .rarity--legendary {
+.rarity-themed.legendary {
   border-color: var(--rarity-legendary) !important;
 }
 
 /* Ultimate */
-.rarity-themed.ultimate, .rarity--ultimate {
+.rarity-themed.ultimate {
   border-color: var(--rarity-ultimate) !important;
 }

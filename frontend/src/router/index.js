@@ -9,14 +9,14 @@ import GachaView from "@/views/GachaView.vue";
 import GoldForgeView from "@/views/GoldForgeView.vue";
 
 const routes = [
-  { path: "/",               name: "Home",          component: HomeView },
-  { path: "/login",          name: "Login",         component: LoginView },
-  { path: "/register",       name: "Register",      component: RegisterView },
-  { path: "/collection",     name: "Collection",    component: CollectionView },
-  { path: "/profile",        name: "Profile",       component: ProfileView },
+  { path: "/", name: "Home", component: HomeView },
+  { path: "/login", name: "Login", component: LoginView },
+  { path: "/register", name: "Register", component: RegisterView },
+  { path: "/collection", name: "Collection", component: CollectionView },
+  { path: "/profile", name: "Profile", component: ProfileView },
   { path: "/profile/update", name: "UpdateProfile", component: UpdateProfileView },
-  { path: "/gacha",          name: "Gacha",         component: GachaView },
-  { path: "/gold-forge",     name: "GoldForge",     component: GoldForgeView },
+  { path: "/gacha", name: "Gacha", component: GachaView },
+  { path: "/gold-forge", name: "GoldForge", component: GoldForgeView },
 ];
 
 
@@ -25,7 +25,7 @@ const router = createRouter({
   routes,
 });
 
-// Navigation guard — checks auth on every route change
+// navigation guard, checks auth on every route change
 router.beforeEach(async (to, from, next) => {
   const publicRoutes = ["/login", "/register"];
 
@@ -37,12 +37,12 @@ router.beforeEach(async (to, from, next) => {
 
     const isLoggedIn = res.ok;
 
-    // Already logged in → redirect away from login/register
+    // already logged in, redirect away from login/register
     if (isLoggedIn && publicRoutes.includes(to.path)) {
       return next("/");
     }
 
-    // Not logged in → redirect to login (except public routes)
+    // not logged in, redirect to login
     if (!isLoggedIn && !publicRoutes.includes(to.path)) {
       return next("/login");
     }

@@ -1,7 +1,4 @@
-/* ================================================
-   BUTTONS
-   Shared button styles used across all pages.
-================================================ */
+/* buttons */
 
 .primary-btn {
   margin-top: 2px;
@@ -38,7 +35,7 @@
   transform: none;
 }
 
-/* Ghost / text-link button */
+/* ghost button*/
 .link-button {
   border: none;
   background: transparent;
@@ -58,7 +55,7 @@
   transform: translateY(-1px);
 }
 
-/* Secondary Button (Neutral) */
+/* secondary button */
 .secondary-btn {
   width: 100%;
   border-radius: var(--radius-pill);
@@ -77,7 +74,7 @@
   transform: translateY(-2px);
 }
 
-/* Danger Button (Red) */
+/* danger button */
 .danger-btn {
   width: 100%;
   border-radius: var(--radius-pill);

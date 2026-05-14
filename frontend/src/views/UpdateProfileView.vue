@@ -50,7 +50,7 @@ const loading = ref(false);
 const successMsg = ref("");
 const errorMsg = ref("");
 
-// Pre-fill with existing data
+// pre-fill with existing data
 onMounted(async () => {
   try {
     const data = await fetchUser();

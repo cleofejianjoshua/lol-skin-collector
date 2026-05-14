@@ -1,6 +1,4 @@
-<!-- Reusable random quote card.
-     Picks a random LoL champion quote on mount.
--->
+<!-- random quote card -->
 <template>
   <div class="quote-card">
     <p class="quote-text">"{{ randomQuote.text }}"</p>

@@ -1,7 +1,4 @@
-/* ================================================
-   FORMS
-   Shared form, field, and input styles.
-================================================ */
+/* forms */
 
 .login-form,
 .profile-form {
@@ -23,16 +20,9 @@
   display: block;
 }
 
-.field-inline {
-  flex-direction: row;
-  align-items: center;
-  justify-content: space-between;
-}
-
 /* Inputs */
 input[type="text"],
 input[type="email"],
-input[type="username"],
 input[type="password"] {
   width: 100%;
   border-radius: 999px;
@@ -50,7 +40,6 @@ input[type="password"] {
 
 input[type="text"]:focus,
 input[type="email"]:focus,
-input[type="username"]:focus,
 input[type="password"]:focus {
   border-color: var(--accent);
   box-shadow: 0 0 0 1px rgba(59, 130, 246, 0.45);
@@ -59,29 +48,6 @@ input[type="password"]:focus {
 
 input[type="text"]::placeholder,
 input[type="email"]::placeholder,
-input[type="username"]::placeholder,
 input[type="password"]::placeholder {
   color: rgba(156, 163, 175, 0.9);
-}
-
-/* Checkbox */
-.checkbox {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 0.8rem;
-  color: var(--text-muted);
-  cursor: pointer;
-}
-
-.checkbox input {
-  width: 14px;
-  height: 14px;
-  border-radius: 4px;
-}
-
-@media (max-width: 480px) {
-  .login-card {
-    padding: 24px 18px 20px;
-  }
 }

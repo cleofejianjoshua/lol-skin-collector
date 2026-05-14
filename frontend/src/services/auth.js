@@ -1,4 +1,4 @@
-const BASE_URL = "http://127.0.0.1:5000"; // your Flask server
+const BASE_URL = "http://127.0.0.1:5000";
 
 export async function registerUser({ username, password }) {
   const res = await fetch(`${BASE_URL}/auth/register`, {

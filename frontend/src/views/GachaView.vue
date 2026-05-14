@@ -1,14 +1,14 @@
 <template>
   <div class="gacha-page">
     <div class="gacha-layout-wrapper">
-      <!-- Left Slideshow -->
+      <!-- left slideshow -->
       <aside class="gacha-side-panel left">
         <SkinSlideshow :skins="skins" :interval="5000" />
       </aside>
 
-      <!-- Center Content -->
+      <!-- center Content -->
       <div class="gacha-main-container">
-        <!-- Page Glow Overlay -->
+        <!-- page glow overlay -->
         <div
           class="page-glow"
           :class="{
@@ -17,7 +17,7 @@
           }"
         ></div>
 
-        <!-- Header -->
+        <!-- header -->
         <div class="gacha-header">
           <h1 class="gacha-title">Skin Gacha</h1>
           <button class="history-btn" @click="openHistory" @mouseenter="pipSound.play()">
@@ -25,29 +25,28 @@
           </button>
         </div>
 
-        <!-- Shard balance + cost -->
-        <div class="shard-info">
-          <div class="shard-balance">
-            <span class="shard-icon">🪙</span>
+        <!-- gold balance & cost -->
+        <div class="gold-info">
+          <div class="gold-balance">
             <span>{{ gold }} Gold</span>
           </div>
-          <span class="shard-divider">·</span>
-          <span class="shard-cost">Cost: <strong>{{ PULL_COST }} Gold</strong> per pull</span>
+          <span class="gold-divider">·</span>
+          <span class="gold-cost">Cost: <strong>{{ PULL_COST }} Gold</strong> per pull</span>
         </div>
 
 
-        <!-- Pull area -->
+        <!-- pull area -->
         <div class="pull-area">
-          <!-- Card -->
+          <!-- card -->
           <div 
             class="card-container" 
             :class="{ flipped: revealed, popped : popped }"
             @click="revealed && resetPull()"  
             :style="{ cursor: revealed ? 'pointer' : 'default' }"
           >
-            <!-- Back: pull button -->
+            <!-- back pull button -->
             <div class="card-face card-back">
-              <!-- Roulette display while pulling -->
+              <!-- roulette display while pulling -->
               <div v-if="isPulling" class="roulette-display" :class="rouletteRarity">
                 <div class="roulette-shimmer"></div>
                 <div class="roulette-rarity-tag" :class="rouletteRarity">
@@ -63,12 +62,12 @@
                 <p class="card-hint">Summoning...</p>
               </div>
 
-              <!-- Normal pull button -->
+              <!-- normal pull button -->
               <template v-else>
                 <button
                   class="pull-btn"
-                  :class="{ pulling: isPulling, disabled: notEnoughShards, 'pity-pull': isPity }"
-                  :disabled="isPulling || notEnoughShards"
+                  :class="{ pulling: isPulling, disabled: notEnoughGold, 'pity-pull': isPity }"
+                  :disabled="isPulling || notEnoughGold"
                   @click="triggerPull"
                   @mouseenter="pipSound.play()"
                 >
@@ -80,8 +79,8 @@
               </template>
             </div>
 
-            <!-- Front: result -->
-            <div class="card-face card-front rarity-themed" :class="[result?.skin?.rarity.name, { 'is-shard-pull': !result?.is_duplicate }]" @mouseenter="pipSound.play()">
+            <!-- front: result -->
+            <div class="card-face card-front rarity-themed" :class="[result?.skin?.rarity.name, { 'is-gold-pull': !result?.is_duplicate }]" @mouseenter="pipSound.play()">
               <div v-if="result" class="result-inner">
                 <div class="rarity-shimmer"></div>
                 <span class="rarity-badge" :class="result.skin.rarity.name">
@@ -89,11 +88,11 @@
                   {{ result.skin.rarity.name.toUpperCase() }}
                 </span>
 
-                <!-- Shard Badge (Top Right) -->
-                <div class="shard-badge">SHARD</div>
+                <!-- gold badge top right -->
+                <div class="gold-badge">GOLD</div>
 
 
-                <!-- Skin Art -->
+                <!-- skin art -->
                 <div class="skin-art-container">
                   <img
                     v-if="result.skin.image_path"
@@ -113,8 +112,8 @@
             </div>
           </div>
           
-          <div class="shard-info" :class="{ pity: isPity }">
-            <span class="shard-cost">
+          <div class="gold-info" :class="{ pity: isPity }">
+            <span class="gold-cost">
               <template v-if="isPity">
                 <strong>Boosted rates active ↑↑</strong>
               </template>
@@ -124,7 +123,7 @@
             </span>
           </div>
 
-          <!-- Rarity odds (placed below card) -->
+          <!-- rarity odds -->
           <div class="odds-card " :class="{ pity: isPity }">
             <div class="odds-list-horizontal">
               <div class="odds-item" v-for="r in displayedRarities" :key="r.name">
@@ -135,32 +134,32 @@
             </div>
           </div>
 
-          <!-- Not enough shards warning -->
-          <p v-if="notEnoughShards && !revealed" class="error-text">
+          <!-- not enough gold warning -->
+          <p v-if="notEnoughGold && !revealed" class="error-text">
             Not enough gold. Go earn more!
           </p>
 
-          <!-- Post-reveal actions (placed at the bottom) -->
+          <!-- post actions -->
           <div v-if="revealed" class="pull-actions">
             <button class="primary-btn" @click="resetPull" @mouseenter="pipSound.play()">Pull Again</button>
           </div>
         </div>
       </div>
 
-      <!-- Right Slideshow -->
+      <!-- right slideshow -->
       <aside class="gacha-side-panel right">
         <SkinSlideshow :skins="skins" :interval="5000" />
       </aside>
     </div>
   </div>
 
-  <!-- ═══════════════ Pull History Modal ═══════════════ -->
+  <!-- pull history modal -->
   <Teleport to="body">
     <Transition name="modal-fade">
       <div v-if="historyOpen" class="history-overlay" @click.self="closeHistory">
         <div class="history-modal">
 
-          <!-- Modal Header -->
+          <!-- modal header -->
           <div class="history-modal-header">
             <div class="history-modal-title-group">
               <h2 class="history-modal-title">Pull History</h2>
@@ -169,18 +168,18 @@
           </div>
           <div class="history-divider"></div>
 
-          <!-- Loading state -->
+          <!-- loading state -->
           <div v-if="historyLoading" class="history-loading">
             <div class="history-spinner"></div>
             <span>Loading history…</span>
           </div>
 
-          <!-- Empty state -->
+          <!-- empty state -->
           <div v-else-if="historyData.total === 0" class="history-empty">
             <p>No pulls yet.<br/>Summon your first skin!</p>
           </div>
 
-          <!-- Table -->
+          <!-- table -->
           <template v-else>
             <table class="history-table">
               <thead>
@@ -224,7 +223,7 @@
               </tbody>
             </table>
 
-            <!-- Pagination -->
+            <!-- pagination -->
             <div class="history-pagination">
               <button
                 class="page-arrow"
@@ -277,7 +276,7 @@ const rouletteSkins    = ref([]);
 const popped = ref(false);
 let rouletteInterval   = null;
 
-// ── History modal state ──────────────────────────────────────
+// history modal state
 const historyOpen    = ref(false);
 const historyLoading = ref(false);
 const historyPage    = ref(1);
@@ -325,7 +324,7 @@ const rouletteDisplaySkin = computed(() => {
 });
 
 function startRoulette() {
-  // Filter skins per rarity for name display
+  // filter skins per rarity for name display
   rouletteSkins.value = skins.value;
 
   let speed = 60;
@@ -335,13 +334,13 @@ function startRoulette() {
   rouletteInterval = setInterval(() => {
     ticks++;
     pipSound.play();
-    // Pick weighted random rarity for visual effect
+    // pick weighted random rarity for visual effect
     const pool = isPity.value
       ? ["common","common","rare","rare","epic","epic","epic","legendary","ultimate"]
       : ["common","common","common","rare","rare","epic","legendary"];
     rouletteRarity.value = pool[Math.floor(Math.random() * pool.length)];
 
-    // Slow down toward the end
+    // slow down toward the end
     if (ticks > totalTicks * 0.6) speed = 120;
     if (ticks > totalTicks * 0.85) speed = 220;
 
@@ -359,7 +358,7 @@ function stopRoulette() {
   }
 }
 
-const notEnoughShards = computed(() => gold.value !== null && gold.value < PULL_COST);
+const notEnoughGold = computed(() => gold.value !== null && gold.value < PULL_COST);
 
 const rarities = [
   { name: "common",    label: "Common",    pct: "40%" },
@@ -394,10 +393,10 @@ onMounted(async () => {
     console.error("Failed to load gacha data:", err);
   }
 
-  // Load skins for side panels
+  // load skins for side panels
   try {
     const data = await fetchSkins();
-    // Map backend keys (skin_name -> name) if necessary
+    // map backend keys (skin_name -> name)
     skins.value = data.map(s => ({
       ...s,
       name: s.skin_name || s.name,
@@ -409,7 +408,7 @@ onMounted(async () => {
   }
 });
 
-// Mock pool for demo (no backend skins yet)
+// mock pool for demo (no backend skins yet)
 const MOCK_POOL = [
   { name: "Elementalist Lux",     champion: "Lux",    rarity: "ultimate",  image_path: "" },
   { name: "Spirit Blossom Ahri",  champion: "Ahri",   rarity: "legendary", image_path: "" },
@@ -437,7 +436,7 @@ function mockPull() {
 }
 
 const triggerPull = async () => {
-  if (isPulling.value || revealed.value || notEnoughShards.value) return;
+  if (isPulling.value || revealed.value || notEnoughGold.value) return;
   isPulling.value = true;
   startRoulette();
   pullSound.play();
@@ -449,7 +448,7 @@ const triggerPull = async () => {
     stopRoulette();
     rouletteRarity.value = data.skin.rarity;
 
-    // Preload image before flipping the card
+    // preload image before flipping the card
     if (data.skin.image_path) {
       await new Promise(resolve => {
         const img = new Image();
@@ -484,7 +483,7 @@ const triggerPull = async () => {
 const resetPull = () => {
   revealed.value  = false;
   isPulling.value = false;
-  // Clear result after flip-back animation finishes (1.2s)
+  // clear result after flip-back animation
   setTimeout(() => {
     if (!revealed.value) result.value = null;
   }, 1200);
@@ -493,7 +492,7 @@ const resetPull = () => {
 </script>
 
 <style scoped>
-/* Page Layout */
+/* page layout */
 .gacha-page {
   min-height: 80vh;
   position: relative;
@@ -559,7 +558,7 @@ const resetPull = () => {
   50%       { opacity: 1; }
 }
 
-/* Rarity Reveal Flashes */
+/* rarity reveal flashes */
 .page-glow.reveal-common    { animation: flashCommon 2s ease-out forwards; opacity: 1; }
 .page-glow.reveal-rare      { animation: flashRare 2s ease-out forwards; opacity: 1; }
 .page-glow.reveal-epic      { animation: flashEpic 2s ease-out forwards; opacity: 1; }
@@ -604,8 +603,8 @@ const resetPull = () => {
   background-clip: text;
 }
 
-/* Shard info bar */
-.shard-info {
+/* gold info bar */
+.gold-info {
   display: flex;
   align-items: center;
   gap: 10px;
@@ -617,24 +616,25 @@ const resetPull = () => {
   color: var(--text-muted);
 }
 
-.shard-info.pity {
+.gold-info.pity {
   background: rgba(88, 28, 135, 0.25);
   border-color: rgba(168, 85, 247, 0.3);
 }
 
-.shard-balance {
+.gold-balance {
   display: flex;
   align-items: center;
   gap: 6px;
-  color: #a5b4fc;
-  font-weight: 600;
+  color: #fbbf24;
+  font-weight: 700;
+  text-shadow: 0 0 10px rgba(251, 191, 36, 0.3);
 }
 
-.shard-icon { font-size: 0.85rem; }
-.shard-divider { color: var(--border-subtle); }
-.shard-cost strong { color: var(--text-main); }
+.gold-icon { font-size: 0.85rem; }
+.gold-divider { color: var(--border-subtle); }
+.gold-cost strong { color: #fbbf24; }
 
-/* Pull area */
+/* pull area */
 .pull-area {
   display: flex;
   flex-direction: column;
@@ -683,14 +683,14 @@ const resetPull = () => {
 .card-container.flipped .card-back  { transform: rotateY(-180deg); }
 .card-container.flipped .card-front { transform: rotateY(0deg); }
 
-/* Rarity border on front */
+/* rarity border on front */
 .card-front.common    { border-color: rgba(156,163,175,0.3); }
 .card-front.rare      { border-color: rgba(59,130,246,0.5);  box-shadow: 0 0 30px rgba(59,130,246,0.2); }
 .card-front.epic      { border-color: rgba(168,85,247,0.5);  box-shadow: 0 0 40px rgba(168,85,247,0.25); }
 .card-front.legendary { border-color: rgba(234,179,8,0.6);   box-shadow: 0 0 60px rgba(234,179,8,0.35); }
 .card-front.ultimate  { border-color: rgba(239,68,68,0.8);  box-shadow: 0 0 80px rgba(239,68,68,0.5); }
 
-/* Pull button / orb */
+/* pull button */
 .pull-btn {
   background: none;
   border: none;
@@ -767,7 +767,7 @@ const resetPull = () => {
   color: var(--text-muted);
 }
 
-/* Result card front */
+/* result card front */
 .result-inner {
   width: 100%;
   height: 100%;
@@ -820,7 +820,7 @@ const resetPull = () => {
 .rarity-badge.legendary { background: rgba(55,35,5,0.9);     color: #fde68a; border: 1px solid rgba(234,179,8,0.5); }
 .rarity-badge.ultimate  { background: rgba(60,8,8,0.9);      color: #ef4444; border: 1px solid rgba(239,68,68,0.6); box-shadow: 0 0 15px rgba(239,68,68,0.4); display: flex; align-items: center; gap: 6px; }
 
-.shard-badge {
+.gold-badge {
   position: absolute;
   top: 16px; right: 16px;
   background: rgba(15, 23, 42, 0.7);
@@ -844,7 +844,7 @@ const resetPull = () => {
   box-shadow: 0 0 8px #ef4444;
 }
 
-/* Skin art */
+/* skin art */
 .skin-art-container {
   position: absolute;
   inset: 0;
@@ -905,13 +905,13 @@ const resetPull = () => {
   letter-spacing: 0.05em;
 }
 
-/* Shard Pull Styling */
-.is-shard-pull .skin-img {
+/* gold pull styling */
+.is-gold-pull .skin-img {
   filter: brightness(.8);
   transition: filter 1s ease;
 }
 
-.shard-stamp-container {
+.gold-stamp-container {
   position: absolute;
   top: 50%;
   left: 50%;
@@ -922,12 +922,12 @@ const resetPull = () => {
   transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 
-.shard-stamp-container.stamp-active {
+.gold-stamp-container.stamp-active {
   transform: translate(-50%, -50%) scale(1) rotate(-15deg);
   opacity: 1;
 }
 
-.shard-stamp {
+.gold-stamp {
   font-size: 3.5rem;
   font-weight: 900;
   color: rgba(255, 255, 255, 0.15);
@@ -941,7 +941,7 @@ const resetPull = () => {
   text-shadow: 0 0 15px rgba(255, 255, 255, 0.1);
 }
 
-/* Post-reveal */
+/* post-reveal */
 .pull-actions { 
   animation: fadeIn 0.5s ease forwards;
 }
@@ -953,7 +953,7 @@ const resetPull = () => {
 
 .primary-btn { width: 180px; padding: 11px; }
 
-/* Odds Card */
+/* odds card */
 .odds-card {
   margin-bottom: 4px;
   background: rgba(15, 23, 42, 0.4);
@@ -1011,7 +1011,7 @@ const resetPull = () => {
   border-color: rgba(168, 85, 247, 0.3);
 }
 
-/* Roulette */
+/* roulette */
 .roulette-display {
   width: 100%;
   height: 100%;
@@ -1116,7 +1116,7 @@ const resetPull = () => {
   border-color: rgba(59,130,246,0.4);
 }
 
-/* ═══════════════ History Button ═══════════════ */
+/* history button */
 .history-btn {
   display: inline-flex;
   align-items: center;
@@ -1144,7 +1144,7 @@ const resetPull = () => {
 
 .history-btn-icon { font-size: 0.9rem; }
 
-/* ═══════════════ History Modal Overlay ═══════════════ */
+/* history modal overlay */
 .history-overlay {
   position: fixed;
   inset: 0;
@@ -1175,7 +1175,7 @@ const resetPull = () => {
   transform: scale(0.95) translateY(10px);
 }
 
-/* ═══════════════ History Modal Panel ═══════════════ */
+/* history modal panel */
 .history-modal {
   width: min(780px, 94vw);
   background: linear-gradient(145deg, rgba(10, 15, 30, 0.97), rgba(15, 22, 45, 0.97));
@@ -1239,7 +1239,7 @@ const resetPull = () => {
   margin: 0 24px;
 }
 
-/* ═══════════════ Loading / Empty ═══════════════ */
+/* loading/empty */
 .history-loading,
 .history-empty {
   display: flex;
@@ -1268,7 +1268,7 @@ const resetPull = () => {
   to { transform: rotate(360deg); }
 }
 
-/* ═══════════════ History Table ═══════════════ */
+/* history table */
 .history-table {
   width: 100%;
   border-collapse: collapse;
@@ -1314,7 +1314,7 @@ const resetPull = () => {
 .history-row:nth-child(4) { animation-delay: 0.16s; }
 .history-row:nth-child(5) { animation-delay: 0.20s; }
 
-/* Left rarity accent bar via box-shadow */
+/* left rarity accent bar */
 .history-row.common    { box-shadow: inset 3px 0 0 rgba(156,163,175,0.45); }
 .history-row.rare      { box-shadow: inset 3px 0 0 rgba(59,130,246,0.6);  background: rgba(59,130,246,0.04); }
 .history-row.epic      { box-shadow: inset 3px 0 0 rgba(168,85,247,0.6);  background: rgba(168,85,247,0.05); }
@@ -1411,7 +1411,7 @@ const resetPull = () => {
   white-space: nowrap;
 }
 
-/* ═══════════════ Pagination ═══════════════ */
+/* pagination */
 .history-pagination {
   display: flex;
   align-items: center;

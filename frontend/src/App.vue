@@ -25,17 +25,17 @@ const loadUser = async () => {
 
 const displayName = computed(() => nickname.value || username.value);
 
-// Opens the confirmation modal instead of logging out immediately
+// opens the confirmation modal instead of logging out immediately
 const promptLogout = () => {
   showLogoutModal.value = true;
 };
 
-// Navigation sound effect
+// nav sound effect
 const navSound = typeof Audio !== 'undefined' ? new Audio('/sounds/sound_click.mp3') : null;
 if (navSound) navSound.volume = 0.5;
 
 const handleNavClick = (e) => {
-  // Only play sound if an anchor tag (or something inside it) was clicked
+  // only play sound if an anchor tag was clicked
   const link = e.target.closest('a');
   if (link && navSound) {
     navSound.currentTime = 0;
@@ -48,7 +48,7 @@ const handleNavHover = (e) => {
   if (link) pipSound.play();
 };
 
-// Called when user clicks "Yes, sign out"
+// called when user clicks yes
 const confirmLogout = async () => {
   showLogoutModal.value = false;
   try {
@@ -61,25 +61,25 @@ const confirmLogout = async () => {
   }
 };
 
-// Called when user clicks "No, stay" or the backdrop
+// called when user clicks no
 const cancelLogout = () => {
   showLogoutModal.value = false;
 };
 
 onMounted(loadUser);
 
-// Re-check user on every route change (e.g. after login/logout)
+// re-check user on every route change
 watch(() => route.fullPath, loadUser);
 </script>
 
 <template>
   <div class="app-root">
 
-    <!-- NAVBAR -->
+    <!-- navbar -->
     <header v-if="!loadingUser" class="top-bar">
       <span class="brand">LOL Skin Gacha Collector</span>
 
-      <!-- Logged-in nav -->
+      <!-- logged-in nav -->
       <nav v-if="isLoggedIn" class="nav-links" @click="handleNavClick" @mouseover="handleNavHover">
         <span class="welcome-text">Welcome, {{ displayName }}!</span>  
         <router-link to="/">Home</router-link>
@@ -90,19 +90,19 @@ watch(() => route.fullPath, loadUser);
         <a href="#" @click.prevent="promptLogout">Logout</a>
       </nav>
 
-      <!-- Guest nav -->
+      <!-- guest nav -->
       <nav v-else class="nav-links" @click="handleNavClick" @mouseover="handleNavHover">
         <router-link to="/login">Log In</router-link>
         <router-link to="/register">Register</router-link>
       </nav>
     </header>
 
-    <!-- PAGE CONTENT -->
+    <!-- page content -->
     <main class="page-content">
       <router-view v-if="!loadingUser" />
     </main>
 
-    <!-- SIGN OUT CONFIRMATION MODAL -->
+    <!-- sign out confirmation modal -->
     <ConfirmModal
       :show="showLogoutModal"
       title="Sign out?"

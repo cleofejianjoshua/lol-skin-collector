@@ -1,12 +1,4 @@
-/**
- * api.js — Central API service layer.
- *
- * All backend calls go through here. Use relative paths so the
- * Vite proxy handles routing to Flask correctly.
- */
-
 // Auth
-
 export async function loginUser({ username, password }) {
   const res = await fetch("/auth/login", {
     method: "POST",
@@ -44,12 +36,8 @@ export async function logoutUser() {
   return data;
 }
 
-// User / Profile
-
-/**
- * Fetch the currently logged-in user.
- * Returns { username, nickname, email, ... } or { username: null } if not logged in.
- */
+// user profile
+// fetch logged in users
 export async function fetchUser() {
   try {
     const res = await fetch("/api/user", {
@@ -77,7 +65,7 @@ export async function fetchOtherDisplaySlots(username) {
   const res = await fetch(`/api/display-slots/${username}`, { credentials: "include" });
   const data = await res.json();
   if (!res.ok) throw new Error(data.error || "Failed to fetch display slots");
-  return data; // [{ slot_index, skin }, ...]
+  return data; // slot index
 }
 
 export async function updateProfile({ nickname, email }) {
@@ -97,11 +85,8 @@ export async function updateProfile({ nickname, email }) {
 }
 
 // Gacha
+// pull skin
 
-/**
- * Perform a single gacha pull.
- * Returns { skin: { id, name, champion, rarity, image_path }, is_duplicate }
- */
 export async function gachaPull() {
   const res = await fetch("/api/gacha/pull", {
     method: "POST",
@@ -114,11 +99,7 @@ export async function gachaPull() {
 }
 
 // Skins
-
-/**
- * Fetch all available skins from the backend.
- * Expected response: [{ id, name, champion, image_path, rarity }, ...]
- */
+// fetch all skins
 export async function fetchSkins() {
   const res = await fetch("/api/skins", { credentials: "include" });
   const data = await res.json();
@@ -126,9 +107,7 @@ export async function fetchSkins() {
   return data;
 }
 
-/**
- * Fetch the skins owned by the current user.
- */
+// fetch skins owned by user
 export async function fetchUserCollection() {
   const res = await fetch("/api/collection", { credentials: "include" });
   const data = await res.json();
@@ -137,11 +116,7 @@ export async function fetchUserCollection() {
 }
 
 // Gold
-
-/**
- * Fetch the current user's gold balance from the database.
- * Returns { gold: number }
- */
+// fetch users gold balance
 export async function fetchGold() {
   const res = await fetch("/api/gold", { credentials: "include" });
   const data = await res.json();
@@ -149,10 +124,7 @@ export async function fetchGold() {
   return data;
 }
 
-/**
- * Add `amount` gold to the current user's balance.
- * Returns { gold: number } with the updated balance.
- */
+// add gold to user
 export async function addGold(amount = 1) {
   const res = await fetch("/api/gold/add", {
     method: "POST",
@@ -165,10 +137,7 @@ export async function addGold(amount = 1) {
   return data;
 }
 
-/**
- * Claim the 5-minute recurring gold bonus.
- * Returns { gold, bonus_awarded } or throws if cooldown hasn't elapsed.
- */
+// claim 5 minute gold bonus
 export async function claimGoldBonus() {
   const res = await fetch("/api/gold/bonus", {
     method: "POST",
@@ -179,10 +148,7 @@ export async function claimGoldBonus() {
   return data;
 }
 
-/**
- * Spend `amount` gold from the current user's balance.
- * Returns { gold: number } with the updated balance.
- */
+// spend gold
 export async function spendGold(amount) {
   const res = await fetch("/api/gold/spend", {
     method: "POST",
@@ -195,13 +161,12 @@ export async function spendGold(amount) {
   return data;
 }
 
-// Display Slots
-
+// display slots
 export async function fetchDisplaySlots() {
   const res = await fetch("/api/display-slots", { credentials: "include" });
   const data = await res.json();
   if (!res.ok) throw new Error(data.error || "Failed to fetch display slots");
-  return data; // [{ slot_index, skin }, ...]
+  return data;
 }
 
 export async function updateDisplaySlot(slotIndex, skinId) {

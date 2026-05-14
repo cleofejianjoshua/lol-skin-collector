@@ -1,12 +1,12 @@
 <template>
   <div class="profile-page">
     <div class="profile-layout-wrapper">
-      <!-- Left Slideshow -->
+      <!-- left Slideshow -->
       <aside class="profile-side-panel left">
         <SkinSlideshow :skins="skins" :interval="5000" />
       </aside>
 
-      <!-- Center Content -->
+      <!-- center Content -->
       <div class="profile-main-container">
         <div class="profile-card">
           <h2>Profile</h2>
@@ -51,7 +51,7 @@
         </div>
       </div>
 
-      <!-- Right Slideshow -->
+      <!-- right Slideshow -->
       <aside class="profile-side-panel right">
         <SkinSlideshow :skins="skins" :interval="5000" />
       </aside>
@@ -105,7 +105,7 @@ const loadProfile = async () => {
     errorMsg.value = err.message;
   }
 
-  // Load skins for side panels
+  // load skin
   try {
     const data = await fetchSkins();
     skins.value = data.map(s => ({

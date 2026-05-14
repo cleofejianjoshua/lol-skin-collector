@@ -1,28 +1,27 @@
 <template>
   <div class="forge-page">
     <div class="forge-layout-wrapper">
-      <!-- Left Slideshow -->
+      <!-- left slideshow -->
       <aside class="forge-side-panel left">
         <SkinSlideshow :skins="skins" :interval="5000" />
       </aside>
 
-      <!-- Center Content -->
+      <!-- center content -->
       <div class="forge-main-container">
 
-        <!-- Header -->
+        <!-- header -->
         <div class="forge-header">
           <h1 class="forge-title">Gold Forge</h1>
           <p class="forge-subtitle">Click the coin to earn gold. Spend it on pulls.</p>
         </div>
 
-        <!-- Gold counter -->
+        <!-- gold counter -->
         <div class="gold-counter">
-          <span class="gold-icon">🪙</span>
           <span class="gold-count">{{ gold }}</span>
           <span class="gold-label">Gold</span>
         </div>
 
-        <!-- Click coin button -->
+        <!-- click coin button -->
         <button
           class="coin-btn"
           :class="{ clicked: isClicked }"
@@ -40,23 +39,22 @@
 
         <p v-if="error" class="error-text">{{ error }}</p>
 
-        <!-- Gold Bonus Timer -->
+        <!-- gold bonus timer -->
         <div class="gold-bonus-zone">
-          <!-- Countdown -->
+          <!-- countdown -->
           <div v-if="!bonusReady" class="bonus-countdown-card">
-            <span class="bonus-countdown-label">🪙 Gold Bonus in</span>
+            <span class="bonus-countdown-label"> Gold Bonus in</span>
             <span class="bonus-timer">{{ formattedCountdown }}</span>
             <div class="bonus-progress-bar">
               <div class="bonus-progress-fill" :style="{ width: progressPercent + '%' }"></div>
             </div>
           </div>
 
-          <!-- Claim button -->
+          <!-- claim button -->
           <div v-else class="bonus-ready-card">
             <div class="bonus-ready-glow"></div>
-            <p class="bonus-ready-label">🎉 Gold Bonus Ready!</p>
+            <p class="bonus-ready-label">Gold Bonus Ready!</p>
             <button class="bonus-claim-btn" :disabled="isClaiming" @click="claimBonus">
-              <span class="bonus-coin">🪙</span>
               {{ isClaiming ? 'Claiming…' : 'Claim + 400 Gold' }}
             </button>
           </div>
@@ -64,7 +62,7 @@
 
       </div>
 
-      <!-- Right Slideshow -->
+      <!-- right slideshow -->
       <aside class="forge-side-panel right">
         <SkinSlideshow :skins="skins" :interval="5000" />
       </aside>
@@ -96,7 +94,7 @@ const error         = ref("");
 const pendingClicks = ref(0);
 let syncTimer       = null;
 
-// ─── Gold Bonus Timer (localStorage-backed, runs in background) ──────────────
+// gold bonus timer, backend runs in background
 const BONUS_DURATION  = 5 * 60; // 300 seconds
 const BONUS_KEY       = "lol_bonus_start"; // localStorage key for start timestamp
 const BONUS_AMOUNT    = 400;
@@ -115,7 +113,7 @@ const progressPercent = computed(() =>
   ((BONUS_DURATION - secondsLeft.value) / BONUS_DURATION) * 100
 );
 
-/** Stamp now as the start time and begin the live interval tick. */
+// start timer
 function startBonusTimer(startTimestamp = Date.now()) {
   if (bonusInterval) clearInterval(bonusInterval);
   localStorage.setItem(BONUS_KEY, startTimestamp.toString());
@@ -138,25 +136,25 @@ function startBonusTimer(startTimestamp = Date.now()) {
   bonusInterval = setInterval(tick, 1000);
 }
 
-/** On mount: restore timer from localStorage if still running. */
+// restore timer from localStorage if still running
 function restoreBonusTimer() {
   const saved = localStorage.getItem(BONUS_KEY);
   if (saved) {
     const startTimestamp = parseInt(saved, 10);
     const elapsed = Math.floor((Date.now() - startTimestamp) / 1000);
     if (elapsed < BONUS_DURATION) {
-      // Timer still in progress — resume from where it left off
+      // timer progress resume
       startBonusTimer(startTimestamp);
       return;
     }
   }
-  // No saved timer or already expired — show bonus as ready immediately
-  // but only if there was a previous session (key existed)
+  // no saved timer or already expired, show bonus as ready immediately
+  // but only if there was a previous session
   if (saved) {
     secondsLeft.value = 0;
     bonusReady.value  = true;
   } else {
-    // First visit ever — start fresh
+    // start fresh
     startBonusTimer();
   }
 }
@@ -176,7 +174,7 @@ async function claimBonus() {
 }
 
 onMounted(async () => {
-  // Load gold from DB
+  // fetch gold from DB
   try {
     const data = await fetchGold();
     gold.value = data.gold ?? 0;
@@ -185,7 +183,7 @@ onMounted(async () => {
     error.value = "Failed to load gold balance.";
   }
 
-  // Load skins for side panels
+  // fetch skins for side panels
   try {
     const data = await fetchSkins();
     skins.value = data.map(s => ({
@@ -203,7 +201,7 @@ onMounted(async () => {
 onUnmounted(() => {
   if (syncTimer) clearTimeout(syncTimer);
   if (bonusInterval) clearInterval(bonusInterval);
-  // Optional: final sync if leaving page with pending clicks
+  // optional final sync if leaving page
   if (pendingClicks.value > 0) syncToDB();
 });
 
@@ -212,9 +210,9 @@ const clickGold = () => {
   pendingClicks.value++;
   error.value = "";
   goldSound.play();
-  // Debounce sync to DB
+  // debounce sync to DB
   if (syncTimer) clearTimeout(syncTimer);
-  syncTimer = setTimeout(syncToDB, 1000); // Sync after 1s of no clicking
+  syncTimer = setTimeout(syncToDB, 1000); // sync after 1s of no clicking
 };
 
 async function syncToDB() {
@@ -225,14 +223,13 @@ async function syncToDB() {
   
   try {
     const data = await addGold(amountToSync);
-    // Overwrite only if we aren't currently clicking
+    // overwrite only if not clicking
     if (pendingClicks.value === 0) {
       gold.value = data.gold;
     }
   } catch (err) {
     console.error("Failed to sync gold:", err);
     error.value = "Sync error. Some gold may not have saved.";
-    // Re-add to pending if failed? Or just leave it.
   }
 }
 </script>
@@ -296,7 +293,7 @@ async function syncToDB() {
   color: var(--text-muted);
 }
 
-/* Counter */
+/* gold counter */
 .gold-counter {
   display: flex;
   align-items: center;
@@ -323,7 +320,7 @@ async function syncToDB() {
   letter-spacing: 0.06em;
 }
 
-/* Coin button */
+/* coin button */
 .coin-btn {
   position: relative;
   width: 220px;
@@ -381,9 +378,7 @@ async function syncToDB() {
   color: #f87171;
 }
 
-/* ═══════════════════════════════════════
-   Gold Bonus Zone
-═══════════════════════════════════════ */
+/* gold bonus */
 .gold-bonus-zone {
   width: 100%;
   max-width: 400px;
@@ -392,7 +387,7 @@ async function syncToDB() {
   align-items: center;
 }
 
-/* Countdown card */
+/* countdown card */
 .bonus-countdown-card {
   width: 100%;
   background: rgba(15, 23, 42, 0.75);
@@ -440,7 +435,7 @@ async function syncToDB() {
   box-shadow: 0 0 8px rgba(251, 191, 36, 0.55);
 }
 
-/* Ready card */
+/* ready card */
 .bonus-ready-card {
   position: relative;
   width: 100%;

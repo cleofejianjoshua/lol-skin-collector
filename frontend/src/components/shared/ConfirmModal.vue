@@ -31,7 +31,7 @@ defineEmits(["confirm", "cancel"]);
 </script>
 
 <style scoped>
-/* Backdrop */
+/* backdrop */
 .modal-backdrop {
   position: fixed;
   inset: 0;
@@ -60,14 +60,14 @@ defineEmits(["confirm", "cancel"]);
   text-align: center;
 }
 
-/* Buttons */
+/* buttons */
 .modal-actions {
   display: flex;
   gap: 12px;
   width: 100%;
 }
 
-/* Transition */
+/* transition */
 .modal-fade-enter-active,
 .modal-fade-leave-active {
   transition: opacity 0.2s ease;
