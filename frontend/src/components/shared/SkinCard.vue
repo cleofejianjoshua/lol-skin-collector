@@ -1,7 +1,7 @@
 <template>
   <div
     class="skin-card rarity-themed"
-    :class="[rarity, { 'is-empty': isEmpty, 'is-gold': isGold, 'read-only': readOnly }]"
+    :class="[rarity, { 'is-empty': isEmpty, 'is-shard': isShard, 'read-only': readOnly }]"
     @mouseenter="!isEmpty && pipSound.play()"
   >
     <!-- filled skin Card -->
@@ -21,7 +21,7 @@
             {{ rarity }}
           </div>
           <div v-if="slotNumber" class="slot-badge">Slot {{ slotNumber }}</div>
-          <div v-if="isGold" class="gold-badge">Gold</div>
+          <div v-if="isShard" class="shard-badge">Shard</div>
         </div>
 
         <!-- bottom skin info -->
@@ -60,7 +60,7 @@ const props = defineProps({
     type: [Number, String],
     default: null
   },
-  isGold: {
+  isShard: {
     type: Boolean,
     default: false
   },
@@ -106,54 +106,27 @@ const rarity = computed(() => {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  filter: brightness(0.8);
-  transition: transform 0.5s ease, filter 0.4s ease;
-}
-
-.skin-card:hover .skin-img {
+  transition: filter 0.4s ease;
   filter: brightness(1);
 }
 
-/* gold state */
-.skin-card.is-gold .skin-img {
+/* shard state */
+.skin-card.is-shard .skin-img {
   filter: grayscale(1) brightness(0.6);
 }
 
-.skin-card.is-gold:hover .skin-img {
+.skin-card.is-shard:hover .skin-img {
   filter: grayscale(0.5) brightness(0.8);
 }
 
-.gold-badge {
-  font-size: 0.62rem;
-  font-weight: 800;
-  color: #fff;
-  text-transform: uppercase;
-  letter-spacing: 0.1em;
-  background: rgba(148, 163, 184, 0.4);
-  padding: 4px 10px;
-  border-radius: 999px;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  backdrop-filter: blur(4px);
-  box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
-}
 
-.skin-placeholder {
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(135deg, #1e293b, #0f172a);
-}
-
-.skin-placeholder.rare      { background: linear-gradient(135deg, #1e3a8a, #0f172a); }
-.skin-placeholder.epic      { background: linear-gradient(135deg, #3b0764, #0f172a); }
-.skin-placeholder.legendary { background: linear-gradient(135deg, #422006, #0f172a); }
-.skin-placeholder.ultimate  { background: linear-gradient(135deg, #450a0a, #0f172a); }
 
 /* overlay */
 .skin-overlay {
   position: absolute;
   inset: 0;
   z-index: 1;
-  padding: 20px;
+  padding: 16px;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
@@ -164,36 +137,7 @@ const rarity = computed(() => {
 .top-row {
   display: flex;
   justify-content: space-between;
-  align-items: flex-start;
-}
-
-.rarity-tag {
-  padding: 4px 10px;
-  border-radius: 999px;
-  font-size: 0.65rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  background: rgba(0,0,0,0.4);
-  border: 1px solid rgba(255,255,255,0.2);
-  display: flex;
   align-items: center;
-  gap: 6px;
-  backdrop-filter: blur(4px);
-}
-
-.rarity-tag.common    { color: #d1d5db; background: rgba(30,30,35,0.75);    border-color: rgba(156,163,175,0.4); }
-.rarity-tag.rare      { color: #93c5fd; background: rgba(15,30,60,0.8);     border-color: rgba(59,130,246,0.4); }
-.rarity-tag.epic      { color: #d8b4fe; background: rgba(40,10,65,0.8);     border-color: rgba(168,85,247,0.4); }
-.rarity-tag.legendary { color: #fde68a; background: rgba(55,35,5,0.85);     border-color: rgba(234,179,8,0.4); }
-.rarity-tag.ultimate  { color: #ef4444; background: rgba(60,8,8,0.85);      border-color: rgba(239,68,68,0.5); box-shadow: 0 0 8px rgba(239,68,68,0.3); }
-
-.ultimate-dot {
-  width: 6px;
-  height: 6px;
-  background: #ef4444;
-  border-radius: 50%;
-  box-shadow: 0 0 6px #ef4444;
 }
 
 .slot-badge {
@@ -214,10 +158,10 @@ const rarity = computed(() => {
 
 .champ-name {
   margin: 0;
-  font-size: 0.7rem;
+  font-size: 0.72rem;
   color: rgba(255,255,255,0.6);
   text-transform: uppercase;
-  letter-spacing: 0.1em;
+  letter-spacing: 0.12em;
 }
 
 .skin-name {
@@ -233,19 +177,17 @@ const rarity = computed(() => {
   position: absolute;
   inset: 0;
   display: flex;
-  flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 16px;
-  color: rgba(148, 163, 184, 0.3);
-  transition: color 0.3s ease;
-}
-
-.empty-state p {
-  margin: 0;
-  font-size: 0.9rem;
+  background: rgba(15, 23, 42, 0.3);
+  color: rgba(148, 163, 184, 0.4);
+  font-size: 0.85rem;
   font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.1em;
+}
+
+.skin-card.read-only {
+  cursor: default;
 }
 </style>

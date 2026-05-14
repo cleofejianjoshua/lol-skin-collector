@@ -41,8 +41,8 @@
         <button class="filter-btn" :class="{ active: statusFilter === 'all' }" @click="setStatusFilter('all')" @mouseenter="pipSound.play()">
           All Status
         </button>
-        <button class="filter-btn" :class="{ active: statusFilter === 'gold' }" @click="setStatusFilter('gold')" @mouseenter="pipSound.play()">
-          Gold
+        <button class="filter-btn" :class="{ active: statusFilter === 'shard' }" @click="setStatusFilter('shard')" @mouseenter="pipSound.play()">
+          Shard
         </button>
         <button class="filter-btn" :class="{ active: statusFilter === 'permanent' }" @click="setStatusFilter('permanent')" @mouseenter="pipSound.play()">
           Unlocked
@@ -95,7 +95,7 @@
         role="button"
         @keydown.enter="openModal(entry)"
       >
-        <SkinCard :skin="entry.skin" :isGold="!entry.is_owned" />
+        <SkinCard :skin="entry.skin" :isShard="!entry.is_owned" />
         <span v-if="entry.count > 1" class="dupe-badge" :class="entry.skin.rarity.name || entry.skin.rarity">×{{ entry.count }}</span>
         <span v-if="entry.is_owned && getSlotForSkin(entry.skin) !== null" class="slot-pip">
           Slot {{ getSlotForSkin(entry.skin) + 1 }}
@@ -110,13 +110,13 @@
           <div class="modal-container">
             
             <!-- left card art -->
-            <div class="modal-card-side" :class="{ 'is-gold-preview': !selected.is_owned }">
-              <SkinCard :skin="selected.skin" :isGold="!selected.is_owned" />>
+            <div class="modal-card-side" :class="{ 'is-shard-preview': !selected.is_owned }">
+              <SkinCard :skin="selected.skin" :isShard="!selected.is_owned" />>
               <span v-if="selected.count > 1" class="modal-dupe-badge" :class="selected.skin.rarity.name || selected.skin.rarity">×{{ selected.count }}</span>
             </div>
 
             <!-- right details/actions card -->
-            <div class="modal-actions-card rarity-themed" :class="selected.skin.rarity.name || selected.skin.rarity">
+            <div class="modal-actions-card rarity-themed rarity-accent-bottom" :class="selected.skin.rarity.name || selected.skin.rarity">
               
               <div class="modal-details-content">
                 
@@ -187,7 +187,7 @@ const selected     = ref(null);
 const displaySlots = ref([null, null, null, null]);
 const essenceBalance = ref(0);
 const activeFilter = ref("all");
-const statusFilter = ref("all"); // all, permanent, gold
+const statusFilter = ref("all"); // all, permanent, shard
 const allSkins     = ref([]);
 const searchQuery  = ref("");
 let slotUpdate      = Promise.resolve();
@@ -233,7 +233,7 @@ function getFilterCount(rarity, status) {
     let sMatch = true;
     if (s === 'permanent') {
       sMatch = e.is_owned;
-    } else if (s === 'gold') {
+    } else if (s === 'shard') {
       sMatch = !e.is_owned;
     }
     
@@ -245,7 +245,7 @@ function getFilterCount(rarity, status) {
 }
 
 const ownedCount = computed(() => collection.value.filter(e => e.is_owned).length);
-const goldCount = computed(() => collection.value.filter(e => !e.is_owned).length);
+const shardCount = computed(() => collection.value.filter(e => !e.is_owned).length);
 
 const filteredCollection = computed(() => {
   const query = searchQuery.value.toLowerCase().trim();
@@ -262,7 +262,7 @@ const filteredCollection = computed(() => {
     let statusMatch = true;
     if (statusFilter.value === "permanent") {
       statusMatch = e.is_owned;
-    } else if (statusFilter.value === "gold") {
+    } else if (statusFilter.value === "shard") {
       statusMatch = !e.is_owned;
     }
 
@@ -730,21 +730,12 @@ async function setDisplaySlot(idx) {
   backdrop-filter: blur(20px);
 }
 
-/* rarity border for actions card */
-.modal-actions-card.rare      { border-bottom: 3px solid rgba(59, 130, 246, 0.6); }
-.modal-actions-card.epic      { border-bottom: 3px solid rgba(168, 85, 247, 0.6); }
-.modal-actions-card.legendary { border-bottom: 3px solid rgba(234, 179, 8, 0.7); }
-.modal-actions-card.ultimate  { border-bottom: 3px solid rgba(239, 68, 68, 0.9); }
-
-
 .modal-info-block {
   margin-bottom: 16px;
   display: flex;
   flex-direction: column;
   gap: 8px;
 }
-
-
 
 .modal-slot-info {
   margin: 0;

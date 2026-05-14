@@ -42,6 +42,7 @@
           v-for="(slot, idx) in displaySlots"
           :key="idx"
           :skin="slot"
+          :isShard="!slot"
           :is-empty="!slot"
           :slot-number="idx + 1"
           :read-only="isViewingOthers"

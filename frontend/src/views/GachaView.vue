@@ -49,12 +49,12 @@
               <!-- roulette display while pulling -->
               <div v-if="isPulling" class="roulette-display" :class="rouletteRarity">
                 <div class="roulette-shimmer"></div>
-                <div class="roulette-rarity-tag" :class="rouletteRarity">
+                <div class="rarity-tag" :class="rouletteRarity">
                   <span v-if="rouletteRarity === 'ultimate'" class="ultimate-dot"></span>
                   {{ rouletteRarity.toUpperCase() }}
                 </div>
                 <div class="roulette-art">
-                  <div class="roulette-placeholder" :class="rouletteRarity"></div>
+                  <div class="skin-placeholder" :class="rouletteRarity"></div>
                 </div>
                 <div v-if="showSkinName" class="roulette-skin-name">
                   {{ rouletteDisplaySkin?.name ?? '???' }}
@@ -88,8 +88,8 @@
                   {{ result.skin.rarity.name.toUpperCase() }}
                 </span>
 
-                <!-- gold badge top right -->
-                <div class="gold-badge">GOLD</div>
+                <!-- shard badge top right (only if new) -->
+                <div v-if="result && !result.is_duplicate" class="shard-badge">SHARD</div>
 
 
                 <!-- skin art -->
@@ -100,7 +100,7 @@
                     :alt="result.skin.name"
                     class="skin-img"
                   />
-                  <div v-else class="skin-img-placeholder" :class="result.skin.rarity.name"></div>
+                  <div v-else class="skin-placeholder" :class="result.skin.rarity.name"></div>
                 </div>
 
                 <div class="skin-info">
@@ -780,68 +780,12 @@ const resetPull = () => {
   overflow: hidden;
 }
 
-.rarity-shimmer {
-  position: absolute;
-  inset: -100%;
-  background: linear-gradient(
-    135deg,
-    transparent 35%,
-    rgba(255, 255, 255, 0.1) 45%,
-    rgba(255, 255, 255, 0.25) 50%,
-    rgba(255, 255, 255, 0.1) 55%,
-    transparent 65%
-  );
-  transform: translateX(-100%) rotate(25deg);
-  pointer-events: none;
-}
 
-.flipped .rarity-shimmer {
-  animation: shimmerSweep 2s cubic-bezier(0.4, 0, 0.2, 1) 0.8s forwards;
-}
 
-@keyframes shimmerSweep {
-  0%   { transform: translateX(-150%) rotate(25deg) scale(2); }
-  100% { transform: translateX(150%)  rotate(25deg) scale(2); }
-}
-
-.rarity-badge {
-  position: absolute;
-  top: 20px; left: 20px;
-  font-size: 0.62rem;
-  font-weight: 700;
-  letter-spacing: 0.1em;
-  padding: 4px 10px;
-  border-radius: 999px;
-}
-
-.rarity-badge.common    { background: rgba(30,30,35,0.85);   color: #d1d5db; border: 1px solid rgba(156,163,175,0.3); }
-.rarity-badge.rare      { background: rgba(15,30,60,0.85);   color: #93c5fd; border: 1px solid rgba(59,130,246,0.4); }
-.rarity-badge.epic      { background: rgba(40,10,65,0.85);   color: #d8b4fe; border: 1px solid rgba(168,85,247,0.4); }
-.rarity-badge.legendary { background: rgba(55,35,5,0.9);     color: #fde68a; border: 1px solid rgba(234,179,8,0.5); }
-.rarity-badge.ultimate  { background: rgba(60,8,8,0.9);      color: #ef4444; border: 1px solid rgba(239,68,68,0.6); box-shadow: 0 0 15px rgba(239,68,68,0.4); display: flex; align-items: center; gap: 6px; }
-
-.gold-badge {
+.shard-badge {
   position: absolute;
   top: 16px; right: 16px;
-  background: rgba(15, 23, 42, 0.7);
-  backdrop-filter: blur(8px);
-  color: #94a3b8;
-  font-size: 0.65rem;
-  font-weight: 800;
-  padding: 3px 10px;
-  border-radius: 999px;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
   z-index: 10;
-}
-
-.ultimate-dot {
-  width: 6px;
-  height: 6px;
-  background: #ef4444;
-  border-radius: 50%;
-  box-shadow: 0 0 8px #ef4444;
 }
 
 /* skin art */
@@ -862,16 +806,7 @@ const resetPull = () => {
 }
 
 
-.skin-img-placeholder {
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(to bottom, #1e293b, #0f172a);
-}
 
-.skin-img-placeholder.rare      { background: linear-gradient(to bottom, #1e293b, #1e3a8a); }
-.skin-img-placeholder.epic      { background: linear-gradient(to bottom, #1e293b, #581c87); }
-.skin-img-placeholder.legendary { background: linear-gradient(to bottom, #1e293b, #713f12); }
-.skin-img-placeholder.ultimate  { background: linear-gradient(to bottom, #1e293b, #450a0a); }
 
 .skin-info {
   width: 100%;
@@ -1054,41 +989,13 @@ const resetPull = () => {
   100% { transform: scale(1)    translateY(0);    }
 }
 
-.roulette-rarity-tag {
-  padding: 6px 16px;
-  border-radius: 999px;
-  font-size: 0.75rem;
-  font-weight: 800;
-  text-transform: uppercase;
-  letter-spacing: 0.1em;
-  border: 1px solid rgba(255,255,255,0.2);
-  backdrop-filter: blur(4px);
-  transition: all 0.1s ease;
-}
-
-.roulette-rarity-tag.common    { color: #d1d5db; background: rgba(30,30,35,0.75);  border-color: rgba(156,163,175,0.4); }
-.roulette-rarity-tag.rare      { color: #93c5fd; background: rgba(15,30,60,0.8);   border-color: rgba(59,130,246,0.4); }
-.roulette-rarity-tag.epic      { color: #d8b4fe; background: rgba(40,10,65,0.8);   border-color: rgba(168,85,247,0.4); }
-.roulette-rarity-tag.legendary { color: #fde68a; background: rgba(55,35,5,0.85);   border-color: rgba(234,179,8,0.4); }
-.roulette-rarity-tag.ultimate  { color: #ef4444; background: rgba(60,8,8,0.85);    border-color: rgba(239,68,68,0.5); box-shadow: 0 0 8px rgba(239,68,68,0.3); }
-
 .roulette-art {
   width: 180px;
   height: 280px;
   overflow: hidden;
 }
 
-.roulette-placeholder {
-  width: 100%;
-  height: 100%;
-  transition: background 0.1s ease;
-}
 
-.roulette-placeholder.common    { background: linear-gradient(135deg, #1e293b, #0f172a); }
-.roulette-placeholder.rare      { background: linear-gradient(135deg, #1e3a8a, #0f172a); }
-.roulette-placeholder.epic      { background: linear-gradient(135deg, #3b0764, #0f172a); }
-.roulette-placeholder.legendary { background: linear-gradient(135deg, #422006, #0f172a); }
-.roulette-placeholder.ultimate  { background: linear-gradient(135deg, #450a0a, #0f172a); }
 
 .roulette-skin-name {
   font-size: 0.85rem;
@@ -1381,23 +1288,7 @@ const resetPull = () => {
 
 .col-rarity { width: 100px; }
 
-.rarity-pill {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  padding: 3px 10px;
-  border-radius: 999px;
-  font-size: 0.65rem;
-  font-weight: 800;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-}
 
-.rarity-pill.common    { background: rgba(30,30,35,0.8);  color: #d1d5db; border: 1px solid rgba(156,163,175,0.3); }
-.rarity-pill.rare      { background: rgba(15,30,60,0.8);  color: #93c5fd; border: 1px solid rgba(59,130,246,0.4); }
-.rarity-pill.epic      { background: rgba(40,10,65,0.8);  color: #d8b4fe; border: 1px solid rgba(168,85,247,0.4); }
-.rarity-pill.legendary { background: rgba(55,35,5,0.85); color: #fde68a; border: 1px solid rgba(234,179,8,0.5); }
-.rarity-pill.ultimate  { background: rgba(60,8,8,0.85);  color: #ef4444; border: 1px solid rgba(239,68,68,0.6); box-shadow: 0 0 8px rgba(239,68,68,0.3); }
 
 .col-champion {
   color: #94a3b8;
