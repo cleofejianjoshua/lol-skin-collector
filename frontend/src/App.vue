@@ -77,7 +77,7 @@ watch(() => route.fullPath, loadUser);
 
     <!-- navbar -->
     <header v-if="!loadingUser" class="top-bar">
-      <span class="brand">LOL Skin Gacha Collector</span>
+      <span class="brand">LOL Skin Collector</span>
 
       <!-- logged-in nav -->
       <nav v-if="isLoggedIn" class="nav-links" @click="handleNavClick" @mouseover="handleNavHover">

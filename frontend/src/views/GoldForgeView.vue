@@ -44,7 +44,7 @@
           <!-- countdown -->
           <div v-if="!bonusReady" class="bonus-countdown-card">
             <span class="bonus-countdown-label"> Gold Bonus in</span>
-            <span class="bonus-timer">{{ formattedCountdown }}</span>
+            <span class="bonus-timer">{{ secondsLeft === BONUS_DURATION ? '...' : formattedCountdown }}</span>
             <div class="bonus-progress-bar">
               <div class="bonus-progress-fill" :style="{ width: progressPercent + '%' }"></div>
             </div>
@@ -52,7 +52,6 @@
 
           <!-- claim button -->
           <div v-else class="bonus-ready-card">
-            <div class="bonus-ready-glow"></div>
             <p class="bonus-ready-label">Gold Bonus Ready!</p>
             <button class="bonus-claim-btn" :disabled="isClaiming" @click="claimBonus">
               {{ isClaiming ? 'Claiming…' : 'Claim + 400 Gold' }}
@@ -87,7 +86,7 @@ const MOCK_POOL = [
   { name: "Base Ahri",            champion: "Ahri",   rarity: "common",    image_path: "" },
 ];
 
-const gold          = ref(0);
+const gold          = ref("...");
 const skins         = ref([]);
 const isClicked     = ref(false);
 const error         = ref("");
@@ -390,15 +389,11 @@ async function syncToDB() {
 /* countdown card */
 .bonus-countdown-card {
   width: 100%;
-  background: rgba(15, 23, 42, 0.75);
-  border: 1px solid rgba(234, 179, 8, 0.2);
-  border-radius: 20px;
-  padding: 22px 28px;
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 10px;
-  backdrop-filter: blur(8px);
+  
 }
 
 .bonus-countdown-label {
@@ -415,7 +410,6 @@ async function syncToDB() {
   font-variant-numeric: tabular-nums;
   letter-spacing: 0.1em;
   color: #fbbf24;
-  text-shadow: 0 0 24px rgba(251, 191, 36, 0.5);
   line-height: 1;
 }
 
@@ -439,10 +433,6 @@ async function syncToDB() {
 .bonus-ready-card {
   position: relative;
   width: 100%;
-  background: rgba(15, 23, 42, 0.85);
-  border: 1px solid rgba(234, 179, 8, 0.45);
-  border-radius: 20px;
-  padding: 26px 28px;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -457,25 +447,13 @@ async function syncToDB() {
   to   { opacity: 1; transform: scale(1)    translateY(0);     }
 }
 
-.bonus-ready-glow {
-  position: absolute;
-  inset: -40px;
-  background: radial-gradient(ellipse at center, rgba(251, 191, 36, 0.14), transparent 68%);
-  animation: bonusGlowPulse 2s ease-in-out infinite;
-  pointer-events: none;
-}
 
-@keyframes bonusGlowPulse {
-  0%, 100% { opacity: 0.6; transform: scale(1);   }
-  50%       { opacity: 1;   transform: scale(1.1); }
-}
 
 .bonus-ready-label {
   margin: 0;
   font-size: 1rem;
   font-weight: 700;
   color: #fde68a;
-  text-shadow: 0 0 10px rgba(251, 191, 36, 0.4);
   position: relative;
 }
 
@@ -486,7 +464,7 @@ async function syncToDB() {
   padding: 13px 34px;
   border: none;
   border-radius: 999px;
-  background: linear-gradient(135deg, #f59e0b, #d97706);
+  background: linear-gradient(135deg, #fef9c3, #facc15, #ca8a04);
   color: #1a0800;
   font-size: 1.05rem;
   font-weight: 800;
@@ -494,12 +472,12 @@ async function syncToDB() {
   cursor: pointer;
   position: relative;
   transition: transform 0.15s ease, box-shadow 0.15s ease, opacity 0.15s ease;
-  box-shadow: 0 4px 20px rgba(245, 158, 11, 0.4), 0 2px 8px rgba(0,0,0,0.35);
+  
 }
 
 .bonus-claim-btn:hover:not(:disabled) {
   transform: scale(1.06);
-  box-shadow: 0 6px 28px rgba(251, 191, 36, 0.6), 0 2px 8px rgba(0,0,0,0.35);
+  
 }
 
 .bonus-claim-btn:active:not(:disabled) { transform: scale(0.96); }

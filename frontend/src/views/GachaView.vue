@@ -440,6 +440,7 @@ const triggerPull = async () => {
   isPulling.value = true;
   startRoulette();
   pullSound.play();
+  gold.value -= 25;
 
   const delay = new Promise(res => setTimeout(res, 2000));
 
@@ -466,6 +467,7 @@ const triggerPull = async () => {
     pulls_until_pity.value = data.pulls_until_pity;
     demoMode.value         = false;
   } catch {
+    gold.value += 25;
     await delay;
     stopRoulette();
     result.value   = mockPull();

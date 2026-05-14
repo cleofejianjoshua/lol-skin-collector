@@ -9,7 +9,7 @@
         <span class="page-title essence-label">Essence: <span class="essence-num">{{ essenceBalance }}</span></span>
       </div>
       <p class="page-subtitle">
-        {{ ownedCount }} permanent - {{ goldCount }} gold
+        {{ ownedCount }} permanent - {{ shardCount }} shard
       </p>
 
       <!-- filter & search -->
