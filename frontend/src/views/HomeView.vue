@@ -74,6 +74,11 @@ const isLoggedIn  = computed(() => username.value && username.value !== "Guest")
 
 const handleSearch = async () => {
   if (!searchQuery.value) return;
+
+  if (searchQuery.value === username.value) {
+    resetToMyShowcase();
+    return;
+  }
   
   try {
     const slots = await fetchOtherDisplaySlots(searchQuery.value);
@@ -191,7 +196,7 @@ onMounted(async () => {
   max-width: 220px;
   background: rgba(15, 23, 42, 0.6);
   border: 1px solid rgba(255, 255, 255, 0.1);
-  padding: 8px 20px;
+  padding: 8px 10px;
   border-radius: 999px;
   color: #fff;
   font-size: 0.85rem;
@@ -242,9 +247,8 @@ onMounted(async () => {
 }
 
 .back-btn.small {
-  padding: 6px 16px;
-  font-size: 0.75rem;
-  margin-top: -4px;
+  padding: 8px 26px;
+  font-size: 0.8rem;
 }
 
 .home-quote {
