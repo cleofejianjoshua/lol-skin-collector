@@ -111,7 +111,7 @@
             
             <!-- left card art -->
             <div class="modal-card-side" :class="{ 'is-shard-preview': !selected.is_owned }">
-              <SkinCard :skin="selected.skin" :isShard="!selected.is_owned" />>
+              <SkinCard :skin="selected.skin" :isShard="!selected.is_owned" />
               <span v-if="selected.count > 1" class="modal-dupe-badge" :class="selected.skin.rarity.name || selected.skin.rarity">×{{ selected.count }}</span>
             </div>
 
