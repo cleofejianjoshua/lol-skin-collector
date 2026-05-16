@@ -41,16 +41,8 @@ pip install -r requirements.txt
 
 ---
 
-### 3. Run migrations
 
-```
-cd backend
-python -m flask db upgrade
-```
-
----
-
-### 4. Start Flask backend
+### 3. Start Flask backend
 
 ```
 cd backend
@@ -62,7 +54,7 @@ http://127.0.0.1:5000
 
 ---
 
-### 5. Setup Vue frontend
+### 4. Setup Vue frontend
 
 Open a new terminal:
 
@@ -77,6 +69,6 @@ http://localhost:5173
 
 ---
 
-### 6. Use the app
+### 5. Use the app
 
 Open the Vue URL in your browser.
